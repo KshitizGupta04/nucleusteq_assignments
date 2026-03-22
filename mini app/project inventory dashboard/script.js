@@ -78,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  
   // 3. ASYNC LOADING
   function fetchProducts() {
     return new Promise((resolve) => {
@@ -130,9 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     list.forEach(product => {
-      let stockStatus = product.stock > 4 ? `${product.stock} Units` : 
+      let stockStatus = product.stock > 4 ? `${product.stock} Units` :
                         product.stock > 0 ? `Low: ${product.stock}` : "DEPLETED";
-      
+     
       let colorStyle = product.stock === 0 ? "color: var(--neon-magenta);" : "";
       let imgSrc = product.image || "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80";
 
@@ -163,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
+ 
   // 5. FILTERS
   function applyFilters() {
     let filtered = [...products];
@@ -189,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
   sortSelect.addEventListener("change", applyFilters);
   lowStockFilter.addEventListener("change", applyFilters);
 
-  
+ 
   // 6. CRUD: ADD & DELETE
   window.deleteProduct = function(id) {
     products = products.filter(p => p.id !== id);
@@ -201,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   form.addEventListener("submit", async function(e) {
     e.preventDefault();
-    submitBtn.disabled = true; 
+    submitBtn.disabled = true;
 
     const name = document.getElementById("assetName").value.trim();
     const price = Number(document.getElementById("assetPrice").value);
@@ -217,20 +216,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const compressedImageBase64 = await compressImage(imageFile);
 
-    products.push({ 
-      id: Date.now(), 
-      name, 
-      price, 
-      stock, 
-      category, 
-      image: compressedImageBase64 
+    products.push({
+      id: Date.now(),
+      name,
+      price,
+      stock,
+      category,
+      image: compressedImageBase64
     });
-    
+   
     saveData();
     form.reset();
     applyFilters();
     updateAnalytics();
-    
+   
     submitBtn.disabled = false;
     showToast("Asset successfully injected.", "success");
   });
@@ -248,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function initApp() {
     products = await fetchProducts();
     if (loaderContainer) loaderContainer.style.display = "none";
-    
+   
     [searchInput, categoryFilter, sortSelect, lowStockFilter, submitBtn].forEach(el => {
       if (el) el.disabled = false;
     });
@@ -259,3 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initApp();
 });
+
+  
+  
