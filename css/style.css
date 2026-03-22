@@ -92,3 +92,31 @@ footer {
     padding: 25px;
 }
 
+/* Hover only on individual lines */
+footer li,
+footer p {
+    transition: color 0.3s ease;
+}
+
+footer li:hover,
+footer p:hover {
+    color: #1abc9c;  /* nice professional teal */
+}
+
+/* Link hover inside footer */
+footer a:hover {
+    color: #1abc9c;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2rem;
+    }
+
+    header img {
+        height: 250px;
+        width: 250px;
+    }
+}
+
