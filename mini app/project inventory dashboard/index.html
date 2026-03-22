@@ -1,34 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Product Inventory Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Inventory Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>Product Inventory Dashboard</h1>
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
 
-  <div id="controls"></div>
-  <div id="analytics"></div>
-  <div id="productGrid"></div>
-  <div id="formSection"></div>
+  <div id="toast-container"></div>
+
+  <main class="dashboard-container">
+    
+    <header class="dashboard-header text-center">
+      <h1>Inventory<span>Pro</span></h1>
+      <p class="subtitle">Next-Gen Asset Management</p>
+    </header>
+
+    <section class="analytics-grid" id="analytics"></section>
+
+    <section class="glass-panel controls-section" id="controls">
+      <div class="search-box">
+        <input type="text" id="search" placeholder="Search data core..." disabled>
+      </div>
+      
+      <div class="filters">
+        <select id="categoryFilter" disabled>
+          <option value="all">All Categories</option>
+          <option value="electronics">Electronics</option>
+          <option value="clothing">Clothing</option>
+          <option value="books">Books</option>
+          <option value="accessories">Accessories</option>
+        </select>
+
+        <select id="sort" disabled>
+          <option value="">Sort By</option>
+          <option value="low">Price: Low to High</option>
+          <option value="high">Price: High to Low</option>
+          <option value="az">A to Z</option>
+          <option value="za">Z to A</option>
+        </select>
+
+        <label class="toggle-switch">
+          <input type="checkbox" id="lowStockFilter" disabled>
+          <span class="slider"></span>
+          <span class="toggle-label">Low Stock (< 5)</span>
+        </label>
+      </div>
+    </section>
+
+    <div id="loader-container">
+      <div class="cyber-loader"></div>
+      <p>Establishing connection...</p>
+    </div>
+
+    <section class="product-grid" id="productGrid"></section>
+
+    <section class="glass-panel form-section">
+      <div class="form-header">
+        <h2>Initialize New Asset</h2>
+      </div>
+      <form id="productForm">
+        <div class="input-group">
+          <label for="assetImage">Asset Image</label>
+          <input type="file" id="assetImage" accept="image/*" required>
+        </div>
+
+        <div class="input-group">
+          <label for="assetName">Asset Designation (Name)</label>
+          <input type="text" id="assetName" placeholder="e.g. Neural Link" required>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label for="assetPrice">Value (₹)</label>
+            <input type="number" id="assetPrice" placeholder="0" min="1" required>
+          </div>
+          <div class="input-group">
+            <label for="assetStock">Units Available</label>
+            <input type="number" id="assetStock" placeholder="0" min="0" required>
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="assetCategory">Classification</label>
+          <select id="assetCategory" required>
+            <option value="" disabled selected>Select Classification</option>
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="books">Books</option>
+            <option value="accessories">Accessories</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" id="submitBtn" disabled>Inject Asset</button>
+      </form>
+    </section>
+
+  </main>
 
   <script src="script.js"></script>
-
-  <form id="productForm">
-  <input type="text" id="name" placeholder="Product Name" required>
-  <input type="number" id="price" placeholder="Price" required>
-  <input type="number" id="stock" placeholder="Stock" required>
-
-  <select id="category" required>
-    <option value="">Select Category</option>
-    <option value="electronics">Electronics</option>
-    <option value="clothing">Clothing</option>
-    <option value="books">Books</option>
-    <option value="accessories">Accessories</option>
-  </select>
-
-  <button type="submit">Add Product</button>
-</form>
 </body>
 </html>

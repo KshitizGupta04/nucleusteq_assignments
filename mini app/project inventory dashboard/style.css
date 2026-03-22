@@ -1,0 +1,505 @@
+/* =========================================
+   1. CYBER VARIABLES
+========================================= */
+:root {
+  --bg-deep: #030014;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --neon-cyan: #00f3ff;
+  --neon-magenta: #ff00ea;
+  --text-main: #ffffff;
+  --text-muted: #8892b0;
+  --success: #00ff88;
+}
+
+/* =========================================
+   2. GLOBAL RESETS
+========================================= */
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+  font-family: 'Space Grotesk', sans-serif; 
+}
+
+body { 
+  background-color: var(--bg-deep); 
+  color: var(--text-main); 
+  min-height: 100vh; 
+  padding: 40px 20px; 
+  overflow-x: hidden; 
+  position: relative; 
+}
+
+/* =========================================
+   3. AMBIENT BACKGROUND ORBS
+========================================= */
+.ambient-orb { 
+  position: fixed; 
+  border-radius: 50%; 
+  filter: blur(100px); 
+  z-index: -1; 
+  animation: float 10s infinite alternate ease-in-out; 
+}
+
+.orb-1 { 
+  width: 40vw; 
+  height: 40vw; 
+  background: rgba(255, 0, 234, 0.15); 
+  top: 10%; 
+  left: -10%; 
+}
+
+.orb-2 { 
+  width: 35vw; 
+  height: 35vw; 
+  background: rgba(0, 243, 255, 0.12); 
+  bottom: -10%; 
+  right: -5%; 
+  animation-delay: -5s; 
+}
+
+@keyframes float { 
+  0% { 
+    transform: translateY(0) scale(1); 
+  } 
+  100% { 
+    transform: translateY(30px) scale(1.1); 
+  } 
+}
+
+/* =========================================
+   4. TYPOGRAPHY & HEADER
+========================================= */
+.dashboard-container { 
+  max-width: 1200px; 
+  margin: 0 auto; 
+}
+
+h1 { 
+  font-size: 3rem; 
+  font-weight: 700; 
+  margin-bottom: 5px; 
+  letter-spacing: -1px; 
+}
+
+h1 span { 
+  background: linear-gradient(to right, var(--neon-cyan), var(--neon-magenta)); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+}
+
+.subtitle { 
+  color: var(--text-muted); 
+  margin-bottom: 40px; 
+  font-size: 1.1rem; 
+}
+
+.text-center { 
+  text-align: center; 
+}
+
+/* =========================================
+   5. GLASS PANELS
+========================================= */
+.glass-panel { 
+  background: var(--glass-bg); 
+  backdrop-filter: blur(16px); 
+  -webkit-backdrop-filter: blur(16px); 
+  border: 1px solid var(--glass-border); 
+  border-radius: 16px; 
+  padding: 24px; 
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); 
+}
+
+/* =========================================
+   6. PRODUCT GRID & CARDS
+========================================= */
+.product-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+  gap: 25px; 
+  margin-bottom: 40px; 
+}
+
+.product-card { 
+  background: var(--glass-bg); 
+  backdrop-filter: blur(16px); 
+  border: 1px solid var(--glass-border); 
+  border-radius: 16px; 
+  padding: 20px; 
+  position: relative; 
+  display: flex; 
+  flex-direction: column; 
+  transition: transform 0.3s ease; 
+  overflow: hidden; 
+}
+
+.product-card:hover { 
+  transform: translateY(-5px); 
+}
+
+.product-card::before { 
+  content: ''; 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0; 
+  border-radius: 16px; 
+  padding: 2px; 
+  background: linear-gradient(45deg, var(--neon-magenta), var(--neon-cyan)); 
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); 
+  -webkit-mask-composite: destination-out; 
+  mask-composite: exclude; 
+  opacity: 0; 
+  transition: opacity 0.4s ease; 
+  pointer-events: none; 
+  z-index: 1; 
+}
+
+.product-card::after { 
+  content: ""; 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0; 
+  background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(0, 243, 255, 0.1), transparent 40%); 
+  opacity: 0; 
+  transition: opacity 0.3s; 
+  pointer-events: none; 
+  z-index: 0; 
+}
+
+.product-card:hover::before, 
+.product-card:hover::after { 
+  opacity: 1; 
+}
+
+.card-content { 
+  position: relative; 
+  z-index: 2; 
+  flex-grow: 1; 
+}
+
+/* =========================================
+   7. PRODUCT CARD INNER ELEMENTS
+========================================= */
+.product-image { 
+  width: 100%; 
+  height: 180px; 
+  object-fit: cover; 
+  border-radius: 10px; 
+  margin-bottom: 15px; 
+  border: 1px solid var(--glass-border); 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+}
+
+.product-name { 
+  font-size: 1.2rem; 
+  margin-bottom: 5px; 
+  color: #fff; 
+}
+
+.product-price { 
+  font-size: 1.5rem; 
+  font-weight: 700; 
+  color: var(--neon-cyan); 
+  margin: 15px 0; 
+}
+
+.badge { 
+  position: absolute; 
+  top: 10px; 
+  right: 10px; 
+  z-index: 3; 
+  padding: 4px 10px; 
+  border-radius: 20px; 
+  font-size: 0.8rem; 
+  font-weight: 600; 
+  background: rgba(0,0,0,0.6); 
+  backdrop-filter: blur(5px); 
+  border: 1px solid var(--glass-border); 
+  color: #fff;
+}
+
+/* =========================================
+   8. CONTROLS, INPUTS & FILTERS
+========================================= */
+.controls-section { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 15px; 
+  justify-content: space-between; 
+  margin-bottom: 40px; 
+}
+
+.filters { 
+  display: flex; 
+  gap: 15px; 
+  flex-wrap: wrap; 
+  align-items: center; 
+}
+
+input[type="text"], 
+input[type="number"], 
+select { 
+  background: rgba(0, 0, 0, 0.4); 
+  border: 1px solid var(--glass-border); 
+  color: var(--text-main); 
+  padding: 12px 16px; 
+  border-radius: 8px; 
+  outline: none; 
+  width: 100%; 
+  transition: all 0.3s; 
+}
+
+input:focus, 
+select:focus { 
+  border-color: var(--neon-cyan); 
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); 
+}
+
+/* File Upload Button Styling */
+input[type="file"] { 
+  padding: 8px; 
+  background: rgba(0, 0, 0, 0.4); 
+  border: 1px dashed var(--glass-border); 
+  border-radius: 8px; 
+  color: var(--text-muted); 
+  cursor: pointer; 
+}
+
+input[type="file"]::-webkit-file-upload-button { 
+  background: var(--glass-bg); 
+  border: 1px solid var(--neon-cyan); 
+  color: var(--text-main); 
+  padding: 8px 16px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  margin-right: 15px; 
+  transition: 0.3s; 
+}
+
+input[type="file"]::-webkit-file-upload-button:hover { 
+  background: var(--neon-cyan); 
+  color: #000; 
+}
+
+/* Custom Toggle Switch for Low Stock */
+.toggle-switch { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  cursor: pointer; 
+  color: var(--text-muted); 
+}
+
+.toggle-switch input { 
+  display: none; 
+}
+
+.slider { 
+  width: 40px; 
+  height: 22px; 
+  background: rgba(0,0,0,0.5); 
+  border: 1px solid var(--glass-border); 
+  border-radius: 20px; 
+  position: relative; 
+  transition: 0.3s; 
+}
+
+.slider::before { 
+  content: ""; 
+  position: absolute; 
+  width: 16px; 
+  height: 16px; 
+  border-radius: 50%; 
+  background: var(--text-muted); 
+  top: 2px; 
+  left: 2px; 
+  transition: 0.3s; 
+}
+
+.toggle-switch input:checked + .slider { 
+  border-color: var(--neon-cyan); 
+  box-shadow: 0 0 10px rgba(0,243,255,0.3); 
+}
+
+.toggle-switch input:checked + .slider::before { 
+  background: var(--neon-cyan); 
+  transform: translateX(18px); 
+}
+
+/* =========================================
+   9. BUTTONS
+========================================= */
+.btn-delete { 
+  width: 100%; 
+  padding: 12px; 
+  background: transparent; 
+  border: 1px solid var(--neon-magenta); 
+  color: var(--neon-magenta); 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 600; 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+  transition: all 0.3s ease; 
+  position: relative; 
+  z-index: 2; 
+}
+
+.btn-delete:hover { 
+  background: var(--neon-magenta); 
+  color: #fff; 
+  box-shadow: 0 0 20px rgba(255, 0, 234, 0.5); 
+}
+
+.btn-primary { 
+  width: 100%; 
+  padding: 14px; 
+  background: linear-gradient(90deg, #0055ff, var(--neon-cyan)); 
+  color: #000; 
+  border: none; 
+  border-radius: 8px; 
+  font-size: 1rem; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: all 0.3s ease; 
+  margin-top: 10px; 
+}
+
+.btn-primary:hover:not(:disabled) { 
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.6); 
+  transform: scale(1.02); 
+}
+
+.btn-primary:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
+
+/* =========================================
+   10. ANALYTICS GRID
+========================================= */
+.analytics-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+  gap: 20px; 
+  margin-bottom: 30px; 
+}
+
+.metric-title { 
+  color: var(--text-muted); 
+  font-size: 0.9rem; 
+  margin-bottom: 5px; 
+  text-transform: uppercase; 
+  letter-spacing: 1px;
+}
+
+.metric-value { 
+  font-size: 2.5rem; 
+  font-weight: 700; 
+}
+
+.danger-text { 
+  color: var(--neon-magenta); 
+  text-shadow: 0 0 10px rgba(255,0,234,0.4); 
+}
+
+/* =========================================
+   11. LOADER & SPINNER
+========================================= */
+#loader-container { 
+  text-align: center; 
+  padding: 60px 0; 
+}
+
+.cyber-loader { 
+  width: 50px; 
+  height: 50px; 
+  border: 3px solid transparent; 
+  border-top-color: var(--neon-cyan); 
+  border-bottom-color: var(--neon-magenta); 
+  border-radius: 50%; 
+  animation: spin 1s linear infinite; 
+  margin: 0 auto 15px auto; 
+}
+
+@keyframes spin { 
+  100% { 
+    transform: rotate(360deg); 
+  } 
+}
+
+.hidden { 
+  display: none !important; 
+}
+
+/* =========================================
+   12. TOAST NOTIFICATIONS
+========================================= */
+#toast-container { 
+  position: fixed; 
+  bottom: 20px; 
+  right: 20px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  z-index: 1000; 
+}
+
+.toast { 
+  background: rgba(0, 0, 0, 0.8); 
+  border-left: 4px solid var(--success); 
+  backdrop-filter: blur(10px); 
+  padding: 15px 20px; 
+  border-radius: 8px; 
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); 
+  animation: slideIn 0.3s ease-out forwards; 
+  color: white; 
+}
+
+.toast.error { 
+  border-left-color: var(--neon-magenta); 
+  box-shadow: 0 0 15px rgba(255, 0, 234, 0.2); 
+}
+
+@keyframes slideIn { 
+  from { 
+    transform: translateX(100%); 
+    opacity: 0; 
+  } 
+  to { 
+    transform: translateX(0); 
+    opacity: 1; 
+  } 
+}
+
+/* =========================================
+   13. FORM LAYOUT
+========================================= */
+.form-section { 
+  max-width: 600px; 
+  margin: 0 auto; 
+}
+
+.input-row { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 15px; 
+}
+
+.input-group { 
+  margin-bottom: 15px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px;
+}
+
+.input-group label { 
+  color: var(--text-muted); 
+  font-size: 0.9rem; 
+}
