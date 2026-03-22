@@ -34,3 +34,24 @@ function calculateTotal(student) {
 
   return total;
 }
+
+function calculateAverage(total, count) {
+  return total / count;
+}
+
+// Function to check fail conditions
+function checkFail(student) {
+  // Check subject fail
+  for (let mark of student.marks) {
+    if (mark.score <= 40) {
+      return `Fail (Failed in ${mark.subject})`;
+    }
+  }
+
+  // Check attendance
+  if (student.attendance < 75) {
+    return "Fail (Low Attendance)";
+  }
+
+  return null;
+}
