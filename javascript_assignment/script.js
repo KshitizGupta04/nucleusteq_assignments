@@ -63,3 +63,32 @@ function getGrade(avg) {
   else if (avg >= 50) return "C";
   else return "Fail";
 }
+
+// Store subject data
+let subjectData = {};
+
+// Calculate student data
+let topper = { name: "", total: 0 };
+
+students.forEach(student => {
+  const total = calculateTotal(student);
+  const avg = calculateAverage(total, student.marks.length);
+  const failStatus = checkFail(student);
+
+  console.log(`${student.name} Total Marks: ${total}`);
+  console.log(`${student.name} Average: ${avg.toFixed(1)}`);
+
+  // Grade logic
+  if (failStatus) {
+    console.log(`${student.name} Grade: ${failStatus}`);
+  } else {
+    console.log(`${student.name} Grade: ${getGrade(avg)}`);
+  }
+
+  console.log("-------------------");
+
+  // Topper logic
+  if (total > topper.total) {
+    topper.name = student.name;
+    topper.total = total;
+  }
