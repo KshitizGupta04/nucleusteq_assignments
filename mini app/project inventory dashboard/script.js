@@ -34,3 +34,8 @@ let products = [
 
 // Initial render
 renderProducts(products);
+
+function deleteProduct(id) {
+  products = products.filter(product => product.id !== id);
+  renderProducts(products);
+}
