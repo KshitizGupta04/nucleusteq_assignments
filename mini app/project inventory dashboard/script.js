@@ -39,3 +39,20 @@ function deleteProduct(id) {
   products = products.filter(product => product.id !== id);
   renderProducts(products);
 }
+
+document.getElementById("productForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const newProduct = {
+    id: Date.now(),
+    name: document.getElementById("name").value,
+    price: +document.getElementById("price").value,
+    stock: +document.getElementById("stock").value,
+    category: document.getElementById("category").value
+  };
+
+  products.push(newProduct);
+  renderProducts(products);
+
+  this.reset();
+});
