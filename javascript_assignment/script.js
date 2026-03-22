@@ -55,3 +55,11 @@ function checkFail(student) {
 
   return null;
 }
+
+// Function to assign grade
+function getGrade(avg) {
+  if (avg >= 85) return "A";
+  else if (avg >= 70) return "B";
+  else if (avg >= 50) return "C";
+  else return "Fail";
+}
