@@ -1,7 +1,5 @@
 /* Reset */
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
@@ -92,7 +90,7 @@ footer {
     padding: 25px;
 }
 
-/* Hover only on individual lines */
+/* Hover only on specific lines */
 footer li,
 footer p {
     transition: color 0.3s ease;
@@ -100,7 +98,7 @@ footer p {
 
 footer li:hover,
 footer p:hover {
-    color: #1abc9c;  /* nice professional teal */
+    color: #1abc9c;  /* nice professional teal looks creative */
 }
 
 /* Link hover inside footer */
