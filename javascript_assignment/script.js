@@ -92,3 +92,33 @@ students.forEach(student => {
     topper.name = student.name;
     topper.total = total;
   }
+  // Subject-wise calculation
+  student.marks.forEach(mark => {
+    if (!subjectData[mark.subject]) {
+      subjectData[mark.subject] = {
+        total: 0,
+        highest: 0,
+        topper: ""
+      };
+    }
+
+    subjectData[mark.subject].total += mark.score;
+
+    if (mark.score > subjectData[mark.subject].highest) {
+      subjectData[mark.subject].highest = mark.score;
+      subjectData[mark.subject].topper = student.name;
+    }
+  });
+});
+
+// Subject-wise results
+for (let subject in subjectData) {
+  const avg = subjectData[subject].total / students.length;
+
+  console.log(`Highest in ${subject}: ${subjectData[subject].topper} (${subjectData[subject].highest})`);
+  console.log(`Average ${subject} Score: ${avg}`);
+  console.log("-------------------");
+}
+
+// Topper output
+console.log(`Class Topper: ${topper.name} with ${topper.total} marks`);
