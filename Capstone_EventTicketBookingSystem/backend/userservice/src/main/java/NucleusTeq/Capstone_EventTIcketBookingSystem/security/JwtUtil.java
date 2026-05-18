@@ -1,71 +1,52 @@
 package NucleusTeq.Capstone_EventTIcketBookingSystem.security;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY =
-            "myverystrongsecretkeymyverystrongsecretkey12345";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    // Generate JWT Token
-    public String generateToken(String email) {
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
 
+    public String generateToken(String email, String role) {
         return Jwts.builder()
-
                 .setSubject(email)
-
+                .claim("role", role)
                 .setIssuedAt(new Date())
-
-                .setExpiration(
-                        new Date(System.currentTimeMillis()
-                                + 1000 * 60 * 60)
-                )
-
-                .signWith(
-                        SignatureAlgorithm.HS256,
-                        SECRET_KEY.getBytes()
-                )
-
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Extract Email
     public String extractEmail(String token) {
-
-        return extractClaims(token).getSubject();
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
-    // Validate Token
     public boolean validateToken(String token) {
-
         try {
-
-            return !extractClaims(token)
-                    .getExpiration()
-                    .before(new Date());
-
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
         } catch (Exception e) {
-
             return false;
         }
-    }
-
-    // Extract Claims
-    private Claims extractClaims(String token) {
-
-        return Jwts.parser()
-
-                .setSigningKey(SECRET_KEY.getBytes())
-
-                .parseClaimsJws(token)
-
-                .getBody();
     }
 }

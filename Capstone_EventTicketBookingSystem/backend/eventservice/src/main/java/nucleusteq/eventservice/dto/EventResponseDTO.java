@@ -1,0 +1,20 @@
+package nucleusteq.eventservice.dto;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class EventResponseDTO {
+
+    private Long id;
+    private String title;
+    private String description;
+    private String location;
+    private String date;
+    private String time;
+    private Double price;
+    private Integer availableSeats;
+    private String organizerEmail;
+}

@@ -6,8 +6,11 @@ import NucleusTeq.Capstone_EventTIcketBookingSystem.dto.RequestRegisterDTO;
 
 import NucleusTeq.Capstone_EventTIcketBookingSystem.service.AuthService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "*")
 @RestController
 
 @RequestMapping("/auth")
@@ -26,17 +29,21 @@ public class AuthController {
     @PostMapping("/register")
 
     public String registerUser(
-            @RequestBody
+
+            @Valid @RequestBody
             RequestRegisterDTO requestDTO
     ) {
 
-        return authService.registerUser(requestDTO);
+        return authService.registerUser(
+                requestDTO
+        );
     }
 
     @PostMapping("/login")
 
     public LoginResponseDTO loginUser(
-            @RequestBody
+
+            @Valid @RequestBody
             LoginRequestDTO loginRequestDTO
     ) {
 

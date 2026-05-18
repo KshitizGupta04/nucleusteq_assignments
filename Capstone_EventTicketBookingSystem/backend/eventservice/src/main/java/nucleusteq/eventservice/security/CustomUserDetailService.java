@@ -1,7 +1,7 @@
-package NucleusTeq.Capstone_EventTIcketBookingSystem.security;
+package nucleusteq.eventservice.security;
 
-import NucleusTeq.Capstone_EventTIcketBookingSystem.entity.User;
-import NucleusTeq.Capstone_EventTIcketBookingSystem.repository.UserRepository;
+import nucleusteq.eventservice.entity.User;
+import nucleusteq.eventservice.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

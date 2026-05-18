@@ -1,4 +1,4 @@
-package NucleusTeq.Capstone_EventTIcketBookingSystem.entity;
+package nucleusteq.eventservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -6,10 +6,8 @@ import lombok.*;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User {
 
     @Id
