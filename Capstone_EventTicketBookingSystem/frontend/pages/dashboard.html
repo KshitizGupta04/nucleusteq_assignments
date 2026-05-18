@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Organizer Dashboard
+    </title>
+
+    <link rel="stylesheet"
+          href="../style.css">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+
+        Eventify
+
+    </div>
+
+    <ul class="nav-links">
+
+        <li>
+            <a href="home.html">
+                Home
+            </a>
+        </li>
+
+        <li>
+            <a href="#">
+                Dashboard
+            </a>
+        </li>
+
+        <li>
+
+            <a href="#"
+               onclick="logoutUser()">
+
+                Logout
+
+            </a>
+
+        </li>
+
+    </ul>
+
+</nav>
+
+<section class="dashboard-section">
+
+    <div class="dashboard-container">
+
+        <h2>
+            Create Event
+        </h2>
+
+        <form id="eventForm">
+
+            <div class="input-group">
+
+                <label>
+                    Title
+                </label>
+
+                <input type="text"
+                       id="title"
+                       required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Description
+                </label>
+
+                <input type="text"
+                       id="description"
+                       required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Location
+                </label>
+
+                <input type="text"
+                       id="location"
+                       required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Date
+                </label>
+
+                <input type="date"
+                       id="date"
+                       required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Time
+                </label>
+
+                <input type="text"
+                       id="time"
+                       placeholder="7:00 PM"
+                       required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Price
+                </label>
+
+                <input type="number"
+                       id="price"
+                       required>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Available Seats
+                </label>
+
+                <input type="number"
+                       id="availableSeats"
+                       required>
+
+            </div>
+
+            <button type="submit"
+                    class="auth-btn">
+
+                Create Event
+
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+<section class="events-section">
+
+    <h2>
+        Manage Events
+    </h2>
+
+    <div class="event-container"
+         id="eventContainer">
+
+    </div>
+
+</section>
+
+<script src="../services/eventService.js"></script>
+
+<script>
+
+    const token =
+        localStorage.getItem(
+            "token"
+        );
+
+    const role =
+        localStorage.getItem(
+            "role"
+        );
+
+    if(!token || role !== "ORGANISER") {
+
+        alert(
+            "Access Denied"
+        );
+
+        window.location.href =
+            "login.html";
+    }
+
+    function logoutUser() {
+
+        localStorage.clear();
+
+        window.location.href =
+            "login.html";
+    }
+
+    const eventContainer =
+        document.getElementById(
+            "eventContainer"
+        );
+
+    async function loadEvents() {
+
+        try {
+
+            const events =
+                await getAllEvents();
+
+            eventContainer.innerHTML = "";
+
+            if(events.length === 0) {
+
+                eventContainer.innerHTML = `
+
+                    <h3 style="
+                        width:100%;
+                        text-align:center;
+                    ">
+
+                        No Events Available
+
+                    </h3>
+                `;
+
+                return;
+            }
+
+            events.forEach(event => {
+
+                eventContainer.innerHTML += `
+
+                    <div class="event-card">
+
+                        <img src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop"
+                             alt="Event">
+
+                        <div class="event-content">
+
+                            <h3>
+                                ${event.title}
+                            </h3>
+
+                            <p>
+                                📍 ${event.location}
+                            </p>
+
+                            <p>
+                                📅 ${event.date}
+                            </p>
+
+                            <p>
+                                ⏰ ${event.time}
+                            </p>
+
+                            <p class="price">
+                                ₹ ${event.price}
+                            </p>
+
+                            <p>
+                                Seats:
+                                ${event.availableSeats}
+                            </p>
+
+                            <div style="
+                                display:flex;
+                                gap:10px;
+                                margin-top:15px;
+                            ">
+
+                                <button
+                                    onclick="editEvent(${event.id})"
+                                    style="
+                                        flex:1;
+                                        background:#2563eb;
+                                        color:white;
+                                        border:none;
+                                        padding:12px;
+                                        border-radius:8px;
+                                        cursor:pointer;
+                                    ">
+
+                                    Update
+
+                                </button>
+
+                                <button
+                                    onclick="removeEvent(${event.id})"
+                                    style="
+                                        flex:1;
+                                        background:red;
+                                        color:white;
+                                        border:none;
+                                        padding:12px;
+                                        border-radius:8px;
+                                        cursor:pointer;
+                                    ">
+
+                                    Delete
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+            });
+
+        } catch(error) {
+
+            console.log(error);
+
+            eventContainer.innerHTML = `
+
+                <h3 style="
+                    color:red;
+                    width:100%;
+                    text-align:center;
+                ">
+
+                    Failed To Load Events
+
+                </h3>
+            `;
+        }
+    }
+
+    loadEvents();
+
+    const eventForm =
+        document.getElementById(
+            "eventForm"
+        );
+
+    eventForm.addEventListener(
+
+        "submit",
+
+        async function(event) {
+
+            event.preventDefault();
+
+            const eventData = {
+
+                title:
+                    document.getElementById(
+                        "title"
+                    ).value,
+
+                description:
+                    document.getElementById(
+                        "description"
+                    ).value,
+
+                location:
+                    document.getElementById(
+                        "location"
+                    ).value,
+
+                date:
+                    document.getElementById(
+                        "date"
+                    ).value,
+
+                time:
+                    document.getElementById(
+                        "time"
+                    ).value,
+
+                price:
+                    parseFloat(
+                        document.getElementById(
+                            "price"
+                        ).value
+                    ),
+
+                availableSeats:
+                    parseInt(
+                        document.getElementById(
+                            "availableSeats"
+                        ).value
+                    )
+            };
+
+            try {
+
+                const response =
+                    await createEvent(
+                        eventData
+                    );
+
+                alert(response);
+
+                eventForm.reset();
+
+                loadEvents();
+
+            } catch(error) {
+
+                console.log(error);
+
+                alert(
+                    error.message
+                );
+            }
+        }
+    );
+
+    async function removeEvent(id) {
+
+        const confirmDelete =
+            confirm(
+                "Delete this event?"
+            );
+
+        if(!confirmDelete) {
+
+            return;
+        }
+
+        try {
+
+            const response =
+                await deleteEvent(id);
+
+            alert(response);
+
+            loadEvents();
+
+        } catch(error) {
+
+            console.log(error);
+
+            alert(
+                error.message
+            );
+        }
+    }
+
+    async function editEvent(id) {
+
+        try {
+
+            const event =
+                await getEventById(id);
+
+            const title =
+                prompt(
+                    "Enter Title",
+                    event.title
+                );
+
+            const description =
+                prompt(
+                    "Enter Description",
+                    event.description
+                );
+
+            const location =
+                prompt(
+                    "Enter Location",
+                    event.location
+                );
+
+            const date =
+                prompt(
+                    "Enter Date",
+                    event.date
+                );
+
+            const time =
+                prompt(
+                    "Enter Time",
+                    event.time
+                );
+
+            const price =
+                prompt(
+                    "Enter Price",
+                    event.price
+                );
+
+            const availableSeats =
+                prompt(
+                    "Enter Seats",
+                    event.availableSeats
+                );
+
+            const updatedEvent = {
+
+                title,
+                description,
+                location,
+                date,
+                time,
+
+                price:
+                    parseFloat(price),
+
+                availableSeats:
+                    parseInt(
+                        availableSeats
+                    )
+            };
+
+            const response =
+                await updateEvent(
+
+                    id,
+
+                    updatedEvent
+                );
+
+            alert(response);
+
+            loadEvents();
+
+        } catch(error) {
+
+            console.log(error);
+
+            alert(
+                error.message
+            );
+        }
+    }
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Eventify
+    </title>
+
+    <link rel="stylesheet"
+          href="../style.css">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+
+        Eventify
+
+    </div>
+
+    <ul class="nav-links">
+
+        <li>
+            <a href="home.html">
+                Home
+            </a>
+        </li>
+
+        <li>
+            <a href="bookings.html">
+                My Bookings
+            </a>
+        </li>
+
+        <li id="dashboardLink"
+            style="display:none;">
+
+            <a href="dashboard.html">
+                Dashboard
+            </a>
+
+        </li>
+
+        <li id="loginLink">
+
+            <a href="login.html">
+                Login
+            </a>
+
+        </li>
+
+        <li id="registerLink">
+
+            <a href="register.html">
+                Register
+            </a>
+
+        </li>
+
+        <li id="logoutLink"
+            style="display:none;">
+
+            <a href="#"
+               onclick="logoutUser()">
+
+                Logout
+
+            </a>
+
+        </li>
+
+    </ul>
+
+</nav>
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <h1>
+            Book Amazing Events Near You
+        </h1>
+
+        <p>
+            Discover concerts, tech events,
+            comedy shows, sports and more.
+        </p>
+
+        <button class="hero-btn">
+
+            Explore Events
+
+        </button>
+
+    </div>
+
+</section>
+
+<section class="events-section">
+
+    <h2>
+        Featured Events
+    </h2>
+
+    <div class="event-container"
+         id="eventContainer">
+
+    </div>
+
+</section>
+
+<footer class="footer">
+
+    <p>
+        © 2026 Eventify.
+        All Rights Reserved.
+    </p>
+
+</footer>
+
+<script src="../services/authService.js"></script>
+
+<script src="../services/eventService.js"></script>
+
+<script>
+
+    // NAVBAR AUTH LOGIC
+    const token =
+        localStorage.getItem(
+            "token"
+        );
+
+    const role =
+        localStorage.getItem(
+            "role"
+        );
+
+    if(token) {
+
+        document.getElementById(
+            "loginLink"
+        ).style.display = "none";
+
+        document.getElementById(
+            "registerLink"
+        ).style.display = "none";
+
+        document.getElementById(
+            "logoutLink"
+        ).style.display = "block";
+    }
+
+    // ORGANISER DASHBOARD LINK
+    if(role === "ORGANISER") {
+
+        document.getElementById(
+            "dashboardLink"
+        ).style.display = "block";
+    }
+
+    // LOGOUT
+    function logoutUser() {
+
+        localStorage.clear();
+
+        window.location.href =
+            "login.html";
+    }
+
+    // LOAD EVENTS
+    const eventContainer =
+        document.getElementById(
+            "eventContainer"
+        );
+
+    async function loadEvents() {
+
+        try {
+
+            const events =
+                await getAllEvents();
+
+            eventContainer.innerHTML = "";
+
+            // NO EVENTS
+            if(events.length === 0) {
+
+                eventContainer.innerHTML = `
+
+                    <h3 style="
+                        width:100%;
+                        text-align:center;
+                    ">
+
+                        No Events Available
+
+                    </h3>
+                `;
+
+                return;
+            }
+
+            // RENDER EVENTS
+            events.forEach(event => {
+
+                eventContainer.innerHTML += `
+
+                    <div class="event-card">
+
+                        <img src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop"
+                             alt="Event">
+
+                        <div class="event-content">
+
+                            <h3>
+                                ${event.title}
+                            </h3>
+
+                            <p>
+                                📍 ${event.location}
+                            </p>
+
+                            <p>
+                                📅 ${event.date}
+                            </p>
+
+                            <p>
+                                ⏰ ${event.time}
+                            </p>
+
+                            <p class="price">
+                                ₹ ${event.price}
+                            </p>
+
+                            <p>
+                                Seats:
+                                ${event.availableSeats}
+                            </p>
+
+                            <button
+                                onclick="bookEvent(${event.id})">
+
+                                Book Now
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                `;
+            });
+
+        } catch(error) {
+
+            console.log(error);
+
+            eventContainer.innerHTML = `
+
+                <h3 style="
+                    color:red;
+                    text-align:center;
+                    width:100%;
+                ">
+
+                    Failed To Load Events
+
+                </h3>
+            `;
+        }
+    }
+
+    loadEvents();
+
+    // BOOK EVENT
+    function bookEvent(eventId) {
+
+        const token =
+            localStorage.getItem(
+                "token"
+            );
+
+        const role =
+            localStorage.getItem(
+                "role"
+            );
+
+        // NOT LOGGED IN
+        if(!token) {
+
+            alert(
+                "Please login first"
+            );
+
+            window.location.href =
+                "login.html";
+
+            return;
+        }
+
+        // ORGANISER CANNOT BOOK
+        if(role === "ORGANISER") {
+
+            alert(
+                "Organizer cannot book events"
+            );
+
+            return;
+        }
+
+        // REDIRECT TO BOOKINGS PAGE
+        window.location.href =
+            `bookings.html?eventId=${eventId}`;
+    }
+
+</script>
+
+</body>
+
+</html>

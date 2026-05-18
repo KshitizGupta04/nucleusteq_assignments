@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Login
+    </title>
+
+    <link rel="stylesheet"
+          href="../style.css">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+</head>
+
+<body>
+
+<section class="auth-section">
+
+    <div class="auth-card">
+
+        <h2>
+            Login
+        </h2>
+
+        <form id="loginForm">
+
+            <div class="input-group">
+
+                <label>
+                    Email
+                </label>
+
+                <input type="email"
+                       id="email"
+                       placeholder="Enter Email">
+
+                <small class="error-text"
+                       id="emailError">
+
+                </small>
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Password
+                </label>
+
+                <input type="password"
+                       id="password"
+                       placeholder="Enter Password">
+
+                <small class="error-text"
+                       id="passwordError">
+
+                </small>
+
+            </div>
+
+            <button type="submit"
+                    class="auth-btn">
+
+                Login
+
+            </button>
+
+            <small class="error-text center-error"
+                   id="loginError">
+
+            </small>
+
+        </form>
+
+        <p class="auth-link">
+
+            Don't have an account?
+
+            <a href="register.html">
+
+                Register
+
+            </a>
+
+        </p>
+
+    </div>
+
+</section>
+
+<script src="../services/authService.js"></script>
+
+<script>
+
+    const loginForm =
+        document.getElementById(
+            "loginForm"
+        );
+
+    loginForm.addEventListener(
+
+        "submit",
+
+        async function(event) {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById(
+                    "email"
+                ).value.trim();
+
+            const password =
+                document.getElementById(
+                    "password"
+                ).value.trim();
+
+            const emailError =
+                document.getElementById(
+                    "emailError"
+                );
+
+            const passwordError =
+                document.getElementById(
+                    "passwordError"
+                );
+
+            const loginError =
+                document.getElementById(
+                    "loginError"
+                );
+
+            // CLEAR ERRORS
+            emailError.innerText = "";
+            passwordError.innerText = "";
+            loginError.innerText = "";
+
+            let isValid = true;
+
+            // EMAIL VALIDATION
+            if(email === "") {
+
+                emailError.innerText =
+                    "Email is required";
+
+                isValid = false;
+            }
+
+            else if(
+
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                    .test(email)
+
+            ) {
+
+                emailError.innerText =
+                    "Invalid email format";
+
+                isValid = false;
+            }
+
+            // PASSWORD VALIDATION
+            if(password === "") {
+
+                passwordError.innerText =
+                    "Password is required";
+
+                isValid = false;
+            }
+
+            else if(password.length < 6) {
+
+                passwordError.innerText =
+                    "Password must be at least 6 characters";
+
+                isValid = false;
+            }
+
+            if(!isValid) {
+
+                return;
+            }
+
+            const loginData = {
+
+                email,
+                password
+            };
+
+            try {
+
+                const response =
+                    await loginUser(
+                        loginData
+                    );
+
+                // STORE TOKEN
+                localStorage.setItem(
+
+                    "token",
+
+                    response.token
+                );
+
+                // DECODE JWT
+                const payload = JSON.parse(
+
+                    atob(
+                        response.token.split(".")[1]
+                    )
+                );
+
+                // GET ROLE
+                const role =
+                    payload.role;
+
+                // STORE ROLE
+                localStorage.setItem(
+                    "role",
+                    role
+                );
+
+                alert(
+                    "Login Successful"
+                );
+
+                // REDIRECT
+                if(role === "ORGANISER") {
+
+                    window.location.href =
+                        "dashboard.html";
+                }
+
+                else {
+
+                    window.location.href =
+                        "home.html";
+                }
+
+            } catch(error) {
+
+                console.log(error);
+
+                loginError.innerText =
+                    error.message;
+            }
+        }
+    );
+
+</script>
+
+</body>
+
+</html>
