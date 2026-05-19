@@ -1,0 +1,22 @@
+# IDE FILES
+.idea/
+.vscode/
+*.iml
+
+# BUILD FILES
+target/
+build/
+out/
+
+# LOG FILES
+*.log
+
+# NODE MODULES
+node_modules/
+
+# ENV FILES
+.env
+
+# OS FILES
+.DS_Store
+Thumbs.db
