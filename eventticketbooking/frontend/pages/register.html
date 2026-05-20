@@ -1,426 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>
-        Register
-    </title>
-
-    <link rel="stylesheet"
-          href="../style.css">
-
-    <link rel="preconnect"
-          href="https://fonts.googleapis.com">
-
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — Eventify</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="register.css">
 </head>
-
 <body>
+    <div class="auth-page">
+        <div class="auth-bg">
+            <img src="../assets/concert.png" alt="Event" onerror="this.style.display='none'">
+            <div class="auth-bg-overlay"></div>
+        </div>
 
-<nav class="navbar">
+        <div class="auth-panel register-panel">
+            <div class="auth-brand">
+                <span class="logo">Eventify</span>
+            </div>
 
-    <div class="logo">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Create account</h2>
+                    <p>Join thousands discovering amazing events</p>
+                </div>
 
-        Eventify
+                <form id="registerForm">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" placeholder="John Doe">
+                        <small class="error-text" id="nameError"></small>
+                    </div>
 
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="you@example.com">
+                        <small class="error-text" id="emailError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="Min 6 chars, 1 uppercase, 1 number">
+                        <small class="error-text" id="passwordError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Phone</label>
+                        <input type="text" id="phone" placeholder="10-digit number">
+                        <small class="error-text" id="phoneError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Role</label>
+                        <select id="role">
+                            <option value="">Select Role</option>
+                            <option value="CUSTOMER">Customer</option>
+                            <option value="ORGANISER">Organiser</option>
+                        </select>
+                        <small class="error-text" id="roleError"></small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary auth-submit">Create Account</button>
+                    <small class="error-text center-error" id="registerError"></small>
+                </form>
+
+                <p class="auth-link">Already have an account? <a href="login.html">Sign in</a></p>
+            </div>
+        </div>
     </div>
 
-    <ul class="nav-links">
-
-        <li>
-            <a href="home.html">
-                Home
-            </a>
-        </li>
-
-        <li>
-            <a href="#">
-                Events
-            </a>
-        </li>
-
-        <li>
-            <a href="login.html">
-                Login
-            </a>
-        </li>
-
-    </ul>
-
-</nav>
-
-<section class="auth-section">
-
-    <div class="auth-card">
-
-        <h2>
-            Register
-        </h2>
-
-        <form id="registerForm">
-
-            <div class="input-group">
-
-                <label>
-                    Name
-                </label>
-
-                <input type="text"
-                       id="name"
-                       placeholder="Enter your name">
-
-                <small id="nameError"
-                       class="error-text"></small>
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Email
-                </label>
-
-                <input type="email"
-                       id="email"
-                       placeholder="Enter your email">
-
-                <small id="emailError"
-                       class="error-text"></small>
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Password
-                </label>
-
-                <input type="password"
-                       id="password"
-                       placeholder="Enter your password">
-
-                <small id="passwordError"
-                       class="error-text"></small>
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Phone
-                </label>
-
-                <input type="text"
-                       id="phone"
-                       placeholder="Enter your phone number">
-
-                <small id="phoneError"
-                       class="error-text"></small>
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Role
-                </label>
-
-                <select id="role">
-
-                    <option value="">
-                        Select Role
-                    </option>
-
-                    <option value="CUSTOMER">
-                        CUSTOMER
-                    </option>
-
-                    <option value="ORGANISER">
-                        ORGANISER
-                    </option>
-
-                </select>
-
-                <small id="roleError"
-                       class="error-text"></small>
-
-            </div>
-
-            <button type="submit"
-                    class="auth-btn">
-
-                Register
-
-            </button>
-
-            <small id="registerError"
-                   class="error-text center-error"></small>
-
-        </form>
-
-        <p class="auth-link">
-
-            Already have an account?
-
-            <a href="login.html">
-
-                Login
-
-            </a>
-
-        </p>
-
-    </div>
-
-</section>
-
-<script>
-
-    const registerForm =
-        document.getElementById(
-            "registerForm"
-        );
-
-    registerForm.addEventListener(
-
-        "submit",
-
-        function(event) {
-
-            event.preventDefault();
-
-            const name =
-                document.getElementById(
-                    "name"
-                ).value.trim();
-
-            const email =
-                document.getElementById(
-                    "email"
-                ).value.trim();
-
-            const password =
-                document.getElementById(
-                    "password"
-                ).value.trim();
-
-            const phone =
-                document.getElementById(
-                    "phone"
-                ).value.trim();
-
-            const role =
-                document.getElementById(
-                    "role"
-                ).value;
-
-            const nameError =
-                document.getElementById(
-                    "nameError"
-                );
-
-            const emailError =
-                document.getElementById(
-                    "emailError"
-                );
-
-            const passwordError =
-                document.getElementById(
-                    "passwordError"
-                );
-
-            const phoneError =
-                document.getElementById(
-                    "phoneError"
-                );
-
-            const roleError =
-                document.getElementById(
-                    "roleError"
-                );
-
-            const registerError =
-                document.getElementById(
-                    "registerError"
-                );
-
-            nameError.innerText = "";
-            emailError.innerText = "";
-            passwordError.innerText = "";
-            phoneError.innerText = "";
-            roleError.innerText = "";
-            registerError.innerText = "";
-
-            let isValid = true;
-
-            // NAME VALIDATION
-            if (name === "") {
-
-                nameError.innerText =
-                    "Name is required";
-
-                isValid = false;
-            }
-
-            else if (name.length < 3) {
-
-                nameError.innerText =
-                    "Name must be at least 3 characters";
-
-                isValid = false;
-            }
-
-            else if (!/^[A-Za-z ]+$/
-                .test(name)) {
-
-                nameError.innerText =
-                    "Name can contain only alphabets";
-
-                isValid = false;
-            }
-
-            // EMAIL VALIDATION
-            if (email === "") {
-
-                emailError.innerText =
-                    "Email is required";
-
-                isValid = false;
-            }
-
-            else if (
-                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                    .test(email)
-            ) {
-
-                emailError.innerText =
-                    "Invalid email format";
-
-                isValid = false;
-            }
-
-            // PASSWORD VALIDATION
-            if (password === "") {
-
-                passwordError.innerText =
-                    "Password is required";
-
-                isValid = false;
-            }
-
-            else if (password.length < 6) {
-
-                passwordError.innerText =
-                    "Password must be at least 6 characters";
-
-                isValid = false;
-            }
-
-            else if (
-                password.includes(" ")
-            ) {
-
-                passwordError.innerText =
-                    "Password cannot contain spaces";
-
-                isValid = false;
-            }
-
-            else if (
-                !/[A-Z]/.test(password)
-            ) {
-
-                passwordError.innerText =
-                    "Password must contain one uppercase letter";
-
-                isValid = false;
-            }
-
-            else if (
-                !/[0-9]/.test(password)
-            ) {
-
-                passwordError.innerText =
-                    "Password must contain one number";
-
-                isValid = false;
-            }
-
-            // PHONE VALIDATION
-            if (phone === "") {
-
-                phoneError.innerText =
-                    "Phone number is required";
-
-                isValid = false;
-            }
-
-            else if (
-                !/^[0-9]{10}$/
-                    .test(phone)
-            ) {
-
-                phoneError.innerText =
-                    "Phone number must be exactly 10 digits";
-
-                isValid = false;
-            }
-
-            // ROLE VALIDATION
-            if (role === "") {
-
-                roleError.innerText =
-                    "Please select a role";
-
-                isValid = false;
-            }
-
-            if (!isValid) {
-
-                return;
-            }
-
-           const userData = {
-
-    name,
-    email,
-    password,
-    phone,
-    role
-};
-
-registerUser(userData)
-
-    .then(response => {
-
-        alert(response);
-
-        window.location.href =
-            "home.html";
-    })
-
-    .catch(error => {
-
-        registerError.innerText =
-            error.message;
-    });
-
-        }
-    );
-
-</script>
-<script src="../services/authService.js"></script>
+    <script src="../components/toast.js"></script>
+    <script src="../components/validator.js"></script>
+    <script src="../services/authService.js"></script>
+    <script src="register.js"></script>
 </body>
 </html>

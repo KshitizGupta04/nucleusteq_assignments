@@ -1,348 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>
-        My Bookings
-    </title>
-
-    <link rel="stylesheet"
-          href="../style.css">
-
-    <link rel="preconnect"
-          href="https://fonts.googleapis.com">
-
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings — Eventify</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="bookings.css">
 </head>
-
 <body>
-
-<nav class="navbar">
-
-    <div class="logo">
-
-        Eventify
-
-    </div>
-
-    <ul class="nav-links">
-
-        <li>
-            <a href="home.html">
-                Home
-            </a>
-        </li>
-
-        <li>
-            <a href="#">
-                My Bookings
-            </a>
-        </li>
-
-        <li>
-
-            <a href="#"
-               onclick="logoutUser()">
-
-                Logout
-
-            </a>
-
-        </li>
-
-    </ul>
-
-</nav>
-
-<section class="dashboard-section">
-
-    <div class="dashboard-container">
-
-        <h2>
-            Book Event
-        </h2>
-
-        <form id="bookingForm">
-
-            <div class="input-group">
-
-                <label>
-                    Number Of Tickets
-                </label>
-
-                <input type="number"
-                       id="numberOfTickets"
-                       min="1"
-                       required>
-
+    <div class="bookings-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="logo">Eventify</span>
             </div>
 
-            <button type="submit"
-                    class="auth-btn">
-
-                Book Tickets
-
-            </button>
-
-        </form>
-
-    </div>
-
-</section>
-
-<section class="events-section">
-
-    <h2>
-        My Bookings
-    </h2>
-
-    <div class="event-container"
-         id="bookingContainer">
-
-    </div>
-
-</section>
-
-<script src="../services/bookingService.js"></script>
-
-<script>
-
-    // CUSTOMER AUTH CHECK
-    const token =
-        localStorage.getItem(
-            "token"
-        );
-
-    const role =
-        localStorage.getItem(
-            "role"
-        );
-
-    if(!token || role !== "CUSTOMER") {
-
-        alert(
-            "Access Denied"
-        );
-
-        window.location.href =
-            "login.html";
-    }
-
-    // LOGOUT
-    function logoutUser() {
-
-        localStorage.clear();
-
-        window.location.href =
-            "login.html";
-    }
-
-    // GET EVENT ID
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-    const eventId =
-        params.get("eventId");
-
-    // BOOK EVENT
-    const bookingForm =
-        document.getElementById(
-            "bookingForm"
-        );
-
-    bookingForm.addEventListener(
-
-        "submit",
-
-        async function(event) {
-
-            event.preventDefault();
-
-            const bookingData = {
-
-                eventId:
-                    parseInt(eventId),
-
-                numberOfTickets:
-                    parseInt(
-                        document.getElementById(
-                            "numberOfTickets"
-                        ).value
-                    )
-            };
-
-            try {
-
-                const response =
-                    await bookTickets(
-                        bookingData
-                    );
-
-                alert(response);
-
-                bookingForm.reset();
-
-                loadBookings();
-
-            } catch(error) {
-
-                console.log(error);
-
-                alert(
-                    error.message
-                );
-            }
-        }
-    );
-
-    // LOAD BOOKINGS
-    const bookingContainer =
-        document.getElementById(
-            "bookingContainer"
-        );
-
-    async function loadBookings() {
-
-        try {
-
-            const bookings =
-                await getMyBookings();
-
-            bookingContainer.innerHTML = "";
-
-            if(bookings.length === 0) {
-
-                bookingContainer.innerHTML = `
-
-                    <h3 style="
-                        width:100%;
-                        text-align:center;
-                    ">
-
-                        No Bookings Available
-
-                    </h3>
-                `;
-
-                return;
-            }
-
-            bookings.forEach(booking => {
-
-                bookingContainer.innerHTML += `
-
-                    <div class="event-card">
-
-                        <img src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1200&auto=format&fit=crop"
-                             alt="Booking">
-
-                        <div class="event-content">
-
-                            <h3>
-                                Booking ID:
-                                ${booking.id}
-                            </h3>
-
-                            <p>
-                                Event ID:
-                                ${booking.eventId}
-                            </p>
-
-                            <p>
-                                Tickets:
-                                ${booking.numberOfTickets}
-                            </p>
-
-                            <p>
-                                Status:
-                                ${booking.bookingStatus}
-                            </p>
-
-                            <button
-                                onclick="removeBooking(${booking.id})"
-                                style="
-                                    background:red;
-                                ">
-
-                                Cancel Booking
-
-                            </button>
-
-                        </div>
-
+            <div class="sidebar-body">
+                <h4 class="form-title">Book an Event</h4>
+                <form id="bookingForm">
+                    <div class="input-group">
+                        <label>Number of Tickets</label>
+                        <input type="number" id="numberOfTickets" min="1" placeholder="1">
+                        <small class="error-text" id="ticketsError"></small>
                     </div>
-                `;
-            });
+                    <button type="submit" class="btn btn-primary book-btn">Book Tickets</button>
+                </form>
+            </div>
+        </aside>
 
-        } catch(error) {
+        <div class="bookings-main">
+            <nav class="top-nav">
+                <div class="top-nav-left">
+                    <h2>My Bookings</h2>
+                </div>
+                <div class="top-nav-right">
+                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()"></button>
+                    <a href="home.html" class="btn btn-outline">Home</a>
+                    <button class="btn btn-danger" onclick="logoutUser()">Logout</button>
+                </div>
+            </nav>
 
-            console.log(error);
+            <div class="main-content">
+                <div class="booking-container" id="bookingContainer"></div>
+            </div>
+        </div>
+    </div>
 
-            bookingContainer.innerHTML = `
-
-                <h3 style="
-                    color:red;
-                    width:100%;
-                    text-align:center;
-                ">
-
-                    Failed To Load Bookings
-
-                </h3>
-            `;
-        }
-    }
-
-    loadBookings();
-
-    // CANCEL BOOKING
-    async function removeBooking(id) {
-
-        const confirmCancel =
-            confirm(
-                "Cancel this booking?"
-            );
-
-        if(!confirmCancel) {
-
-            return;
-        }
-
-        try {
-
-            const response =
-                await cancelBooking(id);
-
-            alert(response);
-
-            loadBookings();
-
-        } catch(error) {
-
-            console.log(error);
-
-            alert(
-                error.message
-            );
-        }
-    }
-
-</script>
-
+    <script src="../components/toast.js"></script>
+    <script src="../components/navbar.js"></script>
+    <script src="../components/eventCard.js"></script>
+    <script src="../components/validator.js"></script>
+    <script src="../services/bookingService.js"></script>
+    <script src="bookings.js"></script>
 </body>
-
 </html>

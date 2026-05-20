@@ -1,129 +1,40 @@
-const BOOKING_URL =
-    "http://localhost:8082/bookings";
+const BOOKING_URL = "http://localhost:8082/api/v1/bookings";
 
-// GET TOKEN
-function getBookingToken() {
-
-    return localStorage.getItem(
-        "token"
-    );
+function getToken() {
+    return localStorage.getItem("token");
 }
 
-// AUTH HEADERS
-function getBookingHeaders() {
-
-    return {
-
-        "Content-Type":
-            "application/json",
-
-        Authorization:
-            `Bearer ${getBookingToken()}`
-    };
-}
-
-// BOOK TICKETS
 async function bookTickets(bookingData) {
+    const response = await fetch(BOOKING_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify(bookingData)
+    });
 
-    try {
-
-        const response = await fetch(
-
-            BOOKING_URL,
-
-            {
-                method: "POST",
-
-                headers:
-                    getBookingHeaders(),
-
-                body: JSON.stringify(
-                    bookingData
-                )
-            }
-        );
-
-        const data =
-            await response.text();
-
-        if(!response.ok) {
-
-            throw new Error(data);
-        }
-
-        return data;
-
-    } catch(error) {
-
-        console.log(error);
-
-        throw error;
-    }
+    const data = await response.text();
+    if (!response.ok) throw new Error(data);
+    return data;
 }
 
-// GET MY BOOKINGS
 async function getMyBookings() {
+    const response = await fetch(`${BOOKING_URL}/my-bookings`, {
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
 
-    try {
-
-        const response = await fetch(
-
-            `${BOOKING_URL}/my-bookings`,
-
-            {
-                headers:
-                    getBookingHeaders()
-            }
-        );
-
-        if(!response.ok) {
-
-            throw new Error(
-                "Failed to fetch bookings"
-            );
-        }
-
-        return await response.json();
-
-    } catch(error) {
-
-        console.log(error);
-
-        throw error;
-    }
+    if (!response.ok) throw new Error("Failed to fetch bookings");
+    return await response.json();
 }
 
-// CANCEL BOOKING
 async function cancelBooking(id) {
+    const response = await fetch(`${BOOKING_URL}/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${getToken()}` }
+    });
 
-    try {
-
-        const response = await fetch(
-
-            `${BOOKING_URL}/${id}`,
-
-            {
-                method: "DELETE",
-
-                headers:
-                    getBookingHeaders()
-            }
-        );
-
-        const data =
-            await response.text();
-
-        if(!response.ok) {
-
-            throw new Error(data);
-        }
-
-        return data;
-
-    } catch(error) {
-
-        console.log(error);
-
-        throw error;
-    }
+    const data = await response.text();
+    if (!response.ok) throw new Error(data);
+    return data;
 }
