@@ -1,47 +1,282 @@
-const DEFAULT_EVENT_IMAGE = "../assets/concert.png";
+const DEFAULT_EVENT_IMAGE =
+    "../assets/concert.png";
+
+
+// ======================================
+// EVENT IMAGE
+// ======================================
 
 function getEventImage(imageUrl) {
-    return imageUrl && imageUrl.trim() !== "" ? imageUrl : DEFAULT_EVENT_IMAGE;
+
+    return imageUrl &&
+    imageUrl.trim() !== ""
+
+        ? imageUrl
+
+        : DEFAULT_EVENT_IMAGE;
 }
 
-function renderEventCard({ event, showActions = true, actionButtons = [] }) {
-    const imgSrc = getEventImage(event.imageUrl);
 
-    const actionsHtml = showActions && actionButtons.length > 0
-        ? `<div class="event-actions">${actionButtons.map(btn =>
-            `<button class="btn ${btn.class}" onclick="${btn.onclick}">${btn.label}</button>`
-        ).join("")}</div>`
-        : "";
+// ======================================
+// EVENT CARD
+// ======================================
+
+function renderEventCard({
+    event,
+    actionButtons
+}) {
 
     return `
+
         <div class="event-card">
-            <img src="${imgSrc}" alt="${event.title}" onerror="this.src='${DEFAULT_EVENT_IMAGE}'">
-            <div class="event-content">
-                <h3>${event.title}</h3>
-                ${event.description ? `<p class="description">${event.description}</p>` : ""}
-                <p>📍 ${event.location}</p>
-                <p>📅 ${event.date} &nbsp; ⏰ ${event.time}</p>
-                <p class="price">₹ ${event.price}</p>
-                <p>${event.availableSeats} seats available</p>
-                ${actionsHtml}
+
+            <div class="event-image-wrapper">
+
+                <img
+
+                    src="${getEventImage(event.imageUrl)}"
+
+                    alt="${event.title}"
+
+                    class="event-image"
+
+                    onerror="this.src='${DEFAULT_EVENT_IMAGE}'"
+                >
+
             </div>
+
+            <div class="event-content">
+
+                <div class="event-top">
+
+                    <h3 class="event-title">
+
+                        ${event.title}
+
+                    </h3>
+
+                    <span class="event-price">
+
+                        ₹${event.price}
+
+                    </span>
+
+                </div>
+
+                <p class="event-description">
+
+                    ${event.description}
+
+                </p>
+
+                <div class="event-details">
+
+                    <div class="event-detail-item">
+
+                        📍 ${event.location}
+
+                    </div>
+
+                    <div class="event-detail-item">
+
+                        📅 ${event.date}
+
+                    </div>
+
+                    <div class="event-detail-item">
+
+                        ⏰ ${event.time}
+
+                    </div>
+
+                    <div class="event-detail-item">
+
+                        🎟 ${event.availableSeats}
+                        Seats Left
+
+                    </div>
+
+                </div>
+
+                <div class="event-actions">
+
+                    ${actionButtons.map(button => `
+
+                        <button
+
+                            class="btn ${button.class}"
+
+                            onclick="${button.onclick}"
+                        >
+
+                            ${button.label}
+
+                        </button>
+
+                    `).join("")}
+
+                </div>
+
+            </div>
+
         </div>
     `;
 }
 
+
+// ======================================
+// BOOKING CARD
+// ======================================
+
 function renderBookingCard(booking) {
-    const statusClass = booking.bookingStatus === "BOOKED" ? "badge-booked" : "badge-cancelled";
-    const cancelBtn = booking.bookingStatus === "BOOKED"
-        ? `<button class="btn btn-danger cancel-btn" onclick="removeBooking(${booking.id})">Cancel Booking</button>`
-        : "";
+
+    const eventDateTime = new Date(
+        `${booking.eventDate}T${booking.eventTime}`
+    );
+
+    const isCompleted =
+        new Date() > eventDateTime;
+
+
+    let statusText =
+        booking.bookingStatus;
+
+    let statusClass =
+        "badge-booked";
+
+
+    // =====================================
+    // COMPLETED EVENT
+    // =====================================
+
+    if (
+
+        isCompleted
+
+        &&
+
+        booking.bookingStatus === "BOOKED"
+    ) {
+
+        statusText = "COMPLETED";
+
+        statusClass = "badge-completed";
+    }
+
+
+    // =====================================
+    // CANCELLED BOOKING
+    // =====================================
+
+    if (
+
+        booking.bookingStatus === "CANCELLED"
+    ) {
+
+        statusClass = "badge-cancelled";
+    }
+
+
+    // =====================================
+    // SHOW CANCEL BUTTON ONLY
+    // FOR ACTIVE BOOKINGS
+    // =====================================
+
+    const cancelBtn =
+
+        !isCompleted
+
+        &&
+
+        booking.bookingStatus === "BOOKED"
+
+            ? `
+
+                <button
+
+                    class="
+                        btn
+                        btn-danger
+                        cancel-btn
+                    "
+
+                    onclick="
+                        removeBooking(${booking.id})
+                    "
+                >
+
+                    Cancel Booking
+
+                </button>
+            `
+
+            : "";
+
 
     return `
+
         <div class="booking-card">
-            <h3>Booking #${booking.id}</h3>
-            <p>Event ID: ${booking.eventId}</p>
-            <p>Tickets: ${booking.numberOfTickets}</p>
-            <p>Status: <span class="badge ${statusClass}">${booking.bookingStatus}</span></p>
+
+            <div class="booking-header">
+
+                <h3>
+
+                    ${booking.eventTitle || `Booking #${booking.id}`}
+
+                </h3>
+
+                <span class="
+                    badge
+                    ${statusClass}
+                ">
+
+                    ${statusText}
+
+                </span>
+
+            </div>
+
+            <div class="booking-details">
+
+                <p>
+
+                    🎫 Event ID:
+                    ${booking.eventId}
+
+                </p>
+
+                <p>
+
+                    👥 Tickets:
+                    ${booking.numberOfTickets}
+
+                </p>
+
+                <p>
+
+                    📍 Location:
+                    ${booking.eventLocation || "N/A"}
+
+                </p>
+
+                <p>
+
+                    📅 Date:
+                    ${booking.eventDate || "N/A"}
+
+                </p>
+
+                <p>
+
+                    ⏰ Time:
+                    ${booking.eventTime || "N/A"}
+
+                </p>
+
+            </div>
+
             ${cancelBtn}
+
         </div>
     `;
 }

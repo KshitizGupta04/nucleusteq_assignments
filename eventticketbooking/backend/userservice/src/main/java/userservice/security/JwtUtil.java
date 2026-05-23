@@ -16,36 +16,102 @@ public class JwtUtil {
     private String secretKey;
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+
+        return Keys.hmacShaKeyFor(
+                secretKey.getBytes()
+        );
     }
 
-    public String generateToken(String email, String role) {
+
+    // =====================================
+    // GENERATE TOKEN
+    // =====================================
+
+    public String generateToken(
+
+            String email,
+
+            String role
+    ) {
+
         return Jwts.builder()
+
                 .setSubject(email)
+
                 .claim("role", role)
+
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+
+                // 30 MINUTES EXPIRY
+                .setExpiration(
+
+                        new Date(
+
+                                System.currentTimeMillis()
+
+                                        + 1000 * 60 * 30
+                        )
+                )
+
+                .signWith(
+
+                        getSigningKey(),
+
+                        SignatureAlgorithm.HS256
+                )
+
                 .compact();
     }
 
-    public String extractEmail(String token) {
+
+    // =====================================
+    // EXTRACT EMAIL
+    // =====================================
+
+    public String extractEmail(
+            String token
+    ) {
+
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+
+                .setSigningKey(
+                        getSigningKey()
+                )
+
                 .build()
+
                 .parseClaimsJws(token)
+
                 .getBody()
+
                 .getSubject();
     }
 
-    public boolean validateToken(String token) {
+
+    // =====================================
+    // VALIDATE TOKEN
+    // =====================================
+
+    public boolean validateToken(
+            String token
+    ) {
+
         try {
+
             Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+
+                    .setSigningKey(
+                            getSigningKey()
+                    )
+
                     .build()
+
                     .parseClaimsJws(token);
+
             return true;
+
         } catch (Exception e) {
+
             return false;
         }
     }

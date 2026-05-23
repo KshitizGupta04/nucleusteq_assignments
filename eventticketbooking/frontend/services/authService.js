@@ -8,8 +8,8 @@ async function registerUser(userData) {
     });
 
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        const error = await response.json();
+        throw new Error(error.message || "Registration failed");
     }
 
     return await response.text();
@@ -23,8 +23,8 @@ async function loginUser(loginData) {
     });
 
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
     }
 
     return await response.json();

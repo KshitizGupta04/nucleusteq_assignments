@@ -1,67 +1,196 @@
-const EVENT_URL = "http://localhost:8082/api/v1/events";
+const BASE_URL =
+    "http://localhost:8082/api/v1/events";
 
-function getToken() {
-    return localStorage.getItem("token");
-}
 
-function authHeaders() {
+// ======================================
+// AUTH HEADERS
+// ======================================
+
+function getAuthHeaders() {
+
+    const token =
+        localStorage.getItem("token");
+
     return {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${getToken()}`
+
+        "Authorization":
+            `Bearer ${token}`
     };
 }
 
+
+// ======================================
+// HANDLE ERROR RESPONSE
+// ======================================
+
+async function handleError(response) {
+
+    let errorMessage =
+        "Something went wrong";
+
+    try {
+
+        const errorData =
+            await response.json();
+
+        errorMessage =
+
+            errorData.message
+
+            ||
+
+            errorMessage;
+
+    } catch {
+
+        // ignore parse error
+    }
+
+    throw new Error(errorMessage);
+}
+
+
+// ======================================
+// GET ALL EVENTS
+// ======================================
+
 async function getAllEvents() {
-    const response = await fetch(EVENT_URL);
-    if (!response.ok) throw new Error("Failed to fetch events");
+
+    const response =
+        await fetch(BASE_URL);
+
+    if (!response.ok) {
+
+        await handleError(response);
+    }
+
     return await response.json();
 }
+
+
+// ======================================
+// GET MY EVENTS
+// ======================================
+
+async function getMyEvents() {
+
+    const response = await fetch(
+
+        `${BASE_URL}/my-events`,
+
+        {
+            headers:
+                getAuthHeaders()
+        }
+    );
+
+    if (!response.ok) {
+
+        await handleError(response);
+    }
+
+    return await response.json();
+}
+
+
+// ======================================
+// GET EVENT BY ID
+// ======================================
 
 async function getEventById(id) {
-    const response = await fetch(`${EVENT_URL}/${id}`);
-    if (!response.ok) throw new Error("Event not found");
+
+    const response = await fetch(
+        `${BASE_URL}/${id}`
+    );
+
+    if (!response.ok) {
+
+        await handleError(response);
+    }
+
     return await response.json();
 }
 
-async function createEvent(eventData) {
-    const response = await fetch(EVENT_URL, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify(eventData)
-    });
+
+// ======================================
+// CREATE EVENT
+// ======================================
+
+async function createEvent(formData) {
+
+    const response = await fetch(
+
+        BASE_URL,
+
+        {
+            method: "POST",
+
+            headers:
+                getAuthHeaders(),
+
+            body: formData
+        }
+    );
 
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+
+        await handleError(response);
     }
 
     return await response.text();
 }
 
-async function updateEvent(id, eventData) {
-    const response = await fetch(`${EVENT_URL}/${id}`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify(eventData)
-    });
+
+// ======================================
+// UPDATE EVENT
+// ======================================
+
+async function updateEvent(id, formData) {
+
+    const response = await fetch(
+
+        `${BASE_URL}/${id}`,
+
+        {
+            method: "PUT",
+
+            headers:
+                getAuthHeaders(),
+
+            body: formData
+        }
+    );
 
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+
+        await handleError(response);
     }
 
     return await response.text();
 }
+
+
+// ======================================
+// DELETE EVENT
+// ======================================
 
 async function deleteEvent(id) {
-    const response = await fetch(`${EVENT_URL}/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${getToken()}` }
-    });
+
+    const response = await fetch(
+
+        `${BASE_URL}/${id}`,
+
+        {
+            method: "DELETE",
+
+            headers:
+                getAuthHeaders()
+        }
+    );
 
     if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+
+        await handleError(response);
     }
 
     return await response.text();

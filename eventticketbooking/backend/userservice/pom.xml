@@ -1,262 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- SPRING BOOT PARENT -->
+	<!-- SPRING BOOT -->
 	<parent>
-
-		<groupId>
-			org.springframework.boot
-		</groupId>
-
-		<artifactId>
-			spring-boot-starter-parent
-		</artifactId>
-
-		<version>
-			4.0.6
-		</version>
-
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.0.6</version>
 		<relativePath/>
-
 	</parent>
 
-	<!-- PROJECT INFO -->
-	<groupId>
-		com.nucleusteq
-	</groupId>
+	<!-- PROJECT -->
+	<groupId>com.nucleusteq</groupId>
+	<artifactId>userservice</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
 
-	<artifactId>
-		userservice
-	</artifactId>
-
-	<version>
-		0.0.1-SNAPSHOT
-	</version>
-
-	<name>
-		userservice
-	</name>
+	<name>userservice</name>
 
 	<description>
 		User Service for Event Ticket Booking System
 	</description>
 
-	<!-- JAVA VERSION -->
 	<properties>
-
-		<java.version>
-			17
-		</java.version>
-
+		<java.version>17</java.version>
 	</properties>
 
 	<!-- DEPENDENCIES -->
 	<dependencies>
 
-		<!-- SPRING WEB -->
+		<!-- WEB -->
 		<dependency>
-
-			<groupId>
-				org.springframework.boot
-			</groupId>
-
-			<artifactId>
-				spring-boot-starter-web
-			</artifactId>
-
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- SPRING DATA JPA -->
+		<!-- JPA -->
 		<dependency>
-
-			<groupId>
-				org.springframework.boot
-			</groupId>
-
-			<artifactId>
-				spring-boot-starter-data-jpa
-			</artifactId>
-
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
-		<!-- SPRING SECURITY -->
+		<!-- SECURITY -->
 		<dependency>
-
-			<groupId>
-				org.springframework.boot
-			</groupId>
-
-			<artifactId>
-				spring-boot-starter-security
-			</artifactId>
-
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- SPRING VALIDATION -->
+		<!-- VALIDATION -->
 		<dependency>
-
-			<groupId>
-				org.springframework.boot
-			</groupId>
-
-			<artifactId>
-				spring-boot-starter-validation
-			</artifactId>
-
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
 		<!-- JWT -->
 		<dependency>
-
-			<groupId>
-				io.jsonwebtoken
-			</groupId>
-
-			<artifactId>
-				jjwt-api
-			</artifactId>
-
-			<version>
-				0.11.5
-			</version>
-
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
 		</dependency>
 
 		<dependency>
-
-			<groupId>
-				io.jsonwebtoken
-			</groupId>
-
-			<artifactId>
-				jjwt-impl
-			</artifactId>
-
-			<version>
-				0.11.5
-			</version>
-
-			<scope>
-				runtime
-			</scope>
-
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
-
-			<groupId>
-				io.jsonwebtoken
-			</groupId>
-
-			<artifactId>
-				jjwt-jackson
-			</artifactId>
-
-			<version>
-				0.11.5
-			</version>
-
-			<scope>
-				runtime
-			</scope>
-
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- MYSQL -->
 		<dependency>
-
-			<groupId>
-				com.mysql
-			</groupId>
-
-			<artifactId>
-				mysql-connector-j
-			</artifactId>
-
-			<scope>
-				runtime
-			</scope>
-
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!-- LOMBOK -->
 		<dependency>
-
-			<groupId>
-				org.projectlombok
-			</groupId>
-
-			<artifactId>
-				lombok
-			</artifactId>
-
-			<optional>
-				true
-			</optional>
-
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- DEVTOOLS -->
 		<dependency>
-
-			<groupId>
-				org.springframework.boot
-			</groupId>
-
-			<artifactId>
-				spring-boot-devtools
-			</artifactId>
-
-			<scope>
-				runtime
-			</scope>
-
-			<optional>
-				true
-			</optional>
-
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 
-		<!-- TESTING -->
+		<!-- TEST -->
 		<dependency>
-
-			<groupId>
-				org.springframework.boot
-			</groupId>
-
-			<artifactId>
-				spring-boot-starter-test
-			</artifactId>
-
-			<scope>
-				test
-			</scope>
-
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 
-		<!-- SPRING SECURITY TEST -->
+		<!-- SECURITY TEST -->
 		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 
-			<groupId>
-				org.springframework.security
-			</groupId>
-
-			<artifactId>
-				spring-security-test
-			</artifactId>
-
-			<scope>
-				test
-			</scope>
-
+		<!-- MOCKITO -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 	</dependencies>
@@ -268,55 +130,119 @@
 
 			<!-- SPRING BOOT -->
 			<plugin>
-
-				<groupId>
-					org.springframework.boot
-				</groupId>
-
-				<artifactId>
-					spring-boot-maven-plugin
-				</artifactId>
-
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
-			<!-- MAVEN COMPILER -->
+			<!-- COMPILER -->
 			<plugin>
 
-				<groupId>
-					org.apache.maven.plugins
-				</groupId>
-
-				<artifactId>
-					maven-compiler-plugin
-				</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
 
 				<configuration>
 
-					<source>
-						17
-					</source>
-
-					<target>
-						17
-					</target>
+					<source>17</source>
+					<target>17</target>
 
 					<annotationProcessorPaths>
 
 						<path>
-
-							<groupId>
-								org.projectlombok
-							</groupId>
-
-							<artifactId>
-								lombok
-							</artifactId>
-
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
 						</path>
 
 					</annotationProcessorPaths>
 
 				</configuration>
+
+			</plugin>
+
+			<!-- JACOCO -->
+			<plugin>
+
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.10</version>
+
+				<executions>
+
+					<!-- ENABLE COVERAGE -->
+					<execution>
+
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+
+					</execution>
+
+					<!-- GENERATE REPORT -->
+					<execution>
+
+						<id>report</id>
+						<phase>test</phase>
+
+						<goals>
+							<goal>report</goal>
+						</goals>
+
+						<configuration>
+
+							<excludes>
+
+								<!-- NON BUSINESS LAYERS -->
+
+								<exclude>**/config/**</exclude>
+								<exclude>**/controller/**</exclude>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/entity/**</exclude>
+								<exclude>**/exception/**</exclude>
+								<exclude>**/security/**</exclude>
+
+							</excludes>
+
+						</configuration>
+
+					</execution>
+
+					<!-- COVERAGE CHECK -->
+					<execution>
+
+						<id>check</id>
+
+						<goals>
+							<goal>check</goal>
+						</goals>
+
+						<configuration>
+
+							<rules>
+
+								<rule>
+
+									<element>BUNDLE</element>
+
+									<limits>
+
+										<limit>
+
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.70</minimum>
+
+										</limit>
+
+									</limits>
+
+								</rule>
+
+							</rules>
+
+						</configuration>
+
+					</execution>
+
+				</executions>
 
 			</plugin>
 

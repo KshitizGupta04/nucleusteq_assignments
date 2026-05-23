@@ -1,28 +1,5 @@
-body { overflow: hidden; }
-
-.dashboard-wrapper {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-}
-
-.sidebar {
-    width: 340px;
-    min-width: 340px;
-    background: var(--bg-card);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.sidebar-brand {
-    padding: 24px 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
+body {
+    padding-top: 65px;
 }
 
 .sidebar-role {
@@ -36,25 +13,123 @@ body { overflow: hidden; }
     border-radius: 20px;
 }
 
-.sidebar-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px 28px;
+.dashboard-main {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 32px 40px;
 }
 
-.form-title {
-    font-size: 0.76rem;
+.dashboard-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.dashboard-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
     font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 20px;
 }
 
-#eventForm {
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-box input {
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    min-width: 240px;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    border-color: var(--accent);
+}
+
+.search-box input::placeholder {
+    color: var(--text-muted);
+}
+
+/* MODAL */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    backdrop-filter: blur(6px);
+    animation: fadeModal 0.25s ease;
+}
+
+.modal.active {
+    display: flex;
+}
+
+@keyframes fadeModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    width: 520px;
+    max-width: 95vw;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 32px;
+    border-radius: 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    animation: scaleModal 0.25s ease;
+}
+
+@keyframes scaleModal {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+}
+
+.close-btn {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    padding: 4px 8px;
+}
+
+.close-btn:hover {
+    color: var(--danger);
+}
+
+#eventForm,
+#editEventForm {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .form-row {
@@ -69,50 +144,46 @@ body { overflow: hidden; }
     margin-top: 4px;
 }
 
-.dashboard-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .dashboard-main {
+        padding: 24px 20px;
+    }
+
+    .dashboard-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .topbar-right {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .search-box input {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
-.top-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 40px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    flex-shrink: 0;
+
+.booking-row {
+
+    padding: 12px 0;
 }
 
-.top-nav-left h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.4rem;
-    font-weight: 600;
+.booking-row p {
+
+    margin: 6px 0;
 }
 
-.top-nav-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+#bookingModalBody {
 
-.main-content {
-    flex: 1;
+    max-height: 400px;
+
     overflow-y: auto;
-    padding: 32px 40px;
-}
-
-.event-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-@media (max-width: 900px) {
-    body { overflow: auto; }
-    .dashboard-wrapper { flex-direction: column; height: auto; }
-    .sidebar { width: 100%; min-width: unset; }
-    body { overflow: auto; }
 }
