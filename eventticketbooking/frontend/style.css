@@ -335,9 +335,7 @@ a:hover { color: var(--accent-hover); }
 }
 
 
-/* =========================================
-   MODAL IMPROVEMENTS
-========================================= */
+/*MODAL IMPROVEMENTS*/
 
 .modal {
 
@@ -383,9 +381,7 @@ a:hover { color: var(--accent-hover); }
     }
 }
 
-/* =========================================
-   FILE INPUT
-========================================= */
+/*FILE INPUT*/
 
 input[type="file"] {
 
@@ -413,10 +409,7 @@ input[type="file"]::file-selector-button {
     font-weight: 600;
 }
 
-/* =========================================
-   EVENT CARD IMAGE FIX
-========================================= */
-
+/*EVENT CARD IMAGE FIX*/
 .event-image {
 
     transition: transform 0.35s ease;
@@ -427,10 +420,7 @@ input[type="file"]::file-selector-button {
     transform: scale(1.05);
 }
 
-/* =========================================
-   SEARCH BOX IMPROVEMENT
-========================================= */
-
+/* SEARCH BOX IMPROVEMENT */
 .search-box input {
 
     min-width: 240px;

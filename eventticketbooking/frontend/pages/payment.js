@@ -7,10 +7,7 @@ if (!token) {
         "login.html";
 }
 
-
-// ======================================
 // ERROR HELPERS
-// ======================================
 
 function showFieldError(id, message) {
 
@@ -29,10 +26,7 @@ function clearErrors() {
     });
 }
 
-
-// ======================================
 // VALIDATION
-// ======================================
 
 function validateCardName(name) {
 
@@ -71,10 +65,7 @@ function validateCVV(cvv) {
     return /^\d{3}$/.test(cvv);
 }
 
-
-// ======================================
 // AUTO FORMAT CARD NUMBER
-// ======================================
 
 document.getElementById(
     "cardNumber"
@@ -88,9 +79,7 @@ document.getElementById(
 });
 
 
-// ======================================
 // AUTO FORMAT EXPIRY
-// ======================================
 
 document.getElementById(
     "expiry"
@@ -118,10 +107,7 @@ document.getElementById(
     this.value = value;
 });
 
-
-// ======================================
 // AUTO FORMAT CVV
-// ======================================
 
 document.getElementById(
     "cvv"
@@ -134,10 +120,7 @@ document.getElementById(
         .slice(0, 3);
 });
 
-
-// ======================================
 // PAYMENT SUBMIT
-// ======================================
 
 document.getElementById(
     "paymentForm"
@@ -168,9 +151,7 @@ document.getElementById(
         ).value.trim();
 
 
-    // ======================================
     // VALIDATIONS
-    // ======================================
 
     let isValid = true;
 
@@ -228,11 +209,7 @@ document.getElementById(
         return;
     }
 
-
-    // ======================================
     // BOOKING DATA
-    // ======================================
-
     const bookingData = JSON.parse(
         localStorage.getItem(
             "pendingBooking"
@@ -250,10 +227,8 @@ document.getElementById(
     }
 
 
-    // ======================================
-    // MOCK PAYMENT
-    // ======================================
 
+    // MOCK PAYMENT
     try {
 
         showToast(
@@ -266,11 +241,7 @@ document.getElementById(
             setTimeout(resolve, 1500)
         );
 
-
-        // ======================================
         // BOOK TICKETS
-        // ======================================
-
         const response =
 
             await bookTickets(

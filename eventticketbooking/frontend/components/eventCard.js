@@ -1,10 +1,7 @@
 const DEFAULT_EVENT_IMAGE =
     "../assets/concert.png";
 
-
-// ======================================
 // EVENT IMAGE
-// ======================================
 
 function getEventImage(imageUrl) {
 
@@ -16,11 +13,7 @@ function getEventImage(imageUrl) {
         : DEFAULT_EVENT_IMAGE;
 }
 
-
-// ======================================
 // EVENT CARD
-// ======================================
-
 function renderEventCard({
     event,
     actionButtons
@@ -124,10 +117,7 @@ function renderEventCard({
 }
 
 
-// ======================================
 // BOOKING CARD
-// ======================================
-
 function renderBookingCard(booking) {
 
     const eventDateTime = new Date(
@@ -144,10 +134,7 @@ function renderBookingCard(booking) {
     let statusClass =
         "badge-booked";
 
-
-    // =====================================
     // COMPLETED EVENT
-    // =====================================
 
     if (
 
@@ -163,10 +150,7 @@ function renderBookingCard(booking) {
         statusClass = "badge-completed";
     }
 
-
-    // =====================================
     // CANCELLED BOOKING
-    // =====================================
 
     if (
 
@@ -176,12 +160,8 @@ function renderBookingCard(booking) {
         statusClass = "badge-cancelled";
     }
 
-
-    // =====================================
     // SHOW CANCEL BUTTON ONLY
     // FOR ACTIVE BOOKINGS
-    // =====================================
-
     const cancelBtn =
 
         !isCompleted

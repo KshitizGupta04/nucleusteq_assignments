@@ -22,11 +22,7 @@ public class JwtUtil {
         );
     }
 
-
-    // =====================================
     // GENERATE TOKEN
-    // =====================================
-
     public String generateToken(
 
             String email,
@@ -63,11 +59,7 @@ public class JwtUtil {
                 .compact();
     }
 
-
-    // =====================================
     // EXTRACT EMAIL
-    // =====================================
-
     public String extractEmail(
             String token
     ) {
@@ -87,11 +79,7 @@ public class JwtUtil {
                 .getSubject();
     }
 
-
-    // =====================================
     // VALIDATE TOKEN
-    // =====================================
-
     public boolean validateToken(
             String token
     ) {

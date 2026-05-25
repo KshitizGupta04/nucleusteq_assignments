@@ -5,9 +5,8 @@ const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 
 
-// ======================================
+
 // AUTH CHECK
-// ======================================
 
 if (!token || role !== "ORGANISER") {
 
@@ -21,9 +20,7 @@ if (!token || role !== "ORGANISER") {
 }
 
 
-// ======================================
 // THEME
-// ======================================
 
 const theme =
     localStorage.getItem("theme") || "dark";
@@ -48,9 +45,7 @@ if (themeBtn) {
 }
 
 
-// ======================================
 // MODALS
-// ======================================
 
 const createModal =
     document.getElementById("createEventModal");
@@ -62,9 +57,7 @@ const bookingModal =
     document.getElementById("bookingModal");
 
 
-// ======================================
 // MODAL FUNCTIONS
-// ======================================
 
 function openCreateModal() {
 
@@ -121,9 +114,7 @@ function handleBookingModalClick(event) {
 }
 
 
-// ======================================
 // VALIDATION HELPERS
-// ======================================
 
 function validateTime(time) {
 
@@ -146,9 +137,7 @@ function validateImage(image) {
 }
 
 
-// ======================================
 // LOAD EVENTS
-// ======================================
 
 async function loadEvents() {
 
@@ -231,9 +220,7 @@ async function loadEvents() {
 }
 
 
-// ======================================
 // CREATE EVENT
-// ======================================
 
 document.getElementById("eventForm")
     .addEventListener("submit", async function(e) {
@@ -412,10 +399,7 @@ document.getElementById("eventForm")
     });
 
 
-// ======================================
 // EDIT EVENT
-// ======================================
-
 async function editEvent(id) {
 
     try {
@@ -464,9 +448,7 @@ async function editEvent(id) {
 }
 
 
-// ======================================
 // UPDATE EVENT
-// ======================================
 
 document.getElementById("editEventForm")
     .addEventListener("submit", async function(e) {
@@ -656,9 +638,7 @@ document.getElementById("editEventForm")
     });
 
 
-// ======================================
 // DELETE EVENT
-// ======================================
 
 async function removeEvent(id) {
 
@@ -685,9 +665,7 @@ async function removeEvent(id) {
 }
 
 
-// ======================================
 // VIEW BOOKINGS
-// ======================================
 
 async function viewBookings(eventId) {
 
@@ -762,9 +740,7 @@ async function viewBookings(eventId) {
 }
 
 
-// ======================================
 // SEARCH EVENTS
-// ======================================
 
 document.getElementById("searchInput")
     .addEventListener("input", async function() {
@@ -851,8 +827,6 @@ document.getElementById("searchInput")
     });
 
 
-// ======================================
 // INITIAL LOAD
-// ======================================
 
 loadEvents();

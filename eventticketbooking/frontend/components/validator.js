@@ -58,11 +58,7 @@ function validatePositiveInteger(value) {
         && parseInt(value) > 0;
 }
 
-
-// ======================================
 // FUTURE DATE TIME VALIDATION
-// ======================================
-
 function validateFutureDateTime(
     date,
     time

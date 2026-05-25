@@ -42,11 +42,7 @@ public class EventService {
         this.bookingRepository = bookingRepository;
     }
 
-
-    // =====================================
     // CREATE EVENT
-    // =====================================
-
     public String createEvent(
 
             String title,
@@ -148,11 +144,7 @@ public class EventService {
         }
     }
 
-
-    // =====================================
     // GET ALL EVENTS
-    // =====================================
-
     public List<Event> getAllEvents() {
 
         LocalDate today =
@@ -177,13 +169,11 @@ public class EventService {
                                     event.getTime()
                             );
 
-                    // FUTURE EVENTS
                     if (eventDate.isAfter(today)) {
 
                         return true;
                     }
 
-                    // TODAY + UPCOMING TIME
                     return
 
                             eventDate.isEqual(today)
@@ -196,11 +186,7 @@ public class EventService {
                 .toList();
     }
 
-
-    // =====================================
     // GET MY EVENTS
-    // =====================================
-
     public List<Event> getMyEvents(
             String organizerEmail
     ) {
@@ -231,13 +217,11 @@ public class EventService {
                                     event.getTime()
                             );
 
-                    // FUTURE EVENTS
                     if (eventDate.isAfter(today)) {
 
                         return true;
                     }
 
-                    // TODAY + UPCOMING TIME
                     return
 
                             eventDate.isEqual(today)
@@ -250,11 +234,7 @@ public class EventService {
                 .toList();
     }
 
-
-    // =====================================
     // GET EVENT BY ID
-    // =====================================
-
     public Event getEventById(Long id) {
 
         return eventRepository.findById(id)
@@ -267,11 +247,7 @@ public class EventService {
                 );
     }
 
-
-    // =====================================
     // UPDATE EVENT
-    // =====================================
-
     public String updateEvent(
 
             Long id,
@@ -358,6 +334,40 @@ public class EventService {
             );
         }
 
+        // VALIDATE BOOKED TICKETS
+        int bookedTickets =
+
+                bookingRepository
+                        .findByEventId(event.getId())
+                        .stream()
+
+                        .filter(booking ->
+
+                                booking
+                                        .getBookingStatus()
+                                        .equals("BOOKED")
+                        )
+
+                        .mapToInt(booking ->
+
+                                booking.getNumberOfTickets()
+                        )
+
+                        .sum();
+
+        if (availableSeats < bookedTickets) {
+
+            throw new BadRequestException(
+
+                    "Seats cannot be less than already booked tickets (" +
+
+                            bookedTickets +
+
+                            ")"
+            );
+        }
+
+
         event.setTitle(title);
 
         event.setDescription(description);
@@ -403,11 +413,7 @@ public class EventService {
         return "Event Updated Successfully";
     }
 
-
-    // =====================================
     // DELETE EVENT
-    // =====================================
-
     @Transactional
     public String deleteEvent(
 

@@ -7,9 +7,7 @@ const role =
     localStorage.getItem("role");
 
 
-// ======================================
 // HIDE REGISTER BUTTON
-// ======================================
 
 if (token) {
 
@@ -27,9 +25,7 @@ if (token) {
 }
 
 
-// ======================================
 // BOOKING MODAL
-// ======================================
 
 const bookingModal =
     document.getElementById(
@@ -55,9 +51,7 @@ function handleBookingModalClick(event) {
 }
 
 
-// ======================================
 // BOOK EVENT
-// ======================================
 
 function bookEvent(eventId) {
 
@@ -96,9 +90,7 @@ function bookEvent(eventId) {
 }
 
 
-// ======================================
 // BOOKING FORM
-// ======================================
 
 document.getElementById("bookingForm")
     .addEventListener("submit", function(e) {
@@ -157,9 +149,7 @@ document.getElementById("bookingForm")
     });
 
 
-// ======================================
 // LOAD EVENTS
-// ======================================
 
 async function loadEvents() {
 

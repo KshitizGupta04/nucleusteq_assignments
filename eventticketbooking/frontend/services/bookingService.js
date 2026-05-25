@@ -1,23 +1,77 @@
 const BOOKING_URL =
     "http://localhost:8082/api/v1/bookings";
 
+// AUTH HEADERS
 function getBookingHeaders() {
 
-    const token = localStorage.getItem("token");
+    const token =
+        localStorage.getItem("token");
 
     return {
 
-        "Content-Type": "application/json",
+        "Content-Type":
+            "application/json",
 
-        "Authorization": `Bearer ${token}`
+        "Authorization":
+            `Bearer ${token}`
     };
 }
 
+// HANDLE ERROR RESPONSE
+async function handleBookingError(response) {
 
-// ======================================
+    // TOKEN EXPIRED / INVALID
+    if (
+
+        response.status === 401
+
+        ||
+
+        response.status === 403
+    ) {
+
+        localStorage.clear();
+
+        localStorage.setItem(
+
+            "sessionExpired",
+
+            "true"
+        );
+
+        window.location.href =
+            "login.html";
+
+        return;
+    }
+
+
+    // OTHER ERRORS
+    let errorMessage =
+        "Something went wrong";
+
+    try {
+
+        const errorData =
+            await response.json();
+
+        errorMessage =
+
+            errorData.message
+
+            ||
+
+            errorMessage;
+
+    } catch (e) {
+
+        // ignore parse error
+    }
+
+    throw new Error(errorMessage);
+}
+
 // BOOK TICKETS
-// ======================================
-
 async function bookTickets(data) {
 
     const response = await fetch(
@@ -27,27 +81,26 @@ async function bookTickets(data) {
         {
             method: "POST",
 
-            headers: getBookingHeaders(),
+            headers:
+                getBookingHeaders(),
 
-            body: JSON.stringify(data)
+            body:
+                JSON.stringify(data)
         }
     );
 
-    const message = await response.text();
-
+    // HANDLE ERROR
     if (!response.ok) {
 
-        throw new Error(message);
+        await handleBookingError(
+            response
+        );
     }
 
-    return message;
+    return await response.text();
 }
 
-
-// ======================================
 // MY BOOKINGS
-// ======================================
-
 async function getMyBookings() {
 
     const response = await fetch(
@@ -55,25 +108,22 @@ async function getMyBookings() {
         `${BOOKING_URL}/my-bookings`,
 
         {
-            headers: getBookingHeaders()
+            headers:
+                getBookingHeaders()
         }
     );
 
     if (!response.ok) {
 
-        throw new Error(
-            "Failed to load bookings"
+        await handleBookingError(
+            response
         );
     }
 
     return await response.json();
 }
 
-
-// ======================================
 // CANCEL BOOKING
-// ======================================
-
 async function cancelBooking(id) {
 
     const response = await fetch(
@@ -83,18 +133,19 @@ async function cancelBooking(id) {
         {
             method: "DELETE",
 
-            headers: getBookingHeaders()
+            headers:
+                getBookingHeaders()
         }
     );
 
-    const message = await response.text();
-
     if (!response.ok) {
 
-        throw new Error(message);
+        await handleBookingError(
+            response
+        );
     }
 
-    return message;
+    return await response.text();
 }
 
 
@@ -109,14 +160,15 @@ async function getBookingsForEvent(eventId) {
         `${BOOKING_URL}/event/${eventId}`,
 
         {
-            headers: getBookingHeaders()
+            headers:
+                getBookingHeaders()
         }
     );
 
     if (!response.ok) {
 
-        throw new Error(
-            "Failed to load bookings"
+        await handleBookingError(
+            response
         );
     }
 

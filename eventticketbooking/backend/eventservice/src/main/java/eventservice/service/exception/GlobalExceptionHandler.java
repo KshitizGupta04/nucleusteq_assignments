@@ -139,6 +139,7 @@ public class GlobalExceptionHandler {
     }
 
     // VALIDATION ERRORS
+
     @ExceptionHandler(
             MethodArgumentNotValidException.class
     )
@@ -149,27 +150,31 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex
     ) {
 
-        Map<String, String> errors =
+        String message =
+
+                ex.getBindingResult()
+
+                        .getFieldErrors()
+
+                        .get(0)
+
+                        .getDefaultMessage();
+
+        Map<String, String> error =
                 new HashMap<>();
 
-        ex.getBindingResult()
-                .getFieldErrors()
-                .forEach(error ->
-
-                        errors.put(
-
-                                error.getField(),
-
-                                error.getDefaultMessage()
-                        )
-                );
+        error.put(
+                "message",
+                message
+        );
 
         return new ResponseEntity<>(
-                errors,
+
+                error,
+
                 HttpStatus.BAD_REQUEST
         );
     }
-
     // GENERIC EXCEPTION
     @ExceptionHandler(Exception.class)
 

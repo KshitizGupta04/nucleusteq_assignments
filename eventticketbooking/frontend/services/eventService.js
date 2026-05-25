@@ -1,11 +1,7 @@
 const BASE_URL =
     "http://localhost:8082/api/v1/events";
 
-
-// ======================================
 // AUTH HEADERS
-// ======================================
-
 function getAuthHeaders() {
 
     const token =
@@ -18,18 +14,36 @@ function getAuthHeaders() {
     };
 }
 
-
-// ======================================
 // HANDLE ERROR RESPONSE
-// ======================================
-
 async function handleError(response) {
+    // TOKEN EXPIRED / INVALID
+    if (
+        response.status === 401
 
+        ||
+
+        response.status === 403
+    ) {
+
+        localStorage.clear();
+
+        localStorage.setItem(
+
+            "sessionExpired",
+
+            "true"
+        );
+
+        window.location.href =
+            "login.html";
+
+        return;
+    }
+
+    // OTHER ERRORS
     let errorMessage =
         "Something went wrong";
-
     try {
-
         const errorData =
             await response.json();
 
@@ -41,19 +55,14 @@ async function handleError(response) {
 
             errorMessage;
 
-    } catch {
-
+    } catch (e) {
         // ignore parse error
     }
 
     throw new Error(errorMessage);
 }
 
-
-// ======================================
 // GET ALL EVENTS
-// ======================================
-
 async function getAllEvents() {
 
     const response =
@@ -68,9 +77,7 @@ async function getAllEvents() {
 }
 
 
-// ======================================
 // GET MY EVENTS
-// ======================================
 
 async function getMyEvents() {
 
@@ -93,15 +100,13 @@ async function getMyEvents() {
 }
 
 
-// ======================================
 // GET EVENT BY ID
-// ======================================
-
 async function getEventById(id) {
 
-    const response = await fetch(
-        `${BASE_URL}/${id}`
-    );
+    const response =
+        await fetch(
+            `${BASE_URL}/${id}`
+        );
 
     if (!response.ok) {
 
@@ -112,10 +117,7 @@ async function getEventById(id) {
 }
 
 
-// ======================================
 // CREATE EVENT
-// ======================================
-
 async function createEvent(formData) {
 
     const response = await fetch(
@@ -141,10 +143,7 @@ async function createEvent(formData) {
 }
 
 
-// ======================================
 // UPDATE EVENT
-// ======================================
-
 async function updateEvent(id, formData) {
 
     const response = await fetch(
@@ -169,10 +168,7 @@ async function updateEvent(id, formData) {
     return await response.text();
 }
 
-
-// ======================================
 // DELETE EVENT
-// ======================================
 
 async function deleteEvent(id) {
 

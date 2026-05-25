@@ -3,71 +3,235 @@ document.documentElement.setAttribute(
     localStorage.getItem("theme") || "dark"
 );
 
-// SHOW/HIDE PASSWORD
-function togglePassword() {
-    const passwordInput = document.getElementById("password");
-    passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+// SESSION EXPIRED MESSAGE
+
+const sessionExpired =
+
+    localStorage.getItem(
+        "sessionExpired"
+    );
+
+if (sessionExpired === "true") {
+
+    showToast(
+
+        "Session expired. Please login again.",
+
+        "error"
+    );
+
+    localStorage.removeItem(
+        "sessionExpired"
+    );
 }
 
+
+
+// SHOW / HIDE PASSWORD
+
+
+function togglePassword() {
+
+    const passwordInput =
+        document.getElementById(
+            "password"
+        );
+
+    passwordInput.type =
+
+        passwordInput.type === "password"
+
+            ? "text"
+
+            : "password";
+}
+
+
+
+// LOGIN FORM
 document.getElementById("loginForm")
     .addEventListener("submit", async function (e) {
 
         e.preventDefault();
 
-        const email    = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
+        const email =
+            document.getElementById(
+                "email"
+            ).value.trim();
 
-        clearErrors("emailError", "passwordError", "loginError");
+        const password =
+            document.getElementById(
+                "password"
+            ).value.trim();
+
+        clearErrors(
+
+            "emailError",
+
+            "passwordError",
+
+            "loginError"
+        );
 
         let isValid = true;
 
-        // EMAIL
+
+
+        // EMAIL VALIDATION
+
+
         if (email === "") {
-            setError("emailError", "Email is required");
+
+            setError(
+
+                "emailError",
+
+                "Email is required"
+            );
+
             isValid = false;
+
         } else if (!validateEmail(email)) {
-            setError("emailError", "Invalid email format");
+
+            setError(
+
+                "emailError",
+
+                "Invalid email format"
+            );
+
             isValid = false;
         }
 
-        // PASSWORD
+
+
+        // PASSWORD VALIDATION
+
+
         if (password === "") {
-            setError("passwordError", "Password is required");
+
+            setError(
+
+                "passwordError",
+
+                "Password is required"
+            );
+
             isValid = false;
+
         } else if (password.length < 6) {
-            setError("passwordError", "Password must be at least 6 characters");
+
+            setError(
+
+                "passwordError",
+
+                "Password must be at least 6 characters"
+            );
+
             isValid = false;
         }
 
         if (!isValid) return;
 
+
+
+        // LOGIN API
+
+
         try {
-            const response = await loginUser({ email, password });
 
-            // DECODE JWT to get role
-            const payload = JSON.parse(atob(response.token.split(".")[1]));
+            const response =
+                await loginUser({
 
-            localStorage.setItem("token", response.token);
-            localStorage.setItem("role", payload.role);
+                    email,
 
-            showToast("Login successful!", "success");
+                    password
+                });
+
+
+
+            // DECODE JWT
+
+            const payload = JSON.parse(
+
+                atob(
+                    response.token
+                        .split(".")[1]
+                )
+            );
+
+
+
+            // SAVE LOGIN DATA
+
+
+            localStorage.setItem(
+
+                "token",
+
+                response.token
+            );
+
+            localStorage.setItem(
+
+                "role",
+
+                payload.role
+            );
+
+
+
+            // SUCCESS TOAST
+
+
+            showToast(
+
+                "Login successful!",
+
+                "success"
+            );
+
+
+            // REDIRECT
 
             setTimeout(() => {
+
                 window.location.href =
+
                     payload.role === "ORGANISER"
+
                         ? "dashboard.html"
+
                         : "home.html";
+
             }, 800);
 
         } catch (error) {
-            // Show clean message, not raw JSON
-            let message = error.message;
+
+            let message =
+                error.message;
+
             try {
-                const parsed = JSON.parse(message);
-                message = parsed.message || "Login failed";
+
+                const parsed =
+                    JSON.parse(message);
+
+                message =
+
+                    parsed.message
+
+                    ||
+
+                    "Login failed";
+
             } catch (_) {
-                // already a plain string
+
+                // already plain string
             }
-            setError("loginError", message);
+
+            setError(
+                "loginError",
+                message
+            );
         }
     });

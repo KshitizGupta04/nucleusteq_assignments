@@ -35,11 +35,7 @@ public class BookingService {
         this.eventRepository = eventRepository;
     }
 
-
-    // =====================================
     // BOOK TICKETS
-    // =====================================
-
     @Transactional
     public String bookTickets(
 
@@ -59,11 +55,7 @@ public class BookingService {
                         )
                 );
 
-
-        // =====================================
         // EVENT TIME VALIDATION
-        // =====================================
-
         LocalDateTime eventDateTime =
 
                 LocalDateTime.of(
@@ -89,11 +81,7 @@ public class BookingService {
             );
         }
 
-
-        // =====================================
         // TICKET VALIDATION
-        // =====================================
-
         if (
 
                 requestDTO.getNumberOfTickets() < 1
@@ -128,11 +116,7 @@ public class BookingService {
             );
         }
 
-
-        // =====================================
         // UPDATE SEATS
-        // =====================================
-
         event.setAvailableSeats(
 
                 event.getAvailableSeats()
@@ -144,11 +128,7 @@ public class BookingService {
 
         eventRepository.save(event);
 
-
-        // =====================================
         // SAVE BOOKING
-        // =====================================
-
         Booking booking = Booking.builder()
 
                 .eventId(
@@ -177,10 +157,7 @@ public class BookingService {
     }
 
 
-    // =====================================
     // GET MY BOOKINGS
-    // =====================================
-
     public List<Booking> getMyBookings(
             String customerEmail
     ) {
@@ -220,11 +197,7 @@ public class BookingService {
         return bookings;
     }
 
-
-    // =====================================
     // ORGANIZER BOOKINGS
-    // =====================================
-
     public List<Booking> getBookingsForOrganizerEvent(
 
             Long eventId,
@@ -258,11 +231,7 @@ public class BookingService {
         );
     }
 
-
-    // =====================================
     // CANCEL BOOKING
-    // =====================================
-
     @Transactional
     public String cancelBooking(
 
@@ -316,11 +285,7 @@ public class BookingService {
                         )
                 );
 
-
-        // =====================================
         // LAST 4 HOURS RESTRICTION
-        // =====================================
-
         LocalDateTime eventDateTime =
 
                 LocalDateTime.of(
@@ -348,11 +313,7 @@ public class BookingService {
             );
         }
 
-
-        // =====================================
         // RESTORE SEATS
-        // =====================================
-
         event.setAvailableSeats(
 
                 event.getAvailableSeats()
@@ -364,11 +325,7 @@ public class BookingService {
 
         eventRepository.save(event);
 
-
-        // =====================================
         // UPDATE STATUS
-        // =====================================
-
         booking.setBookingStatus(
                 "CANCELLED"
         );

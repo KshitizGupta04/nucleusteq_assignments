@@ -116,11 +116,7 @@ class EventServiceTest {
 				.save(any(Event.class));
 	}
 
-
-	// =====================================
 	// GET EVENT TEST
-	// =====================================
-
 	@Test
 	void getEventByIdSuccess() {
 
@@ -146,11 +142,7 @@ class EventServiceTest {
 		);
 	}
 
-
-	// =====================================
 	// EVENT NOT FOUND
-	// =====================================
-
 	@Test
 	void getEventByIdNotFound() {
 
@@ -165,11 +157,7 @@ class EventServiceTest {
 		);
 	}
 
-
-	// =====================================
 	// UPDATE EVENT SUCCESS
-	// =====================================
-
 	@Test
 	void updateEventSuccess() {
 
@@ -217,11 +205,7 @@ class EventServiceTest {
 		);
 	}
 
-
-	// =====================================
 	// UPDATE EVENT UNAUTHORIZED
-	// =====================================
-
 	@Test
 	void updateEventUnauthorized() {
 
@@ -265,11 +249,7 @@ class EventServiceTest {
 		);
 	}
 
-
-	// =====================================
 	// DELETE EVENT SUCCESS
-	// =====================================
-
 	@Test
 	void deleteEventSuccess() {
 
@@ -308,11 +288,7 @@ class EventServiceTest {
 				.delete(event);
 	}
 
-
-	// =====================================
 	// DELETE EVENT NOT FOUND
-	// =====================================
-
 	@Test
 	void deleteEventNotFound() {
 
@@ -332,11 +308,7 @@ class EventServiceTest {
 		);
 	}
 
-
-	// =====================================
 	// DELETE EVENT WITHIN 4 HOURS
-	// =====================================
-
 	@Test
 	void deleteEventWithin4Hours() {
 

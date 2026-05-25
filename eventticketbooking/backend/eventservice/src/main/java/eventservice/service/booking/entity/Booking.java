@@ -25,11 +25,7 @@ public class Booking {
 
     private Long id;
 
-
-    // =====================================
     // EVENT INFO
-    // =====================================
-
     @Column(nullable = false)
 
     private Long eventId;
@@ -55,10 +51,7 @@ public class Booking {
     private LocalDateTime bookingTime;
 
 
-    // =====================================
     // EXTRA EVENT DETAILS
-    // =====================================
-
     @Transient
     private String eventTitle;
 

@@ -26,11 +26,7 @@ public class EventController {
         this.eventService = eventService;
     }
 
-
-    // ============================
     // CREATE EVENT
-    // ============================
-
     @PreAuthorize("hasRole('ORGANISER')")
 
     @PostMapping(
@@ -105,10 +101,7 @@ public class EventController {
     }
 
 
-    // ============================
     // GET MY EVENTS
-    // ============================
-
     @PreAuthorize("hasRole('ORGANISER')")
 
     @GetMapping("/my-events")
@@ -124,11 +117,7 @@ public class EventController {
         );
     }
 
-
-    // ============================
     // GET EVENT BY ID
-    // ============================
-
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEventById(
             @PathVariable Long id
@@ -139,11 +128,7 @@ public class EventController {
         );
     }
 
-
-    // ============================
     // UPDATE EVENT
-    // ============================
-
     @PreAuthorize("hasRole('ORGANISER')")
 
     @PutMapping(
@@ -212,11 +197,7 @@ public class EventController {
         );
     }
 
-
-    // ============================
     // DELETE EVENT
-    // ============================
-
     @PreAuthorize("hasRole('ORGANISER')")
 
     @DeleteMapping("/{id}")
