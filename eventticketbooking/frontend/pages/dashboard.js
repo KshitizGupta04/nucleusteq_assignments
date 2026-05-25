@@ -20,30 +20,6 @@ if (!token || role !== "ORGANISER") {
 }
 
 
-// THEME
-
-const theme =
-    localStorage.getItem("theme") || "dark";
-
-document.documentElement.setAttribute(
-    "data-theme",
-    theme
-);
-
-const themeBtn =
-    document.getElementById("themeToggle");
-
-if (themeBtn) {
-
-    themeBtn.textContent =
-
-        theme === "dark"
-
-            ? "☀ Light Mode"
-
-            : "☾ Dark Mode";
-}
-
 
 // MODALS
 

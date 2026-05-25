@@ -2,7 +2,22 @@
 <html lang="en">
 
 <head>
+    <script>
 
+        const savedTheme =
+
+            localStorage.getItem("theme")
+
+            || "dark";
+
+        document.documentElement.setAttribute(
+
+            "data-theme",
+
+            savedTheme
+        );
+
+    </script>
     <meta charset="UTF-8">
 
     <meta
@@ -61,7 +76,11 @@
                     class="theme-toggle"
                     id="themeToggle"
                     onclick="toggleTheme()"
-            ></button>
+            >
+
+                ☀ Light Mode
+
+            </button>
 
             <a
                     href="home.html"

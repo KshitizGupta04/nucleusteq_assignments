@@ -1,7 +1,3 @@
-document.documentElement.setAttribute(
-    "data-theme",
-    localStorage.getItem("theme") || "dark"
-);
 
 // SESSION EXPIRED MESSAGE
 

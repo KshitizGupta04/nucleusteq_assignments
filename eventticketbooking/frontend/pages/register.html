@@ -17,7 +17,21 @@
 
         <div class="auth-panel register-panel">
             <div class="auth-brand">
-                <span class="logo">Eventify</span>
+
+    <span class="logo">
+        Eventify
+    </span>
+
+                <button
+                        class="theme-toggle"
+                        id="themeToggle"
+                        onclick="toggleTheme()"
+                >
+
+                    ☀ Light Mode
+
+                </button>
+
             </div>
 
             <div class="auth-card">
@@ -29,7 +43,7 @@
                 <form id="registerForm">
                     <div class="input-group">
                         <label>Full Name</label>
-                        <input type="text" id="name" placeholder="John Doe">
+                        <input type="text" id="name" placeholder="Enter your name">
                         <small class="error-text" id="nameError"></small>
                     </div>
 
@@ -73,6 +87,7 @@
     <script src="../components/toast.js"></script>
     <script src="../components/validator.js"></script>
     <script src="../services/authService.js"></script>
+    <script src="../components/navbar.js"></script>
     <script src="register.js"></script>
 </body>
 </html>
