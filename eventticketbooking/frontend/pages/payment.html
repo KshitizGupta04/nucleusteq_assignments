@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Payment — Eventify
+    </title>
+
+    <link
+            rel="stylesheet"
+            href="../style.css"
+    >
+
+    <style>
+
+        body {
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background: var(--bg);
+
+            padding: 24px;
+        }
+
+        .payment-card {
+
+            width: 100%;
+
+            max-width: 420px;
+
+            background: var(--bg-card);
+
+            border: 1px solid var(--border);
+
+            border-radius: 16px;
+
+            padding: 32px;
+
+            box-shadow: var(--shadow);
+        }
+
+        .payment-card h2 {
+
+            font-family: 'Playfair Display', serif;
+
+            margin-bottom: 24px;
+
+            text-align: center;
+        }
+
+        .payment-form {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 16px;
+        }
+
+        .payment-form input {
+
+            width: 100%;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            border: 1px solid var(--border);
+
+            background: var(--bg-elevated);
+
+            color: var(--text-primary);
+
+            outline: none;
+
+            font-size: 0.95rem;
+        }
+
+        .payment-form input:focus {
+
+            border-color: var(--accent);
+        }
+
+        .pay-btn {
+
+            width: 100%;
+
+            padding: 13px;
+
+            margin-top: 8px;
+        }
+
+        .error-text {
+
+            color: crimson;
+
+            font-size: 0.82rem;
+
+            margin-top: -8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="payment-card">
+
+    <h2>
+        Mock Payment
+    </h2>
+
+    <form
+            id="paymentForm"
+            class="payment-form"
+    >
+
+        <!-- CARD HOLDER -->
+
+        <input
+                type="text"
+                id="cardName"
+                placeholder="Card Holder Name"
+        >
+
+        <small
+                class="error-text"
+                id="cardNameError"
+        ></small>
+
+
+        <!-- CARD NUMBER -->
+
+        <input
+                type="text"
+                id="cardNumber"
+                placeholder="1234123412341234"
+                maxlength="16"
+        >
+
+        <small
+                class="error-text"
+                id="cardNumberError"
+        ></small>
+
+
+        <!-- EXPIRY -->
+
+        <input
+                type="text"
+                id="expiry"
+                placeholder="MM/YY"
+                maxlength="5"
+        >
+
+        <small
+                class="error-text"
+                id="expiryError"
+        ></small>
+
+
+        <!-- CVV -->
+
+        <input
+                type="password"
+                id="cvv"
+                placeholder="CVV"
+                maxlength="3"
+        >
+
+        <small
+                class="error-text"
+                id="cvvError"
+        ></small>
+
+
+        <!-- BUTTON -->
+
+        <button
+                type="submit"
+                class="btn btn-primary pay-btn"
+        >
+
+            Pay Now
+
+        </button>
+
+    </form>
+
+</div>
+
+
+<script src="../components/toast.js"></script>
+
+<script src="../components/validator.js"></script>
+
+<script src="../services/bookingService.js"></script>
+
+<script src="payment.js"></script>
+
+</body>
+</html>
