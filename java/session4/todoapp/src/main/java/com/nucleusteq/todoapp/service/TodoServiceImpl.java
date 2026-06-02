@@ -5,6 +5,8 @@ import com.nucleusteq.todoapp.entity.Todo;
 import com.nucleusteq.todoapp.entity.TodoStatus;
 import com.nucleusteq.todoapp.exception.ResourceNotFoundException;
 import com.nucleusteq.todoapp.repository.TodoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,14 +16,24 @@ import java.util.stream.Collectors;
 @Service
 public class TodoServiceImpl implements TodoService {
 
-    private final TodoRepository todoRepository;
+    private static final Logger logger =
+            LoggerFactory.getLogger(TodoServiceImpl.class);
 
-    public TodoServiceImpl(TodoRepository todoRepository) {
+    private final TodoRepository todoRepository;
+    private final NotificationServiceClient notificationServiceClient;
+
+    public TodoServiceImpl(
+            TodoRepository todoRepository,
+            NotificationServiceClient notificationServiceClient) {
+
         this.todoRepository = todoRepository;
+        this.notificationServiceClient = notificationServiceClient;
     }
 
     @Override
     public TodoDTO createTodo(TodoDTO todoDTO) {
+
+        logger.info("Creating new todo with title: {}", todoDTO.getTitle());
 
         Todo todo = convertToEntity(todoDTO);
 
@@ -33,11 +45,19 @@ public class TodoServiceImpl implements TodoService {
 
         Todo savedTodo = todoRepository.save(todo);
 
+        notificationServiceClient.sendNotification(
+                "Notification sent for new TODO"
+        );
+
+        logger.info("Todo created successfully with id: {}", savedTodo.getId());
+
         return convertToDTO(savedTodo);
     }
 
     @Override
     public List<TodoDTO> getAllTodos() {
+
+        logger.info("Fetching all todos");
 
         return todoRepository.findAll()
                 .stream()
@@ -47,6 +67,8 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public TodoDTO getTodoById(Long id) {
+
+        logger.info("Fetching todo with id: {}", id);
 
         Todo todo = todoRepository.findById(id)
                 .orElseThrow(() ->
@@ -59,6 +81,8 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public TodoDTO updateTodo(Long id, TodoDTO todoDTO) {
 
+        logger.info("Updating todo with id: {}", id);
+
         Todo todo = todoRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -67,7 +91,7 @@ public class TodoServiceImpl implements TodoService {
         todo.setTitle(todoDTO.getTitle());
         todo.setDescription(todoDTO.getDescription());
 
-        if(todoDTO.getStatus() != null) {
+        if (todoDTO.getStatus() != null) {
 
             validateStatusTransition(
                     todo.getStatus(),
@@ -79,11 +103,15 @@ public class TodoServiceImpl implements TodoService {
 
         Todo updatedTodo = todoRepository.save(todo);
 
+        logger.info("Todo updated successfully with id: {}", id);
+
         return convertToDTO(updatedTodo);
     }
 
     @Override
     public void deleteTodo(Long id) {
+
+        logger.info("Deleting todo with id: {}", id);
 
         Todo todo = todoRepository.findById(id)
                 .orElseThrow(() ->
@@ -91,6 +119,8 @@ public class TodoServiceImpl implements TodoService {
                                 "Todo not found with id : " + id));
 
         todoRepository.delete(todo);
+
+        logger.info("Todo deleted successfully with id: {}", id);
     }
 
     private TodoDTO convertToDTO(Todo todo) {
