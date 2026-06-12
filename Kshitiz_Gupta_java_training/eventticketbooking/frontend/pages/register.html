@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — Eventify</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="register.css">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-bg">
+            <img src="../assets/concert.png" alt="Event" onerror="this.style.display='none'">
+            <div class="auth-bg-overlay"></div>
+        </div>
+
+        <div class="auth-panel register-panel">
+            <div class="auth-brand">
+
+    <span class="logo">
+        Eventify
+    </span>
+
+                <button
+                        class="theme-toggle"
+                        id="themeToggle"
+                        onclick="toggleTheme()"
+                >
+
+                    ☀ Light Mode
+
+                </button>
+
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Create account</h2>
+                    <p>Join thousands discovering amazing events</p>
+                </div>
+
+                <form id="registerForm">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" placeholder="Enter your name">
+                        <small class="error-text" id="nameError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="you@example.com">
+                        <small class="error-text" id="emailError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="Min 6 chars, 1 uppercase, 1 number">
+                        <small class="error-text" id="passwordError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Phone</label>
+                        <input type="text" id="phone" placeholder="10-digit number">
+                        <small class="error-text" id="phoneError"></small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Role</label>
+                        <select id="role">
+                            <option value="">Select Role</option>
+                            <option value="CUSTOMER">Customer</option>
+                            <option value="ORGANISER">Organiser</option>
+                        </select>
+                        <small class="error-text" id="roleError"></small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary auth-submit">Create Account</button>
+                    <small class="error-text center-error" id="registerError"></small>
+                </form>
+
+                <p class="auth-link">Already have an account? <a href="login.html">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../components/toast.js"></script>
+    <script src="../components/validator.js"></script>
+    <script src="../services/authService.js"></script>
+    <script src="../components/navbar.js"></script>
+    <script src="register.js"></script>
+</body>
+</html>

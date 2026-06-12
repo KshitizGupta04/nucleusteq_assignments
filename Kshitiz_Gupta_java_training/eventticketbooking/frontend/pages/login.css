@@ -1,0 +1,285 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* BODY */
+
+body {
+
+    font-family: Arial, sans-serif;
+
+    background: #0f172a;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 30px;
+}
+
+/* WRAPPER */
+
+.auth-wrapper {
+
+    width: 100%;
+
+    max-width: 1200px;
+
+    min-height: 650px;
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    border-radius: 25px;
+
+    overflow: hidden;
+
+    box-shadow: 0 0 25px rgba(0,0,0,0.4);
+}
+
+/* LEFT SIDE */
+
+.auth-left {
+
+    background-image:
+            linear-gradient(
+                    rgba(0,0,0,0.6),
+                    rgba(0,0,0,0.7)
+            ),
+
+            url('https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop');
+
+    background-size: cover;
+
+    background-position: center;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 40px;
+}
+
+/* OVERLAY */
+
+.overlay {
+
+    text-align: center;
+
+    color: white;
+}
+
+.overlay h1 {
+
+    font-size: 80px;
+
+    margin-bottom: 20px;
+
+    color: gold;
+}
+
+.overlay p {
+
+    font-size: 24px;
+
+    line-height: 1.7;
+}
+
+/* RIGHT SIDE */
+
+.auth-right {
+
+    background: white;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 50px;
+}
+
+/* CARD */
+
+.auth-card {
+
+    width: 100%;
+}
+
+.auth-header {
+
+    margin-bottom: 35px;
+}
+
+.auth-header h2 {
+
+    font-size: 42px;
+
+    color: #111827;
+
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+
+    color: #666;
+
+    font-size: 17px;
+}
+
+/* FORM */
+
+form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+/* INPUT GROUP */
+
+.input-group {
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+.input-group label {
+
+    margin-bottom: 10px;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    color: #111827;
+}
+
+/* INPUTS */
+
+.input-group input {
+
+    padding: 14px;
+
+    border-radius: 10px;
+
+    border: 1px solid #ccc;
+
+    outline: none;
+
+    font-size: 16px;
+
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+
+    border-color: royalblue;
+
+    box-shadow: 0 0 10px rgba(65,105,225,0.3);
+}
+
+/* BUTTON */
+
+.btn {
+
+    padding: 15px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    transition: 0.3s;
+}
+
+.btn-primary {
+
+    background: royalblue;
+
+    color: white;
+}
+
+.btn-primary:hover {
+
+    background: blue;
+}
+
+/* ERRORS */
+
+.error-text {
+
+    margin-top: 8px;
+
+    color: crimson;
+
+    font-size: 14px;
+}
+
+.center-error {
+
+    text-align: center;
+}
+
+/* REGISTER LINK */
+
+.auth-link {
+
+    text-align: center;
+
+    margin-top: 25px;
+
+    color: #444;
+}
+
+.auth-link a {
+
+    color: royalblue;
+
+    text-decoration: none;
+
+    font-weight: bold;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 900px) {
+
+    .auth-wrapper {
+
+        grid-template-columns: 1fr;
+    }
+
+    .auth-left {
+
+        display: none;
+    }
+
+    .auth-right {
+
+        padding: 30px;
+    }
+
+    .auth-header h2 {
+
+        font-size: 32px;
+    }
+}
