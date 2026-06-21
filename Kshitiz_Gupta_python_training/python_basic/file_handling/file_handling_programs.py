@@ -2,8 +2,7 @@
 
 
 # Question 35
-# Create a file and write your name into it
-
+# Create a file and write my name into it
 
 def write_name():
     with open("student.txt", "w") as file:

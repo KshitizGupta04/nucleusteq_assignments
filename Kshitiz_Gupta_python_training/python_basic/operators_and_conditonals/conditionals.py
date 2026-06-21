@@ -1,6 +1,7 @@
 #this if file for Q.7 to Q.11
 
 # Question 7
+'''checking if the number is even or odd'''
 def even_and_odd() :
     num=int(input("Enter the number :"))
 
@@ -12,6 +13,7 @@ def even_and_odd() :
 even_and_odd()   
 
 # Question 8
+'''finding if the number is positive,negative or zero'''
 def number_sign() :
     num=int(input("Enter the number :"))
     if(num>0) :
@@ -24,6 +26,7 @@ def number_sign() :
 number_sign()
 
 # Question 9
+'''finding the largest no among three numbers'''
 def largest_number() :
     num1=int(input("enter the first number : "))
     num2=int(input("enter the second number : "))
@@ -39,6 +42,7 @@ def largest_number() :
 largest_number()
 
 # Question 10
+'''allocating grades as per marks'''
 def marks_to_grade() :
     marks=int(input("enter the marks :"))
     if(marks>100 or marks<0) :
@@ -55,6 +59,7 @@ def marks_to_grade() :
 marks_to_grade()
 
 # Question 11
+'''finding if the year is leap year or not'''
 def leap_year() :
     year=int(input("enter the year"))
     if(year%400==0) or (year%4==0 and year%100!=0) :
