@@ -2,7 +2,7 @@
 Example demonstrating how to import a module.
 """
 
-from utilities import find_square, greet
+from utilities import greet, find_square
 
 
 def main() -> None:
