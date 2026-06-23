@@ -22,6 +22,7 @@ def list_operations(list_number) :
     print(unique_number)
 
 # Question 26
+'''for counting off and even values in list'''
 def count_even_and_odd(list_values) :
     counteven=0
     countodd=0
@@ -35,6 +36,7 @@ def count_even_and_odd(list_values) :
     print(countodd)
 
 # Question 27
+'''reverse the list without using inbuilt reverse function'''
 def rev_list(list_value) :
     start=0
     end=len(list_value)-1
@@ -45,18 +47,21 @@ def rev_list(list_value) :
     print(list_value)
 
 # Question 28
+'''create and accessing the values of tuple'''
 def access_tuple() :
     tuple_number=(1,7,4,8)
     for i in tuple_number :
         print(i)
 
 # Question 29
+'''converting the tuple into list for modification as tuples are immutable'''
 def tuple_into_list(tuple_value) :
     list_value=list(tuple_value)
     list_value[0]=7
     print(list_value)
 
 # Question 30
+'''performing different set operations'''
 def set_operations(set1,set2) :
     union_set=set1 | set2
     intersection_set=set1 & set2
@@ -67,12 +72,14 @@ def set_operations(set1,set2) :
     print(difference_set)
 
 # Question 31
+'''removing duplicates from list using set'''
 def remove_duplicate(list_value) :
     set1=set(list_value)
     final_list=list(set1)
     print(final_list)
 
 # Question 32
+'''creating and accesing the dictionary datatype'''
 def display_student(student):
     print("Name:", student["name"])
     print("Roll No:", student["roll_no"])
@@ -80,6 +87,7 @@ def display_student(student):
     print("Marks:", student["marks"])
 
 # Question 33
+# counting frequency using dictionary
 def count_frequency(s):
     freq = {}
 
@@ -90,6 +98,17 @@ def count_frequency(s):
             freq[ch] = 1
 
     print(freq)
+
+# Question 34
+# merging two dictionaries to form a single resultant dictionary
+def merge_dict(d1, d2):
+    d3 = d1.copy()
+    
+    for key, value in d2.items():
+        d3[key] = value
+    
+    print("Merged Dictionary:", d3)
+
 
 
 #driver code
@@ -113,3 +132,7 @@ student = {
 }
 display_student(student)
 count_frequency("Kshitiz")
+
+d1 = {"a": 1, "b": 2}
+d2 = {"c": 3, "d": 4}
+merge_dict(d1, d2)

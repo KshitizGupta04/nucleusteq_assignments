@@ -1,11 +1,13 @@
 # this file contain Q.17 to Q.20
 
 # Question 17
+'''calculating the square of the number'''
 def find_square(number):
     return number * number
 
 
 # Question 18
+'''checking if the palindrome exist or not for a string'''
 def isPalindrome(s):
     start = 0
     end = len(s) - 1
@@ -21,6 +23,7 @@ def isPalindrome(s):
 
 
 # Question 19
+'''finding the maximum number in a list'''
 def max_list(numbers):
     largest = float('-inf')
 
@@ -31,6 +34,7 @@ def max_list(numbers):
 
 
 # Question 20
+'''demostrate the basic use of the default parameters'''
 def default_param(name, city="Khargone"):
     return f"{name} lives in {city}"
 

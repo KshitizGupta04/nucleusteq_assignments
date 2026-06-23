@@ -1,8 +1,8 @@
+# This file contains Q.40 to Q.44
 
 # Question 40
 # Create a Student class with attributes and display details
 class Student:
-
     def __init__(self, name, age, course):
         self.name = name
         self.age = age
@@ -18,7 +18,6 @@ class Student:
 # Question 41
 # Create a Car class with a constructor
 class Car:
-
     def __init__(self, company, model):
         self.company = company
         self.model = model
@@ -31,14 +30,12 @@ class Car:
 # Question 42
 # Implement inheritance using Person and Employee class
 class Person:
-
     def __init__(self, name, age):
         self.name = name
         self.age = age
 
 
 class Employee(Person):
-
     def __init__(self, name, age, salary):
         super().__init__(name, age)
         self.salary = salary
@@ -53,7 +50,6 @@ class Employee(Person):
 # Question 43
 # Implement encapsulation using private variables in Bank class
 class Bank:
-
     def __init__(self, balance):
         self.__balance = balance
 
@@ -68,13 +64,11 @@ class Bank:
 # Question 44
 # Demonstrate polymorphism using same method name
 class Dog:
-
     def sound(self):
         print("Dog barks")
 
 
 class Cat:
-
     def sound(self):
         print("Cat meows")
 
