@@ -33,3 +33,7 @@ tempCodeRunnerFile.py
 
 # Logs
 *.log
+
+backend/test_*.py
+backend/cleanup.py
+backend/tempCodeRunnerFile.py

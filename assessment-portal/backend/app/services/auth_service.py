@@ -1,21 +1,23 @@
+from app.constants.messages import ErrorMessages
 from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
     hash_password,
     verify_password,
-    create_access_token
 )
-
-from app.models.user import (
-    User,
-    UserRole
+from app.enums.user_role import UserRole
+from app.exceptions.customexceptions import (
+    AdminAlreadyExistsException,
+    InvalidPasswordException,
+    InvalidTokenException,
+    UserAlreadyExistsException,
+    UserNotFoundException,
+    UsernameAlreadyExistsException,
 )
-
-from app.repositories.user_repository import (
-    UserRepository
-)
-
-from app.schemas.auth_schema import (
-    RegisterRequest
-)
+from app.models.user import User
+from app.repositories.user_repository import UserRepository
+from app.schemas.auth_schema import RegisterRequest
 
 
 class AuthService:
@@ -23,49 +25,26 @@ class AuthService:
     @staticmethod
     def register_user(
         request: RegisterRequest,
-        role: UserRole = UserRole.STUDENT
-    ):
+        role: UserRole = UserRole.STUDENT,
+    ) -> dict:
 
-        existing_email = (
-            UserRepository.get_user_by_email(
-                request.email
-            )
-        )
+        if UserRepository.get_user_by_email(request.email):
+            raise UserAlreadyExistsException()
 
-        if existing_email:
-            raise ValueError(
-                "Email already registered"
-            )
+        if UserRepository.get_user_by_username(request.username):
+            raise UsernameAlreadyExistsException()
 
-        existing_username = (
-            UserRepository.get_user_by_username(
-                request.username
-            )
-        )
-
-        if existing_username:
-            raise ValueError(
-                "Username already exists"
-            )
-
-        if role == UserRole.ADMIN:
-
-            existing_admin = (
-                UserRepository.admin_exists()
-            )
-
-            if existing_admin:
-                raise ValueError(
-                    "Admin already exists"
-                )
+        if (
+            role == UserRole.ADMIN
+            and UserRepository.admin_exists()
+        ):
+            raise AdminAlreadyExistsException()
 
         user = User(
             username=request.username,
             email=request.email,
-            password=hash_password(
-                request.password
-            ),
-            role=role
+            password=hash_password(request.password),
+            role=role,
         )
 
         user_id = UserRepository.create_user(
@@ -73,52 +52,65 @@ class AuthService:
         )
 
         return {
-            "message":
-            "User registered successfully",
-            "user_id": user_id
+            "message": ErrorMessages.REGISTER_SUCCESS,
+            "user_id": user_id,
         }
 
     @staticmethod
     def login_user(
         username: str,
-        password: str
-    ):
+        password: str,
+    ) -> dict:
 
-        user = (
-            UserRepository.get_user_by_username(
-                username
-            )
+        user = UserRepository.get_user_by_username(
+            username
         )
 
         if not user:
-            raise ValueError(
-                "User not found"
-            )
+            raise UserNotFoundException()
 
         if not verify_password(
             password,
-            user["password"]
+            user["password"],
         ):
-            raise ValueError(
-                "Invalid password"
-            )
+            raise InvalidPasswordException()
 
-        access_token = (
-            create_access_token(
-                {
-                    "sub":
-                    user["username"],
+        payload = {
+            "sub": user["username"],
+            "role": user["role"],
+        }
 
-                    "role":
-                    user["role"]
-                }
-            )
+        access_token = create_access_token(payload)
+
+        refresh_token = create_refresh_token(payload)
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }
+
+    @staticmethod
+    def refresh_access_token(
+        refresh_token: str,
+    ) -> dict:
+
+        payload = decode_refresh_token(
+            refresh_token
+        )
+
+        if not payload:
+            raise InvalidTokenException()
+
+        access_token = create_access_token(
+            {
+                "sub": payload["sub"],
+                "role": payload["role"],
+            }
         )
 
         return {
-            "access_token":
-            access_token,
-
-            "token_type":
-            "bearer"
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
         }

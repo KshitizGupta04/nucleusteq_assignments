@@ -1,11 +1,14 @@
 from fastapi import (
-    Depends,
-    HTTPException,
-    status
+    Depends
 )
 
 from fastapi.security import (
     OAuth2PasswordBearer
+)
+
+from app.exceptions.customexceptions import (
+    ForbiddenException,
+    InvalidTokenException
 )
 
 from app.core.security import (
@@ -30,10 +33,7 @@ def get_current_user(
 
     if not payload:
 
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
+        raise InvalidTokenException()
 
     return payload
 
@@ -46,9 +46,6 @@ def get_current_admin(
 
     if current_user["role"] != "admin":
 
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise ForbiddenException()
 
     return current_user

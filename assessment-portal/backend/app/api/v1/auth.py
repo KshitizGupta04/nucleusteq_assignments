@@ -1,12 +1,6 @@
-from fastapi.security import OAuth2PasswordRequestForm
-
-
-
-
 from fastapi import (
     APIRouter,
-    Depends,
-    HTTPException
+    Depends
 )
 
 from fastapi.security import (
@@ -18,16 +12,19 @@ from app.core.dependencies import (
     get_current_user
 )
 
-from app.models.user import UserRole
-
+from app.enums.user_role import (
+    UserRole
+)
 
 from app.repositories.user_repository import (
     UserRepository
 )
 
 from app.schemas.auth_schema import (
+    LoginRequest,
+    RefreshTokenRequest,
     RegisterRequest,
-    LoginRequest
+    TokenResponse,
 )
 
 from app.services.auth_service import (
@@ -46,59 +43,51 @@ def register_student(
     request: RegisterRequest
 ):
 
-    try:
-
-        return AuthService.register_user(
-            request,
-            UserRole.STUDENT
-        )
-
-    except ValueError as e:
-
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        )
+    return AuthService.register_user(
+        request,
+        UserRole.STUDENT
+    )
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    response_model=TokenResponse
+)
 def login(
     request: LoginRequest
 ):
 
-    try:
-
-        return AuthService.login_user(
-            request.username,
-            request.password
-        )
-
-    except ValueError as e:
-
-        raise HTTPException(
-            status_code=401,
-            detail=str(e)
-        )
+    return AuthService.login_user(
+        request.username,
+        request.password
+    )
 
 
-@router.post("/token")
+@router.post(
+    "/token",
+    response_model=TokenResponse
+)
 def login_for_swagger(
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
 
-    try:
+    return AuthService.login_user(
+        form_data.username,
+        form_data.password
+    )
 
-        return AuthService.login_user(
-            form_data.username,
-            form_data.password
-        )
 
-    except ValueError as e:
+@router.post(
+    "/refresh",
+    response_model=TokenResponse
+)
+def refresh_token(
+    request: RefreshTokenRequest
+):
 
-        raise HTTPException(
-            status_code=401,
-            detail=str(e)
-        )
+    return AuthService.refresh_access_token(
+        request.refresh_token
+    )
 
 
 @router.get("/me")
