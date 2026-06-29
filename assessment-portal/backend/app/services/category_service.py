@@ -71,6 +71,18 @@ class CategoryService:
         if not category:
             raise CategoryNotFoundException()
 
+        existing_category = (
+            CategoryRepository.get_category_by_name(
+                request.name
+            )
+        )
+
+        if (
+            existing_category
+            and str(existing_category["_id"]) != category_id
+        ):
+            raise CategoryAlreadyExistsException()
+
         CategoryRepository.update_category(
             category_id,
             {

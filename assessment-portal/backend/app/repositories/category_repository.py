@@ -1,6 +1,14 @@
-from bson import ObjectId
+from bson import (
+    ObjectId
+)
 
-from app.core.database import db
+from bson.errors import (
+    InvalidId
+)
+
+from app.core.database import (
+    db
+)
 
 
 class CategoryRepository:
@@ -39,13 +47,19 @@ class CategoryRepository:
         category_id: str
     ):
 
-        return cls.collection.find_one(
-            {
-                "_id": ObjectId(
-                    category_id
-                )
-            }
-        )
+        try:
+
+            return cls.collection.find_one(
+                {
+                    "_id": ObjectId(
+                        category_id
+                    )
+                }
+            )
+
+        except InvalidId:
+
+            return None
 
     @classmethod
     def get_all_categories(
@@ -71,16 +85,22 @@ class CategoryRepository:
         category_data: dict
     ):
 
-        return cls.collection.update_one(
-            {
-                "_id": ObjectId(
-                    category_id
-                )
-            },
-            {
-                "$set": category_data
-            }
-        )
+        try:
+
+            return cls.collection.update_one(
+                {
+                    "_id": ObjectId(
+                        category_id
+                    )
+                },
+                {
+                    "$set": category_data
+                }
+            )
+
+        except InvalidId:
+
+            return None
 
     @classmethod
     def delete_category(
@@ -88,10 +108,16 @@ class CategoryRepository:
         category_id: str
     ):
 
-        return cls.collection.delete_one(
-            {
-                "_id": ObjectId(
-                    category_id
-                )
-            }
-        )
+        try:
+
+            return cls.collection.delete_one(
+                {
+                    "_id": ObjectId(
+                        category_id
+                    )
+                }
+            )
+
+        except InvalidId:
+
+            return None
