@@ -35,8 +35,9 @@ class QuizService:
         request: QuizRequest
     ):
 
-        if QuizRepository.get_quiz_by_title(
-            request.title
+        if QuizRepository.get_quiz_by_title_and_category(
+            request.title,
+            request.category_id
         ):
             raise QuizAlreadyExistsException()
 

@@ -22,14 +22,16 @@ class QuizRepository:
         )
 
     @classmethod
-    def get_quiz_by_title(
+    def get_quiz_by_title_and_category(
         cls,
-        title: str
+        title: str,
+        category_id: str
     ):
 
         return cls.collection.find_one(
             {
-                "title": title
+                "title": title,
+                "category_id": category_id
             }
         )
 

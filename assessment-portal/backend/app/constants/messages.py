@@ -56,8 +56,22 @@ class ErrorMessages:
     CATEGORY_NOT_FOUND = (
         "Category not found."
     )
-    QUIZ_CREATED = "Quiz created successfully."
+    QUIZ_CREATED = (
+    "Quiz created successfully."
+    )
 
-    QUIZ_UPDATED = "Quiz updated successfully."
+    QUIZ_UPDATED = (
+        "Quiz updated successfully."
+    )
 
-    QUIZ_DELETED = "Quiz deleted successfully."
+    QUIZ_DELETED = (
+        "Quiz deleted successfully."
+    )
+
+    QUIZ_ALREADY_EXISTS = (
+        "Quiz already exists."
+    )
+
+    QUIZ_NOT_FOUND = (
+        "Quiz not found."
+    )
