@@ -110,3 +110,10 @@ class CategoryNotFoundException(Exception):
     ):
 
         super().__init__(message)
+
+class QuizAlreadyExistsException(Exception):
+    pass
+
+
+class QuizNotFoundException(Exception):
+    pass
