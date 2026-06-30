@@ -426,3 +426,130 @@ def test_get_users_invalid_token(
     )
 
     assert response.status_code == 401
+
+def test_register_username_starts_with_number(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "10student",
+            "email": "student1@gmail.com",
+            "password": "Student@123"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_username_with_special_character(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student@123",
+            "email": "student2@gmail.com",
+            "password": "Student@123"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_username_with_space(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student gupta",
+            "email": "student3@gmail.com",
+            "password": "Student@123"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_password_without_uppercase(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student_upper",
+            "email": "student4@gmail.com",
+            "password": "student@123"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_password_without_lowercase(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student_lower",
+            "email": "student5@gmail.com",
+            "password": "STUDENT@123"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_password_without_number(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student_number",
+            "email": "student6@gmail.com",
+            "password": "Student@"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_password_without_special_character(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student_special",
+            "email": "student7@gmail.com",
+            "password": "Student123"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_password_too_short(
+    client
+):
+
+    response = client.post(
+        f"{AUTH_URL}/register",
+        json={
+            "username": "student_short",
+            "email": "student8@gmail.com",
+            "password": "Stu@1"
+        }
+    )
+
+    assert response.status_code == 422
