@@ -47,6 +47,19 @@ def get_categories(
     return CategoryService.get_all_categories()
 
 
+@router.get("/{category_id}")
+def get_category(
+    category_id: str,
+    current_user=Depends(
+        get_current_user
+    )
+):
+
+    return CategoryService.get_category_by_id(
+        category_id
+    )
+
+
 @router.put("/{category_id}")
 def update_category(
     category_id: str,

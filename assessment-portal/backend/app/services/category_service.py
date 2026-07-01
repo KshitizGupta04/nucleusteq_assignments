@@ -57,6 +57,26 @@ class CategoryService:
         return CategoryRepository.get_all_categories()
 
     @staticmethod
+    def get_category_by_id(
+        category_id: str
+    ):
+
+        category = (
+            CategoryRepository.get_category_by_id(
+                category_id
+            )
+        )
+
+        if not category:
+            raise CategoryNotFoundException()
+
+        category["_id"] = str(
+            category["_id"]
+        )
+
+        return category
+
+    @staticmethod
     def update_category(
         category_id: str,
         request: UpdateCategoryRequest

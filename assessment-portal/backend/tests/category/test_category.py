@@ -505,3 +505,77 @@ def test_category_description_too_long(
     )
 
     assert response.status_code == 422
+
+def test_get_category_by_id(
+    client,
+    admin_headers
+):
+
+    create = client.post(
+        "/api/v1/categories/",
+        json={
+            "name": "Java",
+            "description": "Java Category"
+        },
+        headers=admin_headers
+    )
+
+    category_id = create.json()["category_id"]
+
+    response = client.get(
+        f"/api/v1/categories/{category_id}",
+        headers=admin_headers
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["_id"] == category_id
+
+    assert data["name"] == "Java"
+
+    assert data["description"] == "Java Category"
+
+
+def test_get_category_invalid_id(
+    client,
+    admin_headers
+):
+
+    response = client.get(
+        "/api/v1/categories/689999999999999999999999",
+        headers=admin_headers
+    )
+
+    assert response.status_code == 404
+
+    assert (
+        response.json()["detail"]
+        == "Category not found."
+    )
+
+
+def test_get_category_without_token(
+    client
+):
+
+    response = client.get(
+        "/api/v1/categories/689999999999999999999999"
+    )
+
+    assert response.status_code == 401
+
+
+def test_get_category_invalid_token(
+    client
+):
+
+    response = client.get(
+        "/api/v1/categories/689999999999999999999999",
+        headers={
+            "Authorization": "Bearer invalidtoken"
+        }
+    )
+
+    assert response.status_code == 401
