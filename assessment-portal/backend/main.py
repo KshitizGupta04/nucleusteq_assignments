@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 
 from app.api.v1.auth import router as auth_router
+
+from app.api.v1.category import (
+    router as category_router
+)
+
 from app.exceptions.handlers import (
     register_exception_handlers
 )
@@ -17,6 +22,10 @@ register_exception_handlers(
 
 app.include_router(
     auth_router
+)
+
+app.include_router(
+    category_router
 )
 
 

@@ -17,6 +17,8 @@ from app.exceptions.customexceptions import (
     UserAlreadyExistsException,
     UserNotFoundException,
     UsernameAlreadyExistsException,
+    CategoryAlreadyExistsException,
+    CategoryNotFoundException,
 )
 
 
@@ -139,6 +141,36 @@ def register_exception_handlers(
 
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+    @app.exception_handler(
+        CategoryAlreadyExistsException
+    )
+    async def category_exists_exception_handler(
+        request: Request,
+        exc: CategoryAlreadyExistsException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+    @app.exception_handler(
+        CategoryNotFoundException
+    )
+    async def category_not_found_exception_handler(
+        request: Request,
+        exc: CategoryNotFoundException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
             content={
                 "detail": str(exc)
             }
