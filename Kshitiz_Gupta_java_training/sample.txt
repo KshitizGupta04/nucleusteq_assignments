@@ -1,2 +1,0 @@
-Hello Kshitiz 
- Welcome to Java File Handling
