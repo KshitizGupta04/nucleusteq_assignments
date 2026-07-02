@@ -3,6 +3,7 @@ from app.constants.messages import (
 )
 
 
+
 class UserAlreadyExistsException(Exception):
 
     def __init__(
@@ -118,6 +119,15 @@ class QuizNotFoundException(Exception):
     def __init__(
         self,
         message: str = ErrorMessages.QUIZ_NOT_FOUND
+    ):
+
+        super().__init__(message)
+
+class QuestionNotFoundException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.QUESTION_NOT_FOUND
     ):
 
         super().__init__(message)

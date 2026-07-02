@@ -16,6 +16,7 @@ from app.exceptions.customexceptions import (
     InvalidPasswordException,
     InvalidTokenException,
     QuizAlreadyExistsException,
+    QuestionNotFoundException,
     QuizNotFoundException,
     UnauthorizedException,
     UserAlreadyExistsException,
@@ -199,6 +200,21 @@ def register_exception_handlers(
     async def quiz_not_found_exception_handler(
         request: Request,
         exc: QuizNotFoundException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+    @app.exception_handler(
+        QuestionNotFoundException
+    )
+    async def question_not_found_exception_handler(
+        request: Request,
+        exc: QuestionNotFoundException
     ):
 
         return JSONResponse(
