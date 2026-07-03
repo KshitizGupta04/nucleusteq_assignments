@@ -81,3 +81,32 @@ class ForbiddenException(Exception):
     ):
 
         super().__init__(message)
+
+class CategoryAlreadyExistsException(Exception):
+    """Raised when category already exists."""
+    pass
+
+
+class CategoryNotFoundException(Exception):
+    """Raised when category is not found."""
+    pass
+
+
+class CategoryAlreadyExistsException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.CATEGORY_ALREADY_EXISTS
+    ):
+
+        super().__init__(message)
+
+
+class CategoryNotFoundException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.CATEGORY_NOT_FOUND
+    ):
+
+        super().__init__(message)
