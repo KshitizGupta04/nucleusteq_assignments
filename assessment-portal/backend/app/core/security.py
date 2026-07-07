@@ -1,3 +1,5 @@
+import logging
+
 from datetime import (
     datetime,
     timedelta,
@@ -16,6 +18,9 @@ from passlib.context import (
 from app.core.config import (
     settings
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 pwd_context = CryptContext(
@@ -106,9 +111,11 @@ def decode_access_token(
     token: str
 ):
 
+    payload = None
+
     try:
 
-        payload = jwt.decode(
+        decoded_payload = jwt.decode(
             token,
             settings.SECRET_KEY,
             algorithms=[
@@ -116,26 +123,31 @@ def decode_access_token(
             ]
         )
 
-        if payload.get(
+        if decoded_payload.get(
             "type"
-        ) != "access":
+        ) == "access":
 
-            return None
+            payload = decoded_payload
 
-        return payload
+    except JWTError as exception:
 
-    except JWTError:
+        logger.exception(
+            "Failed to decode access token: %s",
+            exception
+        )
 
-        return None
+    return payload
 
 
 def decode_refresh_token(
     token: str
 ):
 
+    payload = None
+
     try:
 
-        payload = jwt.decode(
+        decoded_payload = jwt.decode(
             token,
             settings.SECRET_KEY,
             algorithms=[
@@ -143,14 +155,17 @@ def decode_refresh_token(
             ]
         )
 
-        if payload.get(
+        if decoded_payload.get(
             "type"
-        ) != "refresh":
+        ) == "refresh":
 
-            return None
+            payload = decoded_payload
 
-        return payload
+    except JWTError as exception:
 
-    except JWTError:
+        logger.exception(
+            "Failed to decode refresh token: %s",
+            exception
+        )
 
-        return None
+    return payload
