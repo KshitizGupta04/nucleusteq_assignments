@@ -71,3 +71,15 @@ class UpdateQuizRequest(BaseModel):
         ...,
         gt=0
     )
+
+
+class QuizCreateResponse(BaseModel):
+
+    message: str
+
+    quiz_id: str
+
+
+class QuizMessageResponse(BaseModel):
+
+    message: str
