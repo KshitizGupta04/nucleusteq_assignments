@@ -32,9 +32,11 @@ def create_category(
     )
 ):
 
-    return CategoryService.create_category(
+    response = CategoryService.create_category(
         request
     )
+
+    return response
 
 
 @router.get("/")
@@ -44,7 +46,9 @@ def get_categories(
     )
 ):
 
-    return CategoryService.get_all_categories()
+    response = CategoryService.get_all_categories()
+
+    return response
 
 
 @router.get("/{category_id}")
@@ -55,9 +59,11 @@ def get_category(
     )
 ):
 
-    return CategoryService.get_category_by_id(
+    response = CategoryService.get_category_by_id(
         category_id
     )
+
+    return response
 
 
 @router.put("/{category_id}")
@@ -69,10 +75,12 @@ def update_category(
     )
 ):
 
-    return CategoryService.update_category(
+    response = CategoryService.update_category(
         category_id,
         request
     )
+
+    return response
 
 
 @router.delete("/{category_id}")
@@ -83,6 +91,8 @@ def delete_category(
     )
 ):
 
-    return CategoryService.delete_category(
+    response = CategoryService.delete_category(
         category_id
     )
+
+    return response

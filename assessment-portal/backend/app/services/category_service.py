@@ -19,7 +19,9 @@ from app.repositories.category_repository import (
 
 from app.schemas.category_schema import (
     CategoryRequest,
-    UpdateCategoryRequest
+    UpdateCategoryRequest,
+    CategoryCreateResponse,
+    CategoryMessageResponse
 )
 
 
@@ -46,15 +48,21 @@ class CategoryService:
             )
         )
 
-        return {
-            "message": ErrorMessages.CATEGORY_CREATED,
-            "category_id": category_id
-        }
+        response = CategoryCreateResponse(
+            message=ErrorMessages.CATEGORY_CREATED,
+            category_id=category_id
+        )
+
+        return response
 
     @staticmethod
     def get_all_categories():
 
-        return CategoryRepository.get_all_categories()
+        response = (
+            CategoryRepository.get_all_categories()
+        )
+
+        return response
 
     @staticmethod
     def get_category_by_id(
@@ -112,9 +120,11 @@ class CategoryService:
             }
         )
 
-        return {
-            "message": ErrorMessages.CATEGORY_UPDATED
-        }
+        response = CategoryMessageResponse(
+            message=ErrorMessages.CATEGORY_UPDATED
+        )
+
+        return response
 
     @staticmethod
     def delete_category(
@@ -134,6 +144,8 @@ class CategoryService:
             category_id
         )
 
-        return {
-            "message": ErrorMessages.CATEGORY_DELETED
-        }
+        response = CategoryMessageResponse(
+            message=ErrorMessages.CATEGORY_DELETED
+        )
+
+        return response
