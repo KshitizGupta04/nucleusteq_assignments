@@ -10,15 +10,17 @@ from fastapi.responses import (
 
 from app.exceptions.customexceptions import (
     AdminAlreadyExistsException,
+    CategoryAlreadyExistsException,
+    CategoryNotFoundException,
     ForbiddenException,
     InvalidPasswordException,
     InvalidTokenException,
+    QuizAlreadyExistsException,
+    QuizNotFoundException,
     UnauthorizedException,
     UserAlreadyExistsException,
     UserNotFoundException,
     UsernameAlreadyExistsException,
-    CategoryAlreadyExistsException,
-    CategoryNotFoundException,
 )
 
 
@@ -167,6 +169,36 @@ def register_exception_handlers(
     async def category_not_found_exception_handler(
         request: Request,
         exc: CategoryNotFoundException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+    @app.exception_handler(
+        QuizAlreadyExistsException
+    )
+    async def quiz_exists_exception_handler(
+        request: Request,
+        exc: QuizAlreadyExistsException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+    @app.exception_handler(
+        QuizNotFoundException
+    )
+    async def quiz_not_found_exception_handler(
+        request: Request,
+        exc: QuizNotFoundException
     ):
 
         return JSONResponse(

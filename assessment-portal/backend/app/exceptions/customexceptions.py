@@ -82,15 +82,6 @@ class ForbiddenException(Exception):
 
         super().__init__(message)
 
-class CategoryAlreadyExistsException(Exception):
-    """Raised when category already exists."""
-    pass
-
-
-class CategoryNotFoundException(Exception):
-    """Raised when category is not found."""
-    pass
-
 
 class CategoryAlreadyExistsException(Exception):
 
@@ -107,6 +98,26 @@ class CategoryNotFoundException(Exception):
     def __init__(
         self,
         message: str = ErrorMessages.CATEGORY_NOT_FOUND
+    ):
+
+        super().__init__(message)
+
+
+class QuizAlreadyExistsException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.QUIZ_ALREADY_EXISTS
+    ):
+
+        super().__init__(message)
+
+
+class QuizNotFoundException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.QUIZ_NOT_FOUND
     ):
 
         super().__init__(message)
