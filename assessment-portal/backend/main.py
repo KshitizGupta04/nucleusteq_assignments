@@ -6,10 +6,6 @@ from app.api.v1.category import (
     router as category_router
 )
 
-from app.exceptions.handlers import (
-    register_exception_handlers
-)
-
 from app.api.v1.quiz import (
     router as quiz_router
 )
@@ -17,6 +13,15 @@ from app.api.v1.quiz import (
 from app.api.v1.question import (
     router as question_router
 )
+
+from app.api.v1.attempt import (
+    router as attempt_router
+)
+
+from app.exceptions.handlers import (
+    register_exception_handlers
+)
+
 
 app = FastAPI(
     title="Assessment Portal API",
@@ -41,6 +46,10 @@ app.include_router(
 
 app.include_router(
     question_router
+)
+
+app.include_router(
+    attempt_router
 )
 
 

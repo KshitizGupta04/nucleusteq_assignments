@@ -131,3 +131,82 @@ class QuestionNotFoundException(Exception):
     ):
 
         super().__init__(message)
+
+class AttemptNotFoundException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.ATTEMPT_NOT_FOUND
+    ):
+
+        super().__init__(
+            message
+        )
+
+
+class MaxAttemptReachedException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.MAX_ATTEMPT_REACHED
+    ):
+
+        super().__init__(
+            message
+        )
+
+class StudentAccessRequiredException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.STUDENT_ACCESS_REQUIRED
+    ):
+
+        super().__init__(
+            message
+        )
+
+class AttemptAlreadySubmittedException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.ATTEMPT_ALREADY_SUBMITTED
+    ):
+
+        super().__init__(
+            message
+        )
+
+class InvalidAnswerException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.INVALID_ANSWER
+    ):
+
+        super().__init__(
+            message
+        )
+
+class AttemptAlreadyInProgressException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.ATTEMPT_ALREADY_IN_PROGRESS
+    ):
+
+        super().__init__(
+            message
+        )

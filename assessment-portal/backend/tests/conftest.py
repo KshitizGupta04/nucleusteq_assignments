@@ -73,10 +73,16 @@ def admin_headers(admin_token):
 
 
 @pytest.fixture(autouse=True)
-def clean_categories():
+def clean_database():
 
+    db["attempts"].delete_many({})
+    db["questions"].delete_many({})
+    db["quizzes"].delete_many({})
     db["categories"].delete_many({})
 
     yield
 
+    db["attempts"].delete_many({})
+    db["questions"].delete_many({})
+    db["quizzes"].delete_many({})
     db["categories"].delete_many({})
