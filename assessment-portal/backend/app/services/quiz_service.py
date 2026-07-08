@@ -24,7 +24,9 @@ from app.repositories.quiz_repository import (
 
 from app.schemas.quiz_schema import (
     QuizRequest,
-    UpdateQuizRequest
+    UpdateQuizRequest,
+    QuizCreateResponse,
+    QuizMessageResponse
 )
 
 
@@ -64,15 +66,21 @@ class QuizService:
             )
         )
 
-        return {
-            "message": ErrorMessages.QUIZ_CREATED,
-            "quiz_id": quiz_id
-        }
+        response = QuizCreateResponse(
+            message=ErrorMessages.QUIZ_CREATED,
+            quiz_id=quiz_id
+        )
+
+        return response
 
     @staticmethod
     def get_all_quizzes():
 
-        return QuizRepository.get_all_quizzes()
+        response = (
+            QuizRepository.get_all_quizzes()
+        )
+
+        return response
 
     @staticmethod
     def update_quiz(
@@ -110,9 +118,11 @@ class QuizService:
             }
         )
 
-        return {
-            "message": ErrorMessages.QUIZ_UPDATED
-        }
+        response = QuizMessageResponse(
+            message=ErrorMessages.QUIZ_UPDATED
+        )
+
+        return response
 
     @staticmethod
     def delete_quiz(
@@ -132,6 +142,8 @@ class QuizService:
             quiz_id
         )
 
-        return {
-            "message": ErrorMessages.QUIZ_DELETED
-        }
+        response = QuizMessageResponse(
+            message=ErrorMessages.QUIZ_DELETED
+        )
+
+        return response

@@ -66,6 +66,7 @@ def student_headers(student_token):
 
 @pytest.fixture(scope="session")
 def admin_headers(admin_token):
+
     return {
         "Authorization": f"Bearer {admin_token}"
     }

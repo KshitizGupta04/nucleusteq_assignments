@@ -32,9 +32,11 @@ def create_quiz(
     )
 ):
 
-    return QuizService.create_quiz(
+    response = QuizService.create_quiz(
         request
     )
+
+    return response
 
 
 @router.get("/")
@@ -44,7 +46,9 @@ def get_all_quizzes(
     )
 ):
 
-    return QuizService.get_all_quizzes()
+    response = QuizService.get_all_quizzes()
+
+    return response
 
 
 @router.put("/{quiz_id}")
@@ -56,10 +60,12 @@ def update_quiz(
     )
 ):
 
-    return QuizService.update_quiz(
+    response = QuizService.update_quiz(
         quiz_id,
         request
     )
+
+    return response
 
 
 @router.delete("/{quiz_id}")
@@ -70,6 +76,8 @@ def delete_quiz(
     )
 ):
 
-    return QuizService.delete_quiz(
+    response = QuizService.delete_quiz(
         quiz_id
     )
+
+    return response
