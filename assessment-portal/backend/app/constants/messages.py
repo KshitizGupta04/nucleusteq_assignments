@@ -116,4 +116,10 @@ class ErrorMessages:
 
     ATTEMPT_ALREADY_IN_PROGRESS = (
     "You already have an ongoing attempt. Please submit it before starting a new attempt."
-)
+    )
+
+    RESULT_NOT_FOUND = "Result not found."
+
+    RESULT_ALREADY_EXISTS = (
+        "Result already exists for this attempt."
+    )

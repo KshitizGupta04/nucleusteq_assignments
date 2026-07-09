@@ -10,6 +10,8 @@ from fastapi.responses import (
 
 from app.exceptions.customexceptions import (
     AdminAlreadyExistsException,
+    ResultAlreadyExistsException,
+    ResultNotFoundException,
     AttemptAlreadyInProgressException,
     InvalidAnswerException,
     AttemptAlreadySubmittedException,
@@ -313,6 +315,38 @@ def register_exception_handlers(
     async def attempt_already_in_progress_exception_handler(
         request: Request,
         exc: AttemptAlreadyInProgressException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+
+    @app.exception_handler(
+        ResultNotFoundException
+    )
+    async def result_not_found_exception_handler(
+        request: Request,
+        exc: ResultNotFoundException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+
+    @app.exception_handler(
+        ResultAlreadyExistsException
+    )
+    async def result_already_exists_exception_handler(
+        request: Request,
+        exc: ResultAlreadyExistsException
     ):
 
         return JSONResponse(

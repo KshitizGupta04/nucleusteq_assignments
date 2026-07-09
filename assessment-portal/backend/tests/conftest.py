@@ -79,6 +79,7 @@ def clean_database():
     db["questions"].delete_many({})
     db["quizzes"].delete_many({})
     db["categories"].delete_many({})
+    db["results"].delete_many({})
 
     yield
 
@@ -86,3 +87,4 @@ def clean_database():
     db["questions"].delete_many({})
     db["quizzes"].delete_many({})
     db["categories"].delete_many({})
+    db["results"].delete_many({})

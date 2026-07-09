@@ -210,3 +210,30 @@ class AttemptAlreadyInProgressException(
         super().__init__(
             message
         )
+
+class ResultNotFoundException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.RESULT_NOT_FOUND
+    ):
+
+        super().__init__(
+            message
+        )
+
+
+class ResultAlreadyExistsException(
+    Exception
+):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.RESULT_ALREADY_EXISTS
+    ):
+
+        super().__init__(
+            message
+        )

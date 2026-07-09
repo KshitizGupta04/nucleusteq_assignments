@@ -13,7 +13,7 @@ from app.exceptions.customexceptions import (
     QuizNotFoundException,
     InvalidAnswerException,
     QuestionNotFoundException,
-    AttemptAlreadyInProgressException,
+    AttemptAlreadyInProgressException
 )
 
 from app.models.attempt import (
@@ -39,6 +39,10 @@ from app.schemas.attempt_schema import (
     SaveAnswerRequest,
     StartAttemptRequest,
     SubmitAttemptRequest
+)
+
+from app.services.result_service import (
+    ResultService
 )
 
 
@@ -81,6 +85,7 @@ class AttemptService:
         )
 
         if active_attempt:
+
             raise AttemptAlreadyInProgressException()
 
         questions = (
@@ -116,7 +121,6 @@ class AttemptService:
         )
 
         return response
-
 
     @staticmethod
     def save_answer(
@@ -208,7 +212,7 @@ class AttemptService:
         )
 
         return response
-    
+
     @staticmethod
     def submit_attempt(
         attempt_id: str,
@@ -290,6 +294,10 @@ class AttemptService:
                 "status": "submitted",
                 "submitted_at": datetime.utcnow()
             }
+        )
+
+        ResultService.generate_result(
+            attempt_id
         )
 
         response = AttemptMessageResponse(

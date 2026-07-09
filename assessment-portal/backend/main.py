@@ -22,6 +22,10 @@ from app.exceptions.handlers import (
     register_exception_handlers
 )
 
+from app.api.v1.result import (
+    router as result_router
+)
+
 
 app = FastAPI(
     title="Assessment Portal API",
@@ -50,6 +54,10 @@ app.include_router(
 
 app.include_router(
     attempt_router
+)
+
+app.include_router(
+    result_router
 )
 
 
