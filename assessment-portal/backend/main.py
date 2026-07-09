@@ -14,6 +14,10 @@ from app.api.v1.quiz import (
     router as quiz_router
 )
 
+from app.api.v1.question import (
+    router as question_router
+)
+
 app = FastAPI(
     title="Assessment Portal API",
     version="1.0.0"
@@ -33,6 +37,10 @@ app.include_router(
 
 app.include_router(
     quiz_router
+)
+
+app.include_router(
+    question_router
 )
 
 

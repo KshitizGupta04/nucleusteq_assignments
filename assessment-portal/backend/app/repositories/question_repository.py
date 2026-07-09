@@ -1,24 +1,28 @@
-from bson import ObjectId
-
-from app.core.database import db
+from bson import (
+    ObjectId
+)
 
 from bson.errors import (
     InvalidId
 )
 
+from app.core.database import (
+    db
+)
 
-class QuizRepository:
 
-    collection = db["quizzes"]
+class QuestionRepository:
+
+    collection = db["questions"]
 
     @classmethod
-    def create_quiz(
+    def create_question(
         cls,
-        quiz_data: dict
+        question_data: dict
     ):
 
         result = cls.collection.insert_one(
-            quiz_data
+            question_data
         )
 
         return str(
@@ -26,23 +30,9 @@ class QuizRepository:
         )
 
     @classmethod
-    def get_quiz_by_title_and_category(
+    def get_question_by_id(
         cls,
-        title: str,
-        category_id: str
-    ):
-
-        return cls.collection.find_one(
-            {
-                "title": title,
-                "category_id": category_id
-            }
-        )
-
-    @classmethod
-    def get_quiz_by_id(
-        cls,
-        quiz_id: str
+        question_id: str
     ):
 
         try:
@@ -50,36 +40,42 @@ class QuizRepository:
             return cls.collection.find_one(
                 {
                     "_id": ObjectId(
-                        quiz_id
+                        question_id
                     )
                 }
             )
+
         except InvalidId:
 
             return None
 
     @classmethod
-    def get_all_quizzes(
-        cls
+    def get_questions_by_quiz_id(
+        cls,
+        quiz_id: str
     ):
 
-        quizzes = list(
-            cls.collection.find()
+        questions = list(
+            cls.collection.find(
+                {
+                    "quiz_id": quiz_id
+                }
+            )
         )
 
-        for quiz in quizzes:
+        for question in questions:
 
-            quiz["_id"] = str(
-                quiz["_id"]
+            question["_id"] = str(
+                question["_id"]
             )
 
-        return quizzes
+        return questions
 
     @classmethod
-    def update_quiz(
+    def update_question(
         cls,
-        quiz_id: str,
-        quiz_data: dict
+        question_id: str,
+        question_data: dict
     ):
 
         try:
@@ -87,22 +83,22 @@ class QuizRepository:
             return cls.collection.update_one(
                 {
                     "_id": ObjectId(
-                        quiz_id
+                        question_id
                     )
                 },
                 {
-                    "$set": quiz_data
+                    "$set": question_data
                 }
             )
 
         except InvalidId:
 
             return None
-        
+
     @classmethod
-    def delete_quiz(
+    def delete_question(
         cls,
-        quiz_id: str
+        question_id: str
     ):
 
         try:
@@ -110,7 +106,7 @@ class QuizRepository:
             return cls.collection.delete_one(
                 {
                     "_id": ObjectId(
-                        quiz_id
+                        question_id
                     )
                 }
             )

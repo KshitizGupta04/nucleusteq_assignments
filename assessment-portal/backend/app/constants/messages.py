@@ -75,3 +75,9 @@ class ErrorMessages:
     QUIZ_NOT_FOUND = (
         "Quiz not found."
     )
+
+    QUESTION_CREATED = "Question created successfully."
+    QUESTION_UPDATED = "Question updated successfully."
+    QUESTION_DELETED = "Question deleted successfully."
+
+    QUESTION_NOT_FOUND = "Question not found."
