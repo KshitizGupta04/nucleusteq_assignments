@@ -10,13 +10,19 @@ from fastapi.responses import (
 
 from app.exceptions.customexceptions import (
     AdminAlreadyExistsException,
+    AttemptAlreadyInProgressException,
+    InvalidAnswerException,
+    AttemptAlreadySubmittedException,
+    StudentAccessRequiredException,
+    AttemptNotFoundException,
     CategoryAlreadyExistsException,
     CategoryNotFoundException,
     ForbiddenException,
     InvalidPasswordException,
     InvalidTokenException,
-    QuizAlreadyExistsException,
+    MaxAttemptReachedException,
     QuestionNotFoundException,
+    QuizAlreadyExistsException,
     QuizNotFoundException,
     UnauthorizedException,
     UserAlreadyExistsException,
@@ -219,6 +225,98 @@ def register_exception_handlers(
 
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+    @app.exception_handler(
+        AttemptNotFoundException
+    )
+    async def attempt_not_found_exception_handler(
+        request: Request,
+        exc: AttemptNotFoundException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+
+    @app.exception_handler(
+        MaxAttemptReachedException
+    )
+    async def max_attempt_reached_exception_handler(
+        request: Request,
+        exc: MaxAttemptReachedException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+    @app.exception_handler(
+    StudentAccessRequiredException
+    )
+    async def student_access_required_exception_handler(
+        request: Request,
+        exc: StudentAccessRequiredException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+    @app.exception_handler(
+        AttemptAlreadySubmittedException
+    )
+    async def attempt_already_submitted_exception_handler(
+        request: Request,
+        exc: AttemptAlreadySubmittedException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+
+    @app.exception_handler(
+        InvalidAnswerException
+    )
+    async def invalid_answer_exception_handler(
+        request: Request,
+        exc: InvalidAnswerException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": str(exc)
+            }
+        )
+    
+    @app.exception_handler(
+        AttemptAlreadyInProgressException
+    )
+    async def attempt_already_in_progress_exception_handler(
+        request: Request,
+        exc: AttemptAlreadyInProgressException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={
                 "detail": str(exc)
             }

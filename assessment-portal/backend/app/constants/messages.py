@@ -81,3 +81,39 @@ class ErrorMessages:
     QUESTION_DELETED = "Question deleted successfully."
 
     QUESTION_NOT_FOUND = "Question not found."
+
+    ATTEMPT_STARTED = (
+    "Attempt started successfully."
+    )
+
+    ANSWER_SAVED = (
+        "Answer saved successfully."
+    )
+
+    ATTEMPT_SUBMITTED = (
+        "Attempt submitted successfully."
+    )
+
+    ATTEMPT_NOT_FOUND = (
+        "Attempt not found."
+    )
+
+    MAX_ATTEMPT_REACHED = (
+        "Maximum attempts reached."
+    )
+
+    ATTEMPT_ALREADY_SUBMITTED = (
+        "Attempt has already been submitted."
+    )
+
+    STUDENT_ACCESS_REQUIRED = (
+        "Student access required."
+    )
+
+    INVALID_ANSWER = (
+    "Invalid answer selected."
+    )
+
+    ATTEMPT_ALREADY_IN_PROGRESS = (
+    "You already have an ongoing attempt. Please submit it before starting a new attempt."
+)
