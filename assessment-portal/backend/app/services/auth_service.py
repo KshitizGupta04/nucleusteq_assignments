@@ -1,4 +1,11 @@
-from app.constants.messages import ErrorMessages
+from app.constants.messages import (
+    ErrorMessages
+)
+
+from app.core.password_encryption import (
+    decrypt_password
+)
+
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -6,7 +13,11 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from app.enums.user_role import UserRole
+
+from app.enums.user_role import (
+    UserRole
+)
+
 from app.exceptions.customexceptions import (
     AdminAlreadyExistsException,
     InvalidPasswordException,
@@ -15,9 +26,18 @@ from app.exceptions.customexceptions import (
     UserNotFoundException,
     UsernameAlreadyExistsException,
 )
-from app.models.user import User
-from app.repositories.user_repository import UserRepository
-from app.schemas.auth_schema import RegisterRequest
+
+from app.models.user import (
+    User
+)
+
+from app.repositories.user_repository import (
+    UserRepository
+)
+
+from app.schemas.auth_schema import (
+    RegisterRequest
+)
 
 
 class AuthService:
@@ -28,22 +48,35 @@ class AuthService:
         role: UserRole = UserRole.STUDENT,
     ) -> dict:
 
-        if UserRepository.get_user_by_email(request.email):
+        if UserRepository.get_user_by_email(
+            request.email
+        ):
+
             raise UserAlreadyExistsException()
 
-        if UserRepository.get_user_by_username(request.username):
+        if UserRepository.get_user_by_username(
+            request.username
+        ):
+
             raise UsernameAlreadyExistsException()
 
         if (
             role == UserRole.ADMIN
             and UserRepository.admin_exists()
         ):
+
             raise AdminAlreadyExistsException()
+
+        decrypted_password = decrypt_password(
+            request.password
+        )
 
         user = User(
             username=request.username,
             email=request.email,
-            password=hash_password(request.password),
+            password=hash_password(
+                decrypted_password
+            ),
             role=role,
         )
 
@@ -56,6 +89,7 @@ class AuthService:
             "user_id": user_id,
         }
 
+
     @staticmethod
     def login_user(
         username: str,
@@ -67,12 +101,18 @@ class AuthService:
         )
 
         if not user:
+
             raise UserNotFoundException()
 
+        decrypted_password = decrypt_password(
+            password
+        )
+
         if not verify_password(
-            password,
+            decrypted_password,
             user["password"],
         ):
+
             raise InvalidPasswordException()
 
         payload = {
@@ -80,15 +120,20 @@ class AuthService:
             "role": user["role"],
         }
 
-        access_token = create_access_token(payload)
+        access_token = create_access_token(
+            payload
+        )
 
-        refresh_token = create_refresh_token(payload)
+        refresh_token = create_refresh_token(
+            payload
+        )
 
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
         }
+
 
     @staticmethod
     def refresh_access_token(
@@ -100,6 +145,7 @@ class AuthService:
         )
 
         if not payload:
+
             raise InvalidTokenException()
 
         access_token = create_access_token(
