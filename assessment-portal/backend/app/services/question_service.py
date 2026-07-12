@@ -5,20 +5,20 @@ from app.constants.messages import (
 )
 
 from app.exceptions.customexceptions import (
-    QuizNotFoundException,
-    QuestionNotFoundException
+    QuestionNotFoundException,
+    QuizNotFoundException
 )
 
 from app.models.question import (
     Question
 )
 
-from app.repositories.quiz_repository import (
-    QuizRepository
-)
-
 from app.repositories.question_repository import (
     QuestionRepository
+)
+
+from app.repositories.quiz_repository import (
+    QuizRepository
 )
 
 from app.schemas.question_schema import (
@@ -64,9 +64,11 @@ class QuestionService:
             "question_id": question_id
         }
 
+
     @staticmethod
     def get_questions_by_quiz(
-        quiz_id: str
+        quiz_id: str,
+        include_correct_answer: bool = False
     ):
 
         quiz = (
@@ -79,11 +81,25 @@ class QuestionService:
 
             raise QuizNotFoundException()
 
-        return (
+        questions = (
             QuestionRepository.get_questions_by_quiz_id(
                 quiz_id
             )
         )
+
+        if include_correct_answer:
+
+            return questions
+
+        return [
+            {
+                key: value
+                for key, value in question.items()
+                if key != "correct_answer"
+            }
+            for question in questions
+        ]
+
 
     @staticmethod
     def update_question(
@@ -116,6 +132,7 @@ class QuestionService:
         return {
             "message": ErrorMessages.QUESTION_UPDATED
         }
+
 
     @staticmethod
     def delete_question(

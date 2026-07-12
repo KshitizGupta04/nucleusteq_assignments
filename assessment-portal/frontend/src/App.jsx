@@ -8,6 +8,11 @@ import {
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import StudentDashboard from "./pages/student/StudentDashboard";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
 
 function App() {
 
@@ -27,6 +32,7 @@ function App() {
                     }
                 />
 
+
                 <Route
                     path="/login"
                     element={
@@ -34,12 +40,38 @@ function App() {
                     }
                 />
 
+
                 <Route
                     path="/register"
                     element={
                         <Register />
                     }
                 />
+
+
+                <Route
+                    path="/admin/dashboard"
+                    element={
+                        <ProtectedRoute
+                            allowedRole="admin"
+                        >
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+
+                <Route
+                    path="/student/dashboard"
+                    element={
+                        <ProtectedRoute
+                            allowedRole="student"
+                        >
+                            <StudentDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
 
                 <Route
                     path="*"

@@ -23,14 +23,30 @@ from app.repositories.result_repository import (
 from app.schemas.result_schema import (
     AdminResultResponse,
     QuestionBreakdownResponse,
+    QuizStatisticsResponse,
     ResultHistoryResponse,
-    ResultResponse
+    ResultResponse,
+    LeaderboardResponse,
 )
 
 
 class ResultService:
 
     PASSING_PERCENTAGE = 40.0
+
+
+    @staticmethod
+    def _get_question_id(
+        question: dict
+    ) -> str:
+
+        return str(
+            question.get(
+                "id",
+                question.get("_id", "")
+            )
+        )
+
 
     @staticmethod
     def generate_result(
@@ -47,6 +63,7 @@ class ResultService:
 
             raise ResultAlreadyExistsException()
 
+
         attempt = (
             AttemptRepository.get_attempt_by_id(
                 attempt_id
@@ -56,6 +73,7 @@ class ResultService:
         if not attempt:
 
             raise ResultNotFoundException()
+
 
         quiz = (
             QuizRepository.get_quiz_by_id(
@@ -67,6 +85,7 @@ class ResultService:
 
             raise ResultNotFoundException()
 
+
         total_marks = float(
             quiz["total_marks"]
         )
@@ -75,31 +94,34 @@ class ResultService:
             attempt["question_snapshot"]
         )
 
-        if total_questions > 0:
 
-            marks_per_question = (
-                total_marks /
-                total_questions
-            )
+        marks_per_question = (
+            total_marks / total_questions
+            if total_questions > 0
+            else 0.0
+        )
 
-        else:
-
-            marks_per_question = 0.0
 
         question_breakdown = []
 
         score_obtained = 0.0
 
+
         for question in attempt[
             "question_snapshot"
         ]:
 
-            question_id = str(
-                question["_id"]
+            question_id = (
+                ResultService._get_question_id(
+                    question
+                )
             )
 
             selected_answer = (
-                attempt["answers"].get(
+                attempt.get(
+                    "answers",
+                    {}
+                ).get(
                     question_id
                 )
             )
@@ -110,8 +132,8 @@ class ResultService:
 
             is_correct = (
                 selected_answer is not None
-                and selected_answer
-                == correct_answer
+                and selected_answer ==
+                correct_answer
             )
 
             marks_obtained = (
@@ -124,38 +146,39 @@ class ResultService:
                 marks_obtained
             )
 
+
             question_breakdown.append(
                 {
                     "question_id":
-                    question_id,
+                        question_id,
 
                     "question":
-                    question["question"],
+                        question["question"],
 
                     "selected_answer":
-                    selected_answer,
+                        selected_answer,
 
                     "correct_answer":
-                    correct_answer,
+                        correct_answer,
 
                     "is_correct":
-                    is_correct,
+                        is_correct,
 
                     "marks_obtained":
-                    marks_obtained
+                        marks_obtained
                 }
             )
 
-        if total_marks > 0:
 
-            percentage = (
+        percentage = (
+            (
                 score_obtained /
                 total_marks
             ) * 100
+            if total_marks > 0
+            else 0.0
+        )
 
-        else:
-
-            percentage = 0.0
 
         status = (
             "pass"
@@ -164,23 +187,34 @@ class ResultService:
             else "fail"
         )
 
+
         result = Result(
             attempt_id=attempt_id,
+
             quiz_id=attempt[
                 "quiz_id"
             ],
+
             student_id=attempt[
                 "student_id"
             ],
+
             attempt_number=attempt[
                 "attempt_number"
             ],
+
             score_obtained=score_obtained,
+
             total_marks=total_marks,
+
             percentage=percentage,
+
             status=status,
-            question_breakdown=question_breakdown
+
+            question_breakdown=
+                question_breakdown
         )
+
 
         result_id = (
             ResultRepository.create_result(
@@ -189,6 +223,7 @@ class ResultService:
         )
 
         return result_id
+
 
     @staticmethod
     def get_result_by_id(
@@ -206,51 +241,64 @@ class ResultService:
 
             raise ResultNotFoundException()
 
+
         if (
             current_user["role"] == "student"
-            and result["student_id"]
-            != current_user["sub"]
+            and result["student_id"] !=
+            current_user["sub"]
         ):
 
             raise ForbiddenException()
+
 
         return ResultResponse(
             result_id=str(
                 result["_id"]
             ),
+
             attempt_id=result[
                 "attempt_id"
             ],
+
             quiz_id=result[
                 "quiz_id"
             ],
+
             student_id=result[
                 "student_id"
             ],
+
             attempt_number=result[
                 "attempt_number"
             ],
+
             score_obtained=result[
                 "score_obtained"
             ],
+
             total_marks=result[
                 "total_marks"
             ],
+
             percentage=result[
                 "percentage"
             ],
+
             status=result[
                 "status"
             ],
+
             question_breakdown=[
                 QuestionBreakdownResponse(
                     **question
                 )
+
                 for question in result[
                     "question_breakdown"
                 ]
             ]
         )
+
 
     @staticmethod
     def get_student_results(
@@ -263,29 +311,37 @@ class ResultService:
             )
         )
 
+
         return [
             ResultHistoryResponse(
                 result_id=str(
                     result["_id"]
                 ),
+
                 attempt_id=result[
                     "attempt_id"
                 ],
+
                 quiz_id=result[
                     "quiz_id"
                 ],
+
                 attempt_number=result[
                     "attempt_number"
                 ],
+
                 score_obtained=result[
                     "score_obtained"
                 ],
+
                 total_marks=result[
                     "total_marks"
                 ],
+
                 percentage=result[
                     "percentage"
                 ],
+
                 status=result[
                     "status"
                 ]
@@ -293,6 +349,7 @@ class ResultService:
 
             for result in results
         ]
+
 
     @staticmethod
     def get_result_breakdown(
@@ -310,13 +367,15 @@ class ResultService:
 
             raise ResultNotFoundException()
 
+
         if (
             current_user["role"] == "student"
-            and result["student_id"]
-            != current_user["sub"]
+            and result["student_id"] !=
+            current_user["sub"]
         ):
 
             raise ForbiddenException()
+
 
         return [
             QuestionBreakdownResponse(
@@ -328,6 +387,7 @@ class ResultService:
             ]
         ]
 
+
     @staticmethod
     def get_admin_dashboard():
 
@@ -335,36 +395,243 @@ class ResultService:
             ResultRepository.get_all_results()
         )
 
+
         return [
             AdminResultResponse(
                 result_id=str(
                     result["_id"]
                 ),
+
                 attempt_id=result[
                     "attempt_id"
                 ],
+
                 quiz_id=result[
                     "quiz_id"
                 ],
+
                 student_id=result[
                     "student_id"
                 ],
+
                 attempt_number=result[
                     "attempt_number"
                 ],
+
                 score_obtained=result[
                     "score_obtained"
                 ],
+
                 total_marks=result[
                     "total_marks"
                 ],
+
                 percentage=result[
                     "percentage"
                 ],
+
                 status=result[
                     "status"
                 ]
             )
 
             for result in results
+        ]
+
+
+    @staticmethod
+    def get_quiz_statistics(
+        quiz_id: str
+    ):
+
+        quiz = (
+            QuizRepository.get_quiz_by_id(
+                quiz_id
+            )
+        )
+
+        if not quiz:
+
+            raise ResultNotFoundException()
+
+
+        results = (
+            ResultRepository.get_results_by_quiz(
+                quiz_id
+            )
+        )
+
+
+        total_attempts = len(
+            results
+        )
+
+
+        if total_attempts == 0:
+
+            return QuizStatisticsResponse(
+                quiz_id=quiz_id,
+                total_attempts=0,
+                average_score=0.0,
+                pass_count=0,
+                fail_count=0,
+                pass_rate=0.0
+            )
+
+
+        total_percentage = sum(
+            float(
+                result["percentage"]
+            )
+            for result in results
+        )
+
+
+        pass_count = sum(
+            1
+            for result in results
+            if result["status"] == "pass"
+        )
+
+
+        fail_count = (
+            total_attempts
+            - pass_count
+        )
+
+
+        average_score = round(
+            total_percentage /
+            total_attempts,
+            2
+        )
+
+
+        pass_rate = round(
+            (
+                pass_count /
+                total_attempts
+            ) * 100,
+            2
+        )
+
+
+        return QuizStatisticsResponse(
+            quiz_id=quiz_id,
+            total_attempts=total_attempts,
+            average_score=average_score,
+            pass_count=pass_count,
+            fail_count=fail_count,
+            pass_rate=pass_rate
+        )
+    
+
+    @staticmethod
+    def get_quiz_leaderboard(
+        quiz_id: str
+    ):
+
+        quiz = (
+            QuizRepository.get_quiz_by_id(
+                quiz_id
+            )
+        )
+
+        if not quiz:
+
+            raise ResultNotFoundException()
+
+
+        results = (
+            ResultRepository.get_results_by_quiz(
+                quiz_id
+            )
+        )
+
+
+        best_results = {}
+
+
+        for result in results:
+
+            student_id = result[
+                "student_id"
+            ]
+
+
+            if student_id not in best_results:
+
+                best_results[
+                    student_id
+                ] = result
+
+                continue
+
+
+            existing_result = (
+                best_results[
+                    student_id
+                ]
+            )
+
+
+            if (
+                float(
+                    result["percentage"]
+                )
+                >
+                float(
+                    existing_result[
+                        "percentage"
+                    ]
+                )
+            ):
+
+                best_results[
+                    student_id
+                ] = result
+
+
+        sorted_results = sorted(
+            best_results.values(),
+
+            key=lambda result: (
+                float(
+                    result["percentage"]
+                ),
+
+                float(
+                    result["score_obtained"]
+                )
+            ),
+
+            reverse=True
+        )
+
+
+        return [
+            LeaderboardResponse(
+                rank=index,
+
+                student_id=result[
+                    "student_id"
+                ],
+
+                score_obtained=result[
+                    "score_obtained"
+                ],
+
+                total_marks=result[
+                    "total_marks"
+                ],
+
+                percentage=result[
+                    "percentage"
+                ]
+            )
+
+            for index, result in enumerate(
+                sorted_results,
+                start=1
+            )
         ]

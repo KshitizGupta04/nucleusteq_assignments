@@ -42,6 +42,35 @@ def get_admin_dashboard(
     return ResultService.get_admin_dashboard()
 
 
+@router.get(
+    "/admin/quiz/{quiz_id}/statistics"
+)
+def get_quiz_statistics(
+    quiz_id: str,
+    current_admin=Depends(
+        get_current_admin
+    )
+):
+
+    return ResultService.get_quiz_statistics(
+        quiz_id
+    )
+
+
+@router.get(
+    "/admin/quiz/{quiz_id}/leaderboard"
+)
+def get_quiz_leaderboard(
+    quiz_id: str,
+    current_admin=Depends(
+        get_current_admin
+    )
+):
+
+    return ResultService.get_quiz_leaderboard(
+        quiz_id
+    )
+
 @router.get("/{result_id}/breakdown")
 def get_result_breakdown(
     result_id: str,

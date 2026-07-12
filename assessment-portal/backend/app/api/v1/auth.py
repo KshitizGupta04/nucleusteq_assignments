@@ -73,7 +73,8 @@ def login_for_swagger(
 
     return AuthService.login_user(
         form_data.username,
-        form_data.password
+        form_data.password,
+        is_encrypted=False
     )
 
 

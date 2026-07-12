@@ -99,6 +99,38 @@ class AdminResultResponse(
     status: str
 
 
+class QuizStatisticsResponse(
+    BaseModel
+):
+
+    quiz_id: str
+
+    total_attempts: int
+
+    average_score: float
+
+    pass_count: int
+
+    fail_count: int
+
+    pass_rate: float
+
+class LeaderboardResponse(
+    BaseModel
+):
+
+    rank: int
+
+    student_id: str
+
+
+    score_obtained: float
+
+    total_marks: float
+
+    percentage: float
+    
+
 class ResultMessageResponse(
     BaseModel
 ):

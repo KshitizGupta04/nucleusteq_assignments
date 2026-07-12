@@ -645,3 +645,189 @@ def test_invalid_result_id(
         ==
         "Result not found."
     )
+
+
+
+# EXT-002
+# Test-Level Average Score and Pass Rate
+# Expected Result:
+# Admin can view aggregated statistics for
+# a quiz including average score, pass rate,
+# pass count, fail count and total attempts.
+def test_ext_002_test_level_average_score_and_pass_rate(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    (
+        quiz_id,
+        question_1,
+        question_2,
+        question_3,
+        question_4
+    ) = create_quiz_with_questions(
+        client,
+        admin_headers
+    )
+
+
+    attempt_id = start_attempt(
+        client,
+        student_headers,
+        quiz_id
+    )
+
+
+    submit_attempt(
+        client,
+        student_headers,
+        attempt_id,
+        {
+            question_1: "extends",
+            question_2: "Set",
+            question_3: "main()",
+            question_4: "RuntimeException"
+        }
+    )
+
+
+    response = client.get(
+        (
+            f"{RESULT_URL}/admin/quiz/"
+            f"{quiz_id}/statistics"
+        ),
+        headers=admin_headers
+    )
+
+
+    assert response.status_code == 200
+
+
+    data = response.json()
+
+
+    assert data[
+        "quiz_id"
+    ] == quiz_id
+
+
+    assert data[
+        "total_attempts"
+    ] == 1
+
+
+    assert data[
+        "average_score"
+    ] == 100.0
+
+
+    assert data[
+        "pass_count"
+    ] == 1
+
+
+    assert data[
+        "fail_count"
+    ] == 0
+
+
+    assert data[
+        "pass_rate"
+    ] == 100.0
+
+
+
+# EXT-003
+# Leaderboard Per Test
+# Expected Result:
+# Admin can view the leaderboard for a quiz.
+# Students are ranked by percentage, and
+# only the best attempt of each student is
+# included in the leaderboard.
+def test_ext_003_leaderboard_per_test(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    (
+        quiz_id,
+        question_1,
+        question_2,
+        question_3,
+        question_4
+    ) = create_quiz_with_questions(
+        client,
+        admin_headers
+    )
+
+
+    attempt_id = start_attempt(
+        client,
+        student_headers,
+        quiz_id
+    )
+
+
+    submit_attempt(
+        client,
+        student_headers,
+        attempt_id,
+        {
+            question_1: "extends",
+            question_2: "Set",
+            question_3: "main()",
+            question_4: "RuntimeException"
+        }
+    )
+
+
+    response = client.get(
+        (
+            f"{RESULT_URL}/admin/quiz/"
+            f"{quiz_id}/leaderboard"
+        ),
+        headers=admin_headers
+    )
+
+
+    assert response.status_code == 200
+
+
+    data = response.json()
+
+
+    assert len(
+        data
+    ) == 1
+
+
+    leaderboard_entry = data[
+        0
+    ]
+
+
+    assert leaderboard_entry[
+        "rank"
+    ] == 1
+
+
+    assert leaderboard_entry[
+        "student_id"
+    ] == "test_student_category"
+
+
+    assert leaderboard_entry[
+        "score_obtained"
+    ] == 100.0
+
+
+    assert leaderboard_entry[
+        "total_marks"
+    ] == 100.0
+
+
+    assert leaderboard_entry[
+        "percentage"
+    ] == 100.0

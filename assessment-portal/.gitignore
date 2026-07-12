@@ -1,42 +1,39 @@
-# Python
+
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual Environment
+
 venv/
 .venv/
 env/
 
-# Environment Variables
+
 .env
+backend/.env
 
-# VS Code
+
 .vscode/
+.idea/
 
-# Pytest
 .pytest_cache/
-
-# mypy
 .mypy_cache/
 
-# Coverage
 .coverage
+.coverage.*
 htmlcov/
+coverage.xml
 
-# OS Files
+
 .DS_Store
 Thumbs.db
 
-# Temporary Files
 tempCodeRunnerFile.py
+**/tempCodeRunnerFile.py
 
-# Logs
+
+
 *.log
-
 backend/test_*.py
 backend/cleanup.py
-backend/tempCodeRunnerFile.py
-
-
 backend/keys/private_key.pem

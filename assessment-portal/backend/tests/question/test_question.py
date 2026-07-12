@@ -1,7 +1,10 @@
 import uuid
 
+
 CATEGORY_URL = "/api/v1/categories"
+
 QUIZ_URL = "/api/v1/quizzes"
+
 QUESTION_URL = "/api/v1/questions"
 
 
@@ -15,15 +18,21 @@ def create_category(
     response = client.post(
         CATEGORY_URL + "/",
         json={
-            "name": f"Category_{unique}",
-            "description": "Programming Category"
+            "name": (
+                f"Category_{unique}"
+            ),
+            "description": (
+                "Programming Category"
+            )
         },
         headers=admin_headers
     )
 
     assert response.status_code == 200
 
-    return response.json()["category_id"]
+    return response.json()[
+        "category_id"
+    ]
 
 
 def create_quiz(
@@ -37,8 +46,12 @@ def create_quiz(
     response = client.post(
         QUIZ_URL + "/",
         json={
-            "title": f"Quiz_{unique}",
-            "description": "Quiz Description",
+            "title": (
+                f"Quiz_{unique}"
+            ),
+            "description": (
+                "Quiz Description"
+            ),
             "category_id": category_id,
             "duration": 30,
             "total_marks": 100
@@ -48,7 +61,9 @@ def create_quiz(
 
     assert response.status_code == 200
 
-    return response.json()["quiz_id"]
+    return response.json()[
+        "quiz_id"
+    ]
 
 
 def create_question(
@@ -61,14 +76,18 @@ def create_question(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "What is Java Programming?",
+            "question": (
+                "What is Java Programming?"
+            ),
             "options": [
                 "Programming Language",
                 "Database",
                 "Browser",
                 "Operating System"
             ],
-            "correct_answer": "Programming Language",
+            "correct_answer": (
+                "Programming Language"
+            ),
             "question_type": "mcq",
             "difficulty": "easy"
         },
@@ -77,11 +96,15 @@ def create_question(
 
     assert response.status_code == 200
 
-    return response.json()["question_id"]
+    return response.json()[
+        "question_id"
+    ]
 
 
-# QST-001 Add MCQ Question
+# SRS QUESTION SERVICE TEST CASES
 
+
+# QST-001: Add MCQ Question
 def test_qst_001_add_mcq_question(
     client,
     admin_headers
@@ -102,7 +125,9 @@ def test_qst_001_add_mcq_question(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "Which language is platform independent?",
+            "question": (
+                "Which language is platform independent?"
+            ),
             "options": [
                 "Java",
                 "C",
@@ -123,9 +148,10 @@ def test_qst_001_add_mcq_question(
         == "Question created successfully."
     )
 
+    assert "question_id" in response.json()
 
-# QST-002 Add True False Question
 
+# QST-002: Add True False Questio
 def test_qst_002_add_true_false_question(
     client,
     admin_headers
@@ -146,15 +172,17 @@ def test_qst_002_add_true_false_question(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "Java is object oriented.",
+            "question": (
+                "Java is object oriented."
+            ),
             "options": [
                 "True",
-                "False",
-                "NA",
-                "None"
+                "False"
             ],
             "correct_answer": "True",
-            "question_type": "true_false",
+            "question_type": (
+                "true_false"
+            ),
             "difficulty": "easy"
         },
         headers=admin_headers
@@ -162,9 +190,17 @@ def test_qst_002_add_true_false_question(
 
     assert response.status_code == 200
 
+    assert (
+        response.json()["message"]
+        == "Question created successfully."
+    )
+
+    assert "question_id" in response.json()
 
 
-# QST-003 Missing Answer
+# QST-003: Missing Answer
+
+
 def test_qst_003_missing_answer(
     client,
     admin_headers
@@ -185,7 +221,9 @@ def test_qst_003_missing_answer(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "Missing answer question",
+            "question": (
+                "Missing answer question"
+            ),
             "options": [
                 "A",
                 "B",
@@ -201,8 +239,9 @@ def test_qst_003_missing_answer(
     assert response.status_code == 422
 
 
+# QST-004: Update Question
 
-# QST-004 Update Question
+
 def test_qst_004_update_question(
     client,
     admin_headers
@@ -228,7 +267,9 @@ def test_qst_004_update_question(
     response = client.put(
         f"{QUESTION_URL}/{question_id}",
         json={
-            "question": "Updated Java Question",
+            "question": (
+                "Updated Java Question"
+            ),
             "options": [
                 "Java",
                 "Python",
@@ -250,7 +291,9 @@ def test_qst_004_update_question(
     )
 
 
-# QST-005 Delete Question
+# QST-005: Delete Question
+
+
 def test_qst_005_delete_question(
     client,
     admin_headers
@@ -286,8 +329,8 @@ def test_qst_005_delete_question(
     )
 
 
+# QST-006: Get Questions By Quiz
 
-# QST-006 Get Questions By Quiz
 
 def test_qst_006_get_questions_by_quiz(
     client,
@@ -312,24 +355,28 @@ def test_qst_006_get_questions_by_quiz(
     )
 
     response = client.get(
-        f"{QUESTION_URL}/quiz/{quiz_id}",
+        (
+            f"{QUESTION_URL}/"
+            f"quiz/{quiz_id}"
+        ),
         headers=admin_headers
     )
 
     assert response.status_code == 200
 
+    data = response.json()
+
     assert isinstance(
-        response.json(),
+        data,
         list
     )
 
-    assert len(
-        response.json()
-    ) >= 1
+    assert len(data) >= 1
 
 
+# QST-007: Invalid Quiz ID
 
-# QST-007 Invalid Quiz Id
+
 def test_qst_007_invalid_quiz_id(
     client,
     admin_headers
@@ -338,8 +385,12 @@ def test_qst_007_invalid_quiz_id(
     response = client.post(
         QUESTION_URL + "/",
         json={
-            "quiz_id": "689999999999999999999999",
-            "question": "Invalid Quiz Question",
+            "quiz_id": (
+                "689999999999999999999999"
+            ),
+            "question": (
+                "Invalid Quiz Question"
+            ),
             "options": [
                 "A",
                 "B",
@@ -361,15 +412,22 @@ def test_qst_007_invalid_quiz_id(
     )
 
 
+# ADDITIONAL QUESTION TEST CASES
 
-# Invalid Question Id
+
+# ADDITIONAL: Update Invalid Question
+
+
 def test_update_invalid_question(
     client,
     admin_headers
 ):
 
     response = client.put(
-        f"{QUESTION_URL}/689999999999999999999999",
+        (
+            f"{QUESTION_URL}/"
+            "689999999999999999999999"
+        ),
         json={
             "question": "Updated Question",
             "options": [
@@ -393,13 +451,19 @@ def test_update_invalid_question(
     )
 
 
+# ADDITIONAL: Delete Invalid Question
+
+
 def test_delete_invalid_question(
     client,
     admin_headers
 ):
 
     response = client.delete(
-        f"{QUESTION_URL}/689999999999999999999999",
+        (
+            f"{QUESTION_URL}/"
+            "689999999999999999999999"
+        ),
         headers=admin_headers
     )
 
@@ -411,37 +475,20 @@ def test_delete_invalid_question(
     )
 
 
+# ADDITIONAL: Student Cannot Create
 
-# Student Cannot Create Question
+
 def test_student_cannot_create_question(
-    client
+    client,
+    student_headers
 ):
-
-    unique = uuid.uuid4().hex[:8]
-
-    client.post(
-        "/api/v1/auth/register",
-        json={
-            "username": f"student_{unique}",
-            "email": f"{unique}@gmail.com",
-            "password": "Student@123"
-        }
-    )
-
-    login = client.post(
-        "/api/v1/auth/login",
-        json={
-            "username": f"student_{unique}",
-            "password": "Student@123"
-        }
-    )
-
-    token = login.json()["access_token"]
 
     response = client.post(
         QUESTION_URL + "/",
         json={
-            "quiz_id": "689999999999999999999999",
+            "quiz_id": (
+                "689999999999999999999999"
+            ),
             "question": "Student Question",
             "options": [
                 "A",
@@ -453,46 +500,27 @@ def test_student_cannot_create_question(
             "question_type": "mcq",
             "difficulty": "easy"
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=student_headers
     )
 
     assert response.status_code == 403
 
 
+# ADDITIONAL: Student Cannot Update
 
-# Student Cannot Update Question
 
 def test_student_cannot_update_question(
-    client
+    client,
+    student_headers
 ):
 
-    unique = uuid.uuid4().hex[:8]
-
-    client.post(
-        "/api/v1/auth/register",
-        json={
-            "username": f"student_{unique}",
-            "email": f"{unique}@gmail.com",
-            "password": "Student@123"
-        }
-    )
-
-    login = client.post(
-        "/api/v1/auth/login",
-        json={
-            "username": f"student_{unique}",
-            "password": "Student@123"
-        }
-    )
-
-    token = login.json()["access_token"]
-
     response = client.put(
-        f"{QUESTION_URL}/689999999999999999999999",
+        (
+            f"{QUESTION_URL}/"
+            "689999999999999999999999"
+        ),
         json={
-            "question": "Updated",
+            "question": "Updated Question",
             "options": [
                 "A",
                 "B",
@@ -503,52 +531,34 @@ def test_student_cannot_update_question(
             "question_type": "mcq",
             "difficulty": "easy"
         },
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        headers=student_headers
     )
 
     assert response.status_code == 403
 
 
-# Student Cannot Delete Question
+# ADDITIONAL: Student Cannot Delete
+
 
 def test_student_cannot_delete_question(
-    client
+    client,
+    student_headers
 ):
 
-    unique = uuid.uuid4().hex[:8]
-
-    client.post(
-        "/api/v1/auth/register",
-        json={
-            "username": f"student_{unique}",
-            "email": f"{unique}@gmail.com",
-            "password": "Student@123"
-        }
-    )
-
-    login = client.post(
-        "/api/v1/auth/login",
-        json={
-            "username": f"student_{unique}",
-            "password": "Student@123"
-        }
-    )
-
-    token = login.json()["access_token"]
-
     response = client.delete(
-        f"{QUESTION_URL}/689999999999999999999999",
-        headers={
-            "Authorization": f"Bearer {token}"
-        }
+        (
+            f"{QUESTION_URL}/"
+            "689999999999999999999999"
+        ),
+        headers=student_headers
     )
 
     assert response.status_code == 403
 
 
-# Validation Tests
+# ADDITIONAL: Question Too Short
+
+
 def test_question_too_short(
     client,
     admin_headers
@@ -586,6 +596,9 @@ def test_question_too_short(
     assert response.status_code == 422
 
 
+# ADDITIONAL: Less Than Four Options
+
+
 def test_less_than_four_options(
     client,
     admin_headers
@@ -619,6 +632,9 @@ def test_less_than_four_options(
     )
 
     assert response.status_code == 422
+
+
+# ADDITIONAL: Correct Answer Not In Options
 
 
 def test_correct_answer_not_in_options(
@@ -658,6 +674,9 @@ def test_correct_answer_not_in_options(
     assert response.status_code == 422
 
 
+# ADDITIONAL: Invalid Question Type
+
+
 def test_invalid_question_type(
     client,
     admin_headers
@@ -693,6 +712,9 @@ def test_invalid_question_type(
     )
 
     assert response.status_code == 422
+
+
+# ADDITIONAL: Invalid Difficulty
 
 
 def test_invalid_difficulty(
@@ -732,6 +754,9 @@ def test_invalid_difficulty(
     assert response.status_code == 422
 
 
+# ADDITIONAL: Missing Question
+
+
 def test_missing_question(
     client,
     admin_headers
@@ -768,6 +793,9 @@ def test_missing_question(
     assert response.status_code == 422
 
 
+# ADDITIONAL: Missing Options
+
+
 def test_missing_options(
     client,
     admin_headers
@@ -788,7 +816,7 @@ def test_missing_options(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "Question",
+            "question": "Sample Question",
             "correct_answer": "A",
             "question_type": "mcq",
             "difficulty": "easy"
@@ -797,6 +825,9 @@ def test_missing_options(
     )
 
     assert response.status_code == 422
+
+
+# ADDITIONAL: Missing Correct Answer
 
 
 def test_missing_correct_answer(
@@ -819,7 +850,7 @@ def test_missing_correct_answer(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "Question",
+            "question": "Sample Question",
             "options": [
                 "A",
                 "B",
@@ -835,17 +866,26 @@ def test_missing_correct_answer(
     assert response.status_code == 422
 
 
+# ADDITIONAL: Invalid Quiz Object ID
+
+
 def test_get_questions_invalid_object_id(
     client,
     admin_headers
 ):
 
     response = client.get(
-        f"{QUESTION_URL}/quiz/invalidid",
+        (
+            f"{QUESTION_URL}/"
+            "quiz/invalidid"
+        ),
         headers=admin_headers
     )
 
     assert response.status_code == 404
+
+
+# ADDITIONAL: Get Questions Without Token
 
 
 def test_get_questions_without_token(
@@ -853,10 +893,16 @@ def test_get_questions_without_token(
 ):
 
     response = client.get(
-        f"{QUESTION_URL}/quiz/689999999999999999999999"
+        (
+            f"{QUESTION_URL}/quiz/"
+            "689999999999999999999999"
+        )
     )
 
     assert response.status_code == 401
+
+
+# ADDITIONAL: Create Without Token
 
 
 def test_create_question_without_token(
@@ -871,16 +917,25 @@ def test_create_question_without_token(
     assert response.status_code == 401
 
 
+# ADDITIONAL: Update Without Token
+
+
 def test_update_question_without_token(
     client
 ):
 
     response = client.put(
-        f"{QUESTION_URL}/689999999999999999999999",
+        (
+            f"{QUESTION_URL}/"
+            "689999999999999999999999"
+        ),
         json={}
     )
 
     assert response.status_code == 401
+
+
+# ADDITIONAL: Delete Without Token
 
 
 def test_delete_question_without_token(
@@ -888,7 +943,10 @@ def test_delete_question_without_token(
 ):
 
     response = client.delete(
-        f"{QUESTION_URL}/689999999999999999999999"
+        (
+            f"{QUESTION_URL}/"
+            "689999999999999999999999"
+        )
     )
 
     assert response.status_code == 401

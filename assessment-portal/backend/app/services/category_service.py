@@ -30,9 +30,14 @@ class CategoryService:
         request: CategoryRequest
     ):
 
-        if CategoryRepository.get_category_by_name(
-            request.name
-        ):
+        existing_category = (
+            CategoryRepository.get_category_by_name(
+                request.name
+            )
+        )
+
+        if existing_category:
+
             raise CategoryAlreadyExistsException()
 
         category = Category(
@@ -51,10 +56,14 @@ class CategoryService:
             "category_id": category_id
         }
 
+
     @staticmethod
     def get_all_categories():
 
-        return CategoryRepository.get_all_categories()
+        return (
+            CategoryRepository.get_all_categories()
+        )
+
 
     @staticmethod
     def get_category_by_id(
@@ -68,13 +77,17 @@ class CategoryService:
         )
 
         if not category:
+
             raise CategoryNotFoundException()
 
-        category["_id"] = str(
-            category["_id"]
+        category = category.copy()
+
+        category["id"] = str(
+            category.pop("_id")
         )
 
         return category
+
 
     @staticmethod
     def update_category(
@@ -89,6 +102,7 @@ class CategoryService:
         )
 
         if not category:
+
             raise CategoryNotFoundException()
 
         existing_category = (
@@ -99,8 +113,11 @@ class CategoryService:
 
         if (
             existing_category
-            and str(existing_category["_id"]) != category_id
+            and str(
+                existing_category["_id"]
+            ) != category_id
         ):
+
             raise CategoryAlreadyExistsException()
 
         CategoryRepository.update_category(
@@ -116,6 +133,7 @@ class CategoryService:
             "message": ErrorMessages.CATEGORY_UPDATED
         }
 
+
     @staticmethod
     def delete_category(
         category_id: str
@@ -128,6 +146,7 @@ class CategoryService:
         )
 
         if not category:
+
             raise CategoryNotFoundException()
 
         CategoryRepository.delete_category(

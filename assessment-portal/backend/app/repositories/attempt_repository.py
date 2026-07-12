@@ -141,6 +141,27 @@ class AttemptRepository:
                 "status": "in_progress"
             }
         )
+    
+    @classmethod
+    def get_latest_in_progress_attempt(
+        cls,
+        student_id: str,
+        quiz_id: str
+    ):
+
+        return cls.collection.find_one(
+            {
+                "student_id": student_id,
+                "quiz_id": quiz_id,
+                "status": "in_progress"
+            },
+            sort=[
+                (
+                    "started_at",
+                    -1
+                )
+            ]
+        )
 
     @classmethod
     def save_answer(

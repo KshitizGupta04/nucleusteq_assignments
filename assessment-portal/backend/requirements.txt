@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pymongo
+pydantic
+pydantic-settings
+python-jose
+passlib
+bcrypt
+cryptography
+python-multipart
+email-validator
+pytest
+pytest-cov
+pytest-asyncio
+pytest-mock
+httpx

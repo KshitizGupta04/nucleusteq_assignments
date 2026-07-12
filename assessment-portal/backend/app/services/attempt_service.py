@@ -1,5 +1,8 @@
+import random
+
 from datetime import (
-    datetime
+    datetime,
+    timedelta
 )
 
 from app.constants.messages import (
@@ -9,11 +12,12 @@ from app.constants.messages import (
 from app.exceptions.customexceptions import (
     AttemptAlreadySubmittedException,
     AttemptNotFoundException,
-    MaxAttemptReachedException,
-    QuizNotFoundException,
+    ForbiddenException,
     InvalidAnswerException,
+    MaxAttemptReachedException,
     QuestionNotFoundException,
-    AttemptAlreadyInProgressException
+    AttemptAlreadyInProgressException,
+    QuizNotFoundException
 )
 
 from app.models.attempt import (
@@ -35,6 +39,7 @@ from app.repositories.quiz_repository import (
 from app.schemas.attempt_schema import (
     AttemptCreateResponse,
     AttemptMessageResponse,
+    AttemptQuestionResponse,
     ResumeAttemptResponse,
     SaveAnswerRequest,
     StartAttemptRequest,
@@ -47,6 +52,164 @@ from app.services.result_service import (
 
 
 class AttemptService:
+
+    MAX_ATTEMPTS = 3
+
+
+    @staticmethod
+    def _verify_attempt_owner(
+        attempt: dict,
+        current_user
+    ):
+
+        if (
+            attempt["student_id"]
+            != current_user["sub"]
+        ):
+
+            raise ForbiddenException()
+
+
+    @staticmethod
+    def _get_question_id(
+        question: dict
+    ) -> str:
+
+        return str(
+            question.get(
+                "id",
+                question.get("_id", "")
+            )
+        )
+
+
+    @staticmethod
+    def _get_safe_question_snapshot(
+        questions: list
+    ):
+
+        return [
+            AttemptQuestionResponse(
+                id=AttemptService._get_question_id(
+                    question
+                ),
+                quiz_id=question[
+                    "quiz_id"
+                ],
+                question=question[
+                    "question"
+                ],
+                options=question[
+                    "options"
+                ],
+                question_type=question[
+                    "question_type"
+                ],
+                difficulty=question[
+                    "difficulty"
+                ]
+            )
+
+            for question in questions
+        ]
+
+
+    @staticmethod
+    def _get_expiry_time(
+        attempt: dict,
+        quiz: dict
+    ) -> datetime:
+
+        return (
+            attempt["started_at"]
+            + timedelta(
+                minutes=quiz["duration"]
+            )
+        )
+
+
+    @staticmethod
+    def _calculate_score(
+        attempt: dict,
+        answers: dict,
+        quiz: dict
+    ) -> float:
+
+        total_questions = len(
+            attempt[
+                "question_snapshot"
+            ]
+        )
+
+        total_marks = float(
+            quiz["total_marks"]
+        )
+
+        marks_per_question = (
+            total_marks / total_questions
+            if total_questions > 0
+            else 0.0
+        )
+
+        score = 0.0
+
+        for question in attempt[
+            "question_snapshot"
+        ]:
+
+            question_id = (
+                AttemptService._get_question_id(
+                    question
+                )
+            )
+
+            student_answer = (
+                answers.get(
+                    question_id
+                )
+            )
+
+            if (
+                student_answer is not None
+                and student_answer ==
+                question["correct_answer"]
+            ):
+
+                score += marks_per_question
+
+        return score
+
+
+    @staticmethod
+    def _complete_attempt(
+        attempt_id: str,
+        attempt: dict,
+        answers: dict,
+        quiz: dict
+    ):
+
+        score = (
+            AttemptService._calculate_score(
+                attempt,
+                answers,
+                quiz
+            )
+        )
+
+        AttemptRepository.update_attempt(
+            attempt_id,
+            {
+                "answers": answers,
+                "score": score,
+                "status": "submitted",
+                "submitted_at": datetime.utcnow()
+            }
+        )
+
+        ResultService.generate_result(
+            attempt_id
+        )
+
 
     @staticmethod
     def start_attempt(
@@ -66,19 +229,10 @@ class AttemptService:
 
             raise QuizNotFoundException()
 
-        attempt_count = (
-            AttemptRepository.count_attempts(
-                student_id,
-                request.quiz_id
-            )
-        )
-
-        if attempt_count >= 3:
-
-            raise MaxAttemptReachedException()
 
         active_attempt = (
-            AttemptRepository.get_in_progress_attempt(
+            AttemptRepository
+            .get_latest_in_progress_attempt(
                 student_id,
                 request.quiz_id
             )
@@ -86,21 +240,77 @@ class AttemptService:
 
         if active_attempt:
 
-            raise AttemptAlreadyInProgressException()
+            expires_at = (
+                AttemptService._get_expiry_time(
+                    active_attempt,
+                    quiz
+                )
+            )
 
-        questions = (
-            QuestionRepository.get_questions_by_quiz_id(
+            if (
+                datetime.utcnow() >=
+                expires_at
+            ):
+
+                attempt_id = str(
+                    active_attempt["_id"]
+                )
+
+                saved_answers = (
+                    active_attempt.get(
+                        "answers",
+                        {}
+                    )
+                )
+
+                AttemptService._complete_attempt(
+                    attempt_id,
+                    active_attempt,
+                    saved_answers,
+                    quiz
+                )
+
+            else:
+
+                raise (
+                    AttemptAlreadyInProgressException()
+                )
+
+
+        attempt_count = (
+            AttemptRepository.count_attempts(
+                student_id,
                 request.quiz_id
             )
         )
 
-        snapshot = []
 
-        for question in questions:
+        if (
+            attempt_count >=
+            AttemptService.MAX_ATTEMPTS
+        ):
 
-            snapshot.append(
-                question
+            raise MaxAttemptReachedException()
+
+
+        questions = (
+            QuestionRepository
+            .get_questions_by_quiz_id(
+                request.quiz_id
             )
+        )
+
+
+        snapshot = [
+            question.copy()
+            for question in questions
+        ]
+
+
+        random.shuffle(
+            snapshot
+        )
+
 
         attempt = Attempt(
             quiz_id=request.quiz_id,
@@ -109,23 +319,36 @@ class AttemptService:
             question_snapshot=snapshot
         )
 
+
         attempt_id = (
             AttemptRepository.create_attempt(
                 attempt.model_dump()
             )
         )
 
-        response = AttemptCreateResponse(
-            message=ErrorMessages.ATTEMPT_STARTED,
-            attempt_id=attempt_id
+
+        expires_at = (
+            attempt.started_at
+            + timedelta(
+                minutes=quiz["duration"]
+            )
         )
 
-        return response
+
+        return AttemptCreateResponse(
+            message=ErrorMessages.ATTEMPT_STARTED,
+            attempt_id=attempt_id,
+            resumed=False,
+            started_at=attempt.started_at,
+            expires_at=expires_at
+        )
+
 
     @staticmethod
     def save_answer(
         attempt_id: str,
-        request: SaveAnswerRequest
+        request: SaveAnswerRequest,
+        current_user
     ):
 
         attempt = (
@@ -134,37 +357,103 @@ class AttemptService:
             )
         )
 
+
         if not attempt:
 
             raise AttemptNotFoundException()
 
-        if attempt["status"] == "submitted":
+
+        AttemptService._verify_attempt_owner(
+            attempt,
+            current_user
+        )
+
+
+        if (
+            attempt["status"] ==
+            "submitted"
+        ):
 
             raise AttemptAlreadySubmittedException()
 
+
+        quiz = (
+            QuizRepository.get_quiz_by_id(
+                attempt["quiz_id"]
+            )
+        )
+
+
+        if not quiz:
+
+            raise QuizNotFoundException()
+
+
+        expires_at = (
+            AttemptService._get_expiry_time(
+                attempt,
+                quiz
+            )
+        )
+
+
+        if (
+            datetime.utcnow() >=
+            expires_at
+        ):
+
+            saved_answers = (
+                attempt.get(
+                    "answers",
+                    {}
+                )
+            )
+
+            AttemptService._complete_attempt(
+                attempt_id,
+                attempt,
+                saved_answers,
+                quiz
+            )
+
+            raise AttemptAlreadySubmittedException()
+
+
         selected_question = None
+
 
         for question in attempt[
             "question_snapshot"
         ]:
 
-            if str(
-                question["_id"]
-            ) == request.question_id:
+            question_id = (
+                AttemptService._get_question_id(
+                    question
+                )
+            )
+
+            if (
+                question_id ==
+                request.question_id
+            ):
 
                 selected_question = question
 
                 break
 
+
         if not selected_question:
 
             raise QuestionNotFoundException()
 
-        if request.answer not in selected_question[
-            "options"
-        ]:
+
+        if (
+            request.answer not in
+            selected_question["options"]
+        ):
 
             raise InvalidAnswerException()
+
 
         AttemptRepository.save_answer(
             attempt_id,
@@ -172,15 +461,16 @@ class AttemptService:
             request.answer
         )
 
-        response = AttemptMessageResponse(
+
+        return AttemptMessageResponse(
             message=ErrorMessages.ANSWER_SAVED
         )
 
-        return response
 
     @staticmethod
     def resume_attempt(
-        attempt_id: str
+        attempt_id: str,
+        current_user
     ):
 
         attempt = (
@@ -189,34 +479,104 @@ class AttemptService:
             )
         )
 
+
         if not attempt:
 
             raise AttemptNotFoundException()
 
-        response = ResumeAttemptResponse(
+
+        AttemptService._verify_attempt_owner(
+            attempt,
+            current_user
+        )
+
+
+        quiz = (
+            QuizRepository.get_quiz_by_id(
+                attempt["quiz_id"]
+            )
+        )
+
+
+        if not quiz:
+
+            raise QuizNotFoundException()
+
+
+        expires_at = (
+            AttemptService._get_expiry_time(
+                attempt,
+                quiz
+            )
+        )
+
+
+        if (
+            attempt["status"] ==
+            "in_progress"
+            and datetime.utcnow() >=
+            expires_at
+        ):
+
+            saved_answers = (
+                attempt.get(
+                    "answers",
+                    {}
+                )
+            )
+
+            AttemptService._complete_attempt(
+                attempt_id,
+                attempt,
+                saved_answers,
+                quiz
+            )
+
+            attempt = (
+                AttemptRepository
+                .get_attempt_by_id(
+                    attempt_id
+                )
+            )
+
+
+        safe_questions = (
+            AttemptService
+            ._get_safe_question_snapshot(
+                attempt[
+                    "question_snapshot"
+                ]
+            )
+        )
+
+
+        return ResumeAttemptResponse(
             attempt_id=str(
                 attempt["_id"]
             ),
             quiz_id=attempt[
                 "quiz_id"
             ],
-            question_snapshot=attempt[
-                "question_snapshot"
-            ],
-            answers=attempt[
-                "answers"
-            ],
+            question_snapshot=safe_questions,
+            answers=attempt.get(
+                "answers",
+                {}
+            ),
             status=attempt[
                 "status"
-            ]
+            ],
+            started_at=attempt[
+                "started_at"
+            ],
+            expires_at=expires_at
         )
 
-        return response
 
     @staticmethod
     def submit_attempt(
         attempt_id: str,
-        request: SubmitAttemptRequest
+        request: SubmitAttemptRequest,
+        current_user
     ):
 
         attempt = (
@@ -225,83 +585,78 @@ class AttemptService:
             )
         )
 
+
         if not attempt:
 
             raise AttemptNotFoundException()
 
-        if attempt["status"] == "submitted":
+
+        AttemptService._verify_attempt_owner(
+            attempt,
+            current_user
+        )
+
+
+        if (
+            attempt["status"] ==
+            "submitted"
+        ):
 
             raise AttemptAlreadySubmittedException()
 
-        score = 0
 
-        total_questions = len(
-            attempt[
+        question_map = {
+            AttemptService._get_question_id(
+                question
+            ): question
+
+            for question in attempt[
                 "question_snapshot"
             ]
-        )
+        }
 
-        if total_questions > 0:
 
-            quiz = (
-                QuizRepository.get_quiz_by_id(
-                    attempt[
-                        "quiz_id"
-                    ]
-                )
+        for (
+            question_id,
+            answer
+        ) in request.answers.items():
+
+            question = question_map.get(
+                question_id
             )
 
-            marks_per_question = (
-                quiz["total_marks"] /
-                total_questions
-            )
+            if not question:
 
-        else:
-
-            marks_per_question = 0
-
-        for question in attempt[
-            "question_snapshot"
-        ]:
-
-            question_id = str(
-                question["_id"]
-            )
-
-            correct_answer = question[
-                "correct_answer"
-            ]
-
-            student_answer = (
-                request.answers.get(
-                    question_id
-                )
-            )
+                raise QuestionNotFoundException()
 
             if (
-                student_answer
-                and student_answer ==
-                correct_answer
+                answer not in
+                question["options"]
             ):
 
-                score += marks_per_question
+                raise InvalidAnswerException()
 
-        AttemptRepository.update_attempt(
+
+        quiz = (
+            QuizRepository.get_quiz_by_id(
+                attempt["quiz_id"]
+            )
+        )
+
+
+        if not quiz:
+
+            raise QuizNotFoundException()
+
+
+        AttemptService._complete_attempt(
             attempt_id,
-            {
-                "answers": request.answers,
-                "score": score,
-                "status": "submitted",
-                "submitted_at": datetime.utcnow()
-            }
+            attempt,
+            request.answers,
+            quiz
         )
 
-        ResultService.generate_result(
-            attempt_id
-        )
 
-        response = AttemptMessageResponse(
+        return AttemptMessageResponse(
             message=ErrorMessages.ATTEMPT_SUBMITTED
         )
-
-        return response

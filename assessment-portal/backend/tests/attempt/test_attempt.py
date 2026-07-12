@@ -1,9 +1,22 @@
 import uuid
 
-ATTEMPT_URL = "/api/v1/attempts"
+from datetime import (
+    datetime,
+    timedelta
+)
+
+from app.repositories.attempt_repository import (
+    AttemptRepository
+)
+
+
 CATEGORY_URL = "/api/v1/categories"
+
 QUIZ_URL = "/api/v1/quizzes"
+
 QUESTION_URL = "/api/v1/questions"
+
+ATTEMPT_URL = "/api/v1/attempts"
 
 
 def create_category(
@@ -16,21 +29,28 @@ def create_category(
     response = client.post(
         CATEGORY_URL + "/",
         json={
-            "name": f"Category_{unique}",
-            "description": "Programming Category"
+            "name": (
+                f"Attempt_Category_{unique}"
+            ),
+            "description": (
+                "Category for attempt testing"
+            )
         },
         headers=admin_headers
     )
 
     assert response.status_code == 200
 
-    return response.json()["category_id"]
+    return response.json()[
+        "category_id"
+    ]
 
 
 def create_quiz(
     client,
     admin_headers,
-    category_id
+    category_id,
+    duration=30
 ):
 
     unique = uuid.uuid4().hex[:8]
@@ -38,10 +58,14 @@ def create_quiz(
     response = client.post(
         QUIZ_URL + "/",
         json={
-            "title": f"Quiz_{unique}",
-            "description": "Quiz Description",
+            "title": (
+                f"Attempt_Quiz_{unique}"
+            ),
+            "description": (
+                "Quiz for attempt testing"
+            ),
             "category_id": category_id,
-            "duration": 30,
+            "duration": duration,
             "total_marks": 100
         },
         headers=admin_headers
@@ -49,7 +73,9 @@ def create_quiz(
 
     assert response.status_code == 200
 
-    return response.json()["quiz_id"]
+    return response.json()[
+        "quiz_id"
+    ]
 
 
 def create_question(
@@ -62,14 +88,16 @@ def create_question(
         QUESTION_URL + "/",
         json={
             "quiz_id": quiz_id,
-            "question": "What is Java Programming Language?",
+            "question": (
+                "Which language is platform independent?"
+            ),
             "options": [
-                "Programming Language",
-                "Database",
-                "Browser",
-                "Operating System"
+                "Java",
+                "C",
+                "HTML",
+                "CSS"
             ],
-            "correct_answer": "Programming Language",
+            "correct_answer": "Java",
             "question_type": "mcq",
             "difficulty": "easy"
         },
@@ -78,10 +106,42 @@ def create_question(
 
     assert response.status_code == 200
 
-    return response.json()["question_id"]
+    return response.json()[
+        "question_id"
+    ]
 
 
-def create_attempt(
+def setup_quiz_with_question(
+    client,
+    admin_headers,
+    duration=30
+):
+
+    category_id = create_category(
+        client,
+        admin_headers
+    )
+
+    quiz_id = create_quiz(
+        client,
+        admin_headers,
+        category_id,
+        duration
+    )
+
+    question_id = create_question(
+        client,
+        admin_headers,
+        quiz_id
+    )
+
+    return (
+        quiz_id,
+        question_id
+    )
+
+
+def start_attempt(
     client,
     student_headers,
     quiz_id
@@ -97,31 +157,24 @@ def create_attempt(
 
     assert response.status_code == 200
 
-    return response.json()["attempt_id"]
+    return response
 
 
-# ATT-001 Start Quiz Attempt
-def test_att_001_start_attempt(
+# SRS QUIZ ATTEMPT SERVICE TEST CASES
+
+
+# ATT-001: Start Quiz Attempt
+
+
+def test_att_001_start_quiz_attempt(
     client,
     admin_headers,
     student_headers
 ):
 
-    category_id = create_category(
+    quiz_id, _ = setup_quiz_with_question(
         client,
         admin_headers
-    )
-
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    create_question(
-        client,
-        admin_headers,
-        quiz_id
     )
 
     response = client.post(
@@ -134,88 +187,41 @@ def test_att_001_start_attempt(
 
     assert response.status_code == 200
 
+    data = response.json()
+
+    assert "attempt_id" in data
+
     assert (
-        response.json()["message"]
-        ==
-        "Attempt started successfully."
+        data["message"]
+        == "Attempt started successfully."
     )
 
-#ATT-002 Save Answer
-def test_att_002_save_answer(
+
+# ATT-002: Create Question Snapshot
+
+
+def test_att_002_create_question_snapshot(
     client,
     admin_headers,
     student_headers
 ):
 
-    category_id = create_category(
-        client,
-        admin_headers
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
     )
 
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    question_id = create_question(
-        client,
-        admin_headers,
-        quiz_id
-    )
-
-    attempt_id = create_attempt(
+    start_response = start_attempt(
         client,
         student_headers,
         quiz_id
     )
 
-    response = client.put(
-        f"{ATTEMPT_URL}/{attempt_id}/answer",
-        json={
-            "question_id": question_id,
-            "answer": "Programming Language"
-        },
-        headers=student_headers
-    )
-
-    assert response.status_code == 200
-
-    assert (
-        response.json()["message"]
-        ==
-        "Answer saved successfully."
-    )
-
-# ATT-003 Resume Attempt
-def test_att_003_resume_attempt(
-    client,
-    admin_headers,
-    student_headers
-):
-
-    category_id = create_category(
-        client,
-        admin_headers
-    )
-
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    create_question(
-        client,
-        admin_headers,
-        quiz_id
-    )
-
-    attempt_id = create_attempt(
-        client,
-        student_headers,
-        quiz_id
-    )
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
 
     response = client.get(
         f"{ATTEMPT_URL}/{attempt_id}",
@@ -224,56 +230,85 @@ def test_att_003_resume_attempt(
 
     assert response.status_code == 200
 
+    data = response.json()
+
+    assert "question_snapshot" in data
+
+    assert isinstance(
+        data["question_snapshot"],
+        list
+    )
+
+    assert len(
+        data["question_snapshot"]
+    ) == 1
+
+    snapshot = data[
+        "question_snapshot"
+    ][0]
+
     assert (
-        response.json()["attempt_id"]
-        ==
-        attempt_id
+        snapshot["id"]
+        == question_id
     )
 
     assert (
-        response.json()["status"]
-        ==
-        "in_progress"
+        snapshot["quiz_id"]
+        == quiz_id
     )
 
+    assert (
+        snapshot["question"]
+        == (
+            "Which language is "
+            "platform independent?"
+        )
+    )
 
-#ATT-004 Submit Attempt
-def test_att_004_submit_attempt(
+    assert snapshot["options"] == [
+        "Java",
+        "C",
+        "HTML",
+        "CSS"
+    ]
+
+    assert "correct_answer" not in snapshot
+
+
+# ATT-003: Save Partial Answers
+
+
+def test_att_003_save_partial_answers(
     client,
     admin_headers,
     student_headers
 ):
 
-    category_id = create_category(
-        client,
-        admin_headers
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
     )
 
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    question_id = create_question(
-        client,
-        admin_headers,
-        quiz_id
-    )
-
-    attempt_id = create_attempt(
+    start_response = start_attempt(
         client,
         student_headers,
         quiz_id
     )
 
-    response = client.post(
-        f"{ATTEMPT_URL}/{attempt_id}/submit",
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
+
+    response = client.put(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/answer"
+        ),
         json={
-            "answers": {
-                question_id:
-                "Programming Language"
-            }
+            "question_id": question_id,
+            "answer": "Java"
         },
         headers=student_headers
     )
@@ -282,62 +317,449 @@ def test_att_004_submit_attempt(
 
     assert (
         response.json()["message"]
-        ==
-        "Attempt submitted successfully."
+        == "Answer saved successfully."
     )
 
-# ATT-005 Maximum Three Attempts
-def test_att_005_max_attempt_limit(
+
+# ATT-004: Resume Attempt
+
+
+def test_att_004_resume_attempt(
     client,
     admin_headers,
     student_headers
 ):
 
-    category_id = create_category(
-        client,
-        admin_headers
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
     )
 
-    quiz_id = create_quiz(
+    start_response = start_attempt(
         client,
-        admin_headers,
-        category_id
-    )
-
-    question_id = create_question(
-        client,
-        admin_headers,
+        student_headers,
         quiz_id
     )
 
-    for i in range(3):
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
 
-        response = client.post(
-            ATTEMPT_URL + "/start",
-            json={
-                "quiz_id": quiz_id
-            },
-            headers=student_headers
+    save_response = client.put(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/answer"
+        ),
+        json={
+            "question_id": question_id,
+            "answer": "Java"
+        },
+        headers=student_headers
+    )
+
+    assert save_response.status_code == 200
+
+    response = client.get(
+        f"{ATTEMPT_URL}/{attempt_id}",
+        headers=student_headers
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "answers" in data
+
+    assert (
+        data["answers"][question_id]
+        == "Java"
+    )
+
+
+# ATT-005: Submit Quiz
+
+
+def test_att_005_submit_quiz(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
+    )
+
+    start_response = start_attempt(
+        client,
+        student_headers,
+        quiz_id
+    )
+
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
+
+    response = client.post(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": {
+                question_id: "Java"
+            }
+        },
+        headers=student_headers
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert (
+        data["message"]
+        == "Attempt submitted successfully."
+    )
+
+
+# ATT-006: Submit After Time Expiry
+
+
+def test_att_006_submit_after_time_expiry(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers,
+            duration=1
+        )
+    )
+
+    start_response = start_attempt(
+        client,
+        student_headers,
+        quiz_id
+    )
+
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
+
+    expired_started_at = (
+        datetime.utcnow()
+        - timedelta(
+            minutes=2
+        )
+    )
+
+    update_result = (
+        AttemptRepository.update_attempt(
+            attempt_id,
+            {
+                "started_at": (
+                    expired_started_at
+                )
+            }
+        )
+    )
+
+    assert update_result is not None
+
+    response = client.post(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": {
+                question_id: "Java"
+            }
+        },
+        headers=student_headers
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert (
+        data["message"]
+        == "Attempt submitted successfully."
+    )
+
+    stored_attempt = (
+        AttemptRepository.get_attempt_by_id(
+            attempt_id
+        )
+    )
+
+    assert stored_attempt is not None
+
+    assert (
+        stored_attempt["status"]
+        == "submitted"
+    )
+
+
+# ATT-007: Re-attempt Quiz
+# Max Attempts Reached
+
+
+def test_att_007_reattempt_quiz_max_limit(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
+    )
+
+    for _ in range(3):
+
+        start_response = start_attempt(
+            client,
+            student_headers,
+            quiz_id
         )
 
-        assert response.status_code == 200
+        attempt_id = (
+            start_response.json()[
+                "attempt_id"
+            ]
+        )
 
-        attempt_id = response.json()[
-            "attempt_id"
-        ]
-
-        response = client.post(
-            f"{ATTEMPT_URL}/{attempt_id}/submit",
+        submit_response = client.post(
+            (
+                f"{ATTEMPT_URL}/"
+                f"{attempt_id}/submit"
+            ),
             json={
                 "answers": {
-                    question_id:
-                    "Programming Language"
+                    question_id: "Java"
                 }
             },
             headers=student_headers
         )
 
-        assert response.status_code == 200
+        assert (
+            submit_response.status_code
+            == 200
+        )
+
+    response = client.post(
+        ATTEMPT_URL + "/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert response.status_code == 400
+
+
+# ATT-008: Attempt Invalid Quiz
+
+
+def test_att_008_attempt_invalid_quiz(
+    client,
+    student_headers
+):
+
+    response = client.post(
+        ATTEMPT_URL + "/start",
+        json={
+            "quiz_id": (
+                "689999999999999999999999"
+            )
+        },
+        headers=student_headers
+    )
+
+    assert response.status_code == 404
+
+    assert (
+        response.json()["detail"]
+        == "Quiz not found."
+    )
+
+
+# ADDITIONAL ATTEMPT TEST CASES
+
+
+# ADDITIONAL: Attempt Without Token
+
+
+def test_attempt_without_token(
+    client
+):
+
+    response = client.post(
+        ATTEMPT_URL + "/start",
+        json={
+            "quiz_id": (
+                "689999999999999999999999"
+            )
+        }
+    )
+
+    assert response.status_code == 401
+
+
+# ADDITIONAL: Admin Cannot Start Attempt
+
+
+def test_admin_cannot_start_attempt(
+    client,
+    admin_headers
+):
+
+    response = client.post(
+        ATTEMPT_URL + "/start",
+        json={
+            "quiz_id": (
+                "689999999999999999999999"
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert response.status_code == 403
+
+
+# ADDITIONAL: Invalid Answer
+
+
+def test_invalid_answer(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
+    )
+
+    start_response = start_attempt(
+        client,
+        student_headers,
+        quiz_id
+    )
+
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
+
+    response = client.put(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/answer"
+        ),
+        json={
+            "question_id": question_id,
+            "answer": "Invalid Answer"
+        },
+        headers=student_headers
+    )
+
+    assert response.status_code == 400
+
+
+# ADDITIONAL: Attempt Already Submitted
+
+
+def test_attempt_already_submitted(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    quiz_id, question_id = (
+        setup_quiz_with_question(
+            client,
+            admin_headers
+        )
+    )
+
+    start_response = start_attempt(
+        client,
+        student_headers,
+        quiz_id
+    )
+
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
+
+    first_response = client.post(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": {
+                question_id: "Java"
+            }
+        },
+        headers=student_headers
+    )
+
+    assert first_response.status_code == 200
+
+    second_response = client.post(
+        (
+            f"{ATTEMPT_URL}/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": {
+                question_id: "Java"
+            }
+        },
+        headers=student_headers
+    )
+
+    assert second_response.status_code == 400
+
+
+# ADDITIONAL: Attempt Already In Progress
+
+
+def test_attempt_already_in_progress(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    quiz_id, _ = setup_quiz_with_question(
+        client,
+        admin_headers
+    )
+
+    first_response = client.post(
+        ATTEMPT_URL + "/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert first_response.status_code == 200
 
     response = client.post(
         ATTEMPT_URL + "/start",
@@ -351,225 +773,183 @@ def test_att_005_max_attempt_limit(
 
     assert (
         response.json()["detail"]
-        ==
-        "Maximum attempts reached."
+        == (
+            "You already have an ongoing "
+            "attempt. Please submit it "
+            "before starting a new attempt."
+        )
     )
 
-# ATT-007 Invalid Quiz Id
-def test_att_007_invalid_quiz(
+
+
+# EXT-001
+# Randomize Question Order Per Attempt
+# Expected Result:
+# Questions are randomized when an attempt
+# starts and the same randomized order is
+# preserved when the attempt is resumed.
+
+
+def test_ext_001_randomize_question_order_per_attempt(
     client,
-    student_headers
+    admin_headers,
+    student_headers,
+    monkeypatch
 ):
 
-    response = client.post(
-        ATTEMPT_URL + "/start",
-        json={
-            "quiz_id":
-            "invalid_quiz_id"
+    category_id = create_category(
+        client,
+        admin_headers
+    )
+
+    quiz_id = create_quiz(
+        client,
+        admin_headers,
+        category_id
+    )
+
+    question_ids = []
+
+    questions_data = [
+        {
+            "question": (
+                "Which keyword is used "
+                "to define a class in Java?"
+            ),
+            "options": [
+                "class",
+                "define",
+                "object",
+                "new"
+            ],
+            "correct_answer": "class"
         },
-        headers=student_headers
+        {
+            "question": (
+                "Which keyword is used "
+                "to create an object in Java?"
+            ),
+            "options": [
+                "new",
+                "create",
+                "object",
+                "make"
+            ],
+            "correct_answer": "new"
+        },
+        {
+            "question": (
+                "Which method is the entry "
+                "point of a Java program?"
+            ),
+            "options": [
+                "main",
+                "start",
+                "run",
+                "execute"
+            ],
+            "correct_answer": "main"
+        }
+    ]
+
+    for question_data in questions_data:
+
+        response = client.post(
+            QUESTION_URL + "/",
+            headers=admin_headers,
+            json={
+                "quiz_id": quiz_id,
+                "question": question_data[
+                    "question"
+                ],
+                "options": question_data[
+                    "options"
+                ],
+                "correct_answer": (
+                    question_data[
+                        "correct_answer"
+                    ]
+                ),
+                "question_type": "mcq",
+                "difficulty": "easy"
+            }
+        )
+
+        assert response.status_code == 200
+
+        question_ids.append(
+            response.json()[
+                "question_id"
+            ]
+        )
+
+    def reverse_questions(
+        snapshot
+    ):
+
+        snapshot.reverse()
+
+    monkeypatch.setattr(
+        "app.services.attempt_service."
+        "random.shuffle",
+        reverse_questions
     )
 
-    assert response.status_code == 404
-
-    assert (
-        response.json()["detail"]
-        ==
-        "Quiz not found."
-    )
-
-# ATT-008 Unauthorized Access
-def test_att_008_without_token(
-    client
-):
-
-    response = client.post(
+    start_response = client.post(
         ATTEMPT_URL + "/start",
+        headers=student_headers,
         json={
-            "quiz_id":
-            "123"
+            "quiz_id": quiz_id
         }
     )
 
-    assert response.status_code == 401
+    assert start_response.status_code == 200
 
+    attempt_id = start_response.json()[
+        "attempt_id"
+    ]
 
-# Admin Cannot Start Attempt
-def test_admin_cannot_start_attempt(
-    client,
-    admin_headers
-):
-
-    response = client.post(
-        ATTEMPT_URL + "/start",
-        json={
-            "quiz_id":
-            "123"
-        },
-        headers=admin_headers
+    attempt = (
+        AttemptRepository.get_attempt_by_id(
+            attempt_id
+        )
     )
 
-    assert response.status_code == 403
+    assert attempt is not None
 
+    stored_order = [
+        str(
+            question.get(
+                "id",
+                question.get(
+                    "_id",
+                    ""
+                )
+            )
+        )
+        for question in attempt[
+            "question_snapshot"
+        ]
+    ]
 
-# Invalid Answer
-def test_invalid_answer(
-    client,
-    admin_headers,
-    student_headers
-):
-
-    category_id = create_category(
-        client,
-        admin_headers
+    assert stored_order == list(
+        reversed(
+            question_ids
+        )
     )
 
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    question_id = create_question(
-        client,
-        admin_headers,
-        quiz_id
-    )
-
-    attempt_id = create_attempt(
-        client,
-        student_headers,
-        quiz_id
-    )
-
-    response = client.put(
-        f"{ATTEMPT_URL}/{attempt_id}/answer",
-        json={
-            "question_id":
-            question_id,
-            "answer":
-            "Wrong Option"
-        },
+    resume_response = client.get(
+        f"{ATTEMPT_URL}/{attempt_id}",
         headers=student_headers
     )
 
-    assert response.status_code == 400
+    assert resume_response.status_code == 200
 
-    assert (
-        response.json()["detail"]
-        ==
-        "Invalid answer selected."
-    )
+    resumed_order = [
+        question["id"]
+        for question in resume_response.json()[
+            "question_snapshot"
+        ]
+    ]
 
-
-# Attempt Already Submitted
-def test_attempt_already_submitted(
-    client,
-    admin_headers,
-    student_headers
-):
-
-    category_id = create_category(
-        client,
-        admin_headers
-    )
-
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    question_id = create_question(
-        client,
-        admin_headers,
-        quiz_id
-    )
-
-    attempt_id = create_attempt(
-        client,
-        student_headers,
-        quiz_id
-    )
-
-    client.post(
-        f"{ATTEMPT_URL}/{attempt_id}/submit",
-        json={
-            "answers": {
-                question_id:
-                "Programming Language"
-            }
-        },
-        headers=student_headers
-    )
-
-    response = client.post(
-        f"{ATTEMPT_URL}/{attempt_id}/submit",
-        json={
-            "answers": {
-                question_id:
-                "Programming Language"
-            }
-        },
-        headers=student_headers
-    )
-
-    assert response.status_code == 400
-
-    assert (
-        response.json()["detail"]
-        ==
-        "Attempt has already been submitted."
-    )
-
-
-
-# Attempt Already In Progress
-def test_attempt_already_in_progress(
-    client,
-    admin_headers,
-    student_headers
-):
-
-    category_id = create_category(
-        client,
-        admin_headers
-    )
-
-    quiz_id = create_quiz(
-        client,
-        admin_headers,
-        category_id
-    )
-
-    create_question(
-        client,
-        admin_headers,
-        quiz_id
-    )
-
-    client.post(
-        ATTEMPT_URL + "/start",
-        json={
-            "quiz_id":
-            quiz_id
-        },
-        headers=student_headers
-    )
-
-    response = client.post(
-        ATTEMPT_URL + "/start",
-        json={
-            "quiz_id":
-            quiz_id
-        },
-        headers=student_headers
-    )
-
-    assert response.status_code == 400
-
-    assert (
-        response.json()["detail"]
-        ==
-        "You already have an ongoing attempt. Please submit it before starting a new attempt."
-    )
+    assert resumed_order == stored_order

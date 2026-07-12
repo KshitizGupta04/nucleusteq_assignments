@@ -1,3 +1,7 @@
+from datetime import (
+    datetime
+)
+
 from typing import (
     Dict,
     List
@@ -38,6 +42,23 @@ class SubmitAttemptRequest(
     ]
 
 
+class AttemptQuestionResponse(
+    BaseModel
+):
+
+    id: str
+
+    quiz_id: str
+
+    question: str
+
+    options: List[str]
+
+    question_type: str
+
+    difficulty: str
+
+
 class AttemptResponse(
     BaseModel
 ):
@@ -50,16 +71,22 @@ class AttemptResponse(
 
     attempt_number: int
 
-    question_snapshot: List
+    question_snapshot: List[
+        AttemptQuestionResponse
+    ]
 
     answers: Dict[
         str,
         str
     ]
 
-    score: int
+    score: float
 
     status: str
+
+    started_at: datetime
+
+    expires_at: datetime
 
 
 class AttemptCreateResponse(
@@ -69,6 +96,12 @@ class AttemptCreateResponse(
     message: str
 
     attempt_id: str
+
+    resumed: bool
+
+    started_at: datetime
+
+    expires_at: datetime
 
 
 class AttemptMessageResponse(
@@ -86,7 +119,9 @@ class ResumeAttemptResponse(
 
     quiz_id: str
 
-    question_snapshot: List
+    question_snapshot: List[
+        AttemptQuestionResponse
+    ]
 
     answers: Dict[
         str,
@@ -94,3 +129,7 @@ class ResumeAttemptResponse(
     ]
 
     status: str
+
+    started_at: datetime
+
+    expires_at: datetime

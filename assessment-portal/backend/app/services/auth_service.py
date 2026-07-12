@@ -1,9 +1,14 @@
+from fastapi import (
+    HTTPException
+)
+
 from app.constants.messages import (
     ErrorMessages
 )
 
 from app.core.password_encryption import (
-    decrypt_password
+    decrypt_password,
+    validate_password_strength
 )
 
 from app.core.security import (
@@ -71,6 +76,19 @@ class AuthService:
             request.password
         )
 
+        try:
+
+            validate_password_strength(
+                decrypted_password
+            )
+
+        except ValueError as error:
+
+            raise HTTPException(
+                status_code=422,
+                detail=str(error)
+            ) from error
+
         user = User(
             username=request.username,
             email=request.email,
@@ -85,7 +103,9 @@ class AuthService:
         )
 
         return {
-            "message": ErrorMessages.REGISTER_SUCCESS,
+            "message": (
+                ErrorMessages.REGISTER_SUCCESS
+            ),
             "user_id": user_id,
         }
 
@@ -94,22 +114,32 @@ class AuthService:
     def login_user(
         username: str,
         password: str,
+        is_encrypted: bool = True,
     ) -> dict:
 
-        user = UserRepository.get_user_by_username(
-            username
+        user = (
+            UserRepository
+            .get_user_by_username(
+                username
+            )
         )
 
         if not user:
 
             raise UserNotFoundException()
 
-        decrypted_password = decrypt_password(
-            password
-        )
+        if is_encrypted:
+
+            actual_password = decrypt_password(
+                password
+            )
+
+        else:
+
+            actual_password = password
 
         if not verify_password(
-            decrypted_password,
+            actual_password,
             user["password"],
         ):
 
@@ -132,6 +162,7 @@ class AuthService:
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
+            "role": user["role"],
         }
 
 
@@ -159,4 +190,5 @@ class AuthService:
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
+            "role": payload["role"],
         }
