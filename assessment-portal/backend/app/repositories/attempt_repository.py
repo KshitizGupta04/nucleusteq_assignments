@@ -19,6 +19,7 @@ class AttemptRepository:
 
     collection = db["attempts"]
 
+
     @classmethod
     def create_attempt(
         cls,
@@ -32,6 +33,7 @@ class AttemptRepository:
         return str(
             result.inserted_id
         )
+
 
     @classmethod
     def get_attempt_by_id(
@@ -53,6 +55,7 @@ class AttemptRepository:
 
             return None
 
+
     @classmethod
     def get_attempts_by_student_and_quiz(
         cls,
@@ -68,6 +71,7 @@ class AttemptRepository:
                 }
             )
         )
+
 
     @classmethod
     def get_attempts_by_student(
@@ -91,6 +95,7 @@ class AttemptRepository:
 
         return attempts
 
+
     @classmethod
     def get_attempts_by_quiz(
         cls,
@@ -113,6 +118,7 @@ class AttemptRepository:
 
         return attempts
 
+
     @classmethod
     def count_attempts(
         cls,
@@ -126,6 +132,7 @@ class AttemptRepository:
                 "quiz_id": quiz_id
             }
         )
+
 
     @classmethod
     def get_in_progress_attempt(
@@ -141,6 +148,29 @@ class AttemptRepository:
                 "status": "in_progress"
             }
         )
+
+
+    @classmethod
+    def get_latest_in_progress_attempt(
+        cls,
+        student_id: str,
+        quiz_id: str
+    ):
+
+        return cls.collection.find_one(
+            {
+                "student_id": student_id,
+                "quiz_id": quiz_id,
+                "status": "in_progress"
+            },
+            sort=[
+                (
+                    "started_at",
+                    -1
+                )
+            ]
+        )
+
 
     @classmethod
     def save_answer(
@@ -169,6 +199,7 @@ class AttemptRepository:
         except InvalidId:
 
             return None
+
 
     @classmethod
     def submit_attempt(
@@ -199,6 +230,7 @@ class AttemptRepository:
 
             return None
 
+
     @classmethod
     def update_attempt(
         cls,
@@ -227,6 +259,7 @@ class AttemptRepository:
 
             return None
 
+
     @classmethod
     def delete_attempt(
         cls,
@@ -246,3 +279,17 @@ class AttemptRepository:
         except InvalidId:
 
             return None
+
+
+    # Delete all attempts belonging to a quiz.
+    @classmethod
+    def delete_attempts_by_quiz(
+        cls,
+        quiz_id: str
+    ):
+
+        return cls.collection.delete_many(
+            {
+                "quiz_id": quiz_id
+            }
+        )

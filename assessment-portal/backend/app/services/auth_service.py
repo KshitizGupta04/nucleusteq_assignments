@@ -1,4 +1,20 @@
-from app.constants.messages import ErrorMessages
+from fastapi import (
+    HTTPException
+)
+
+from app.constants.messages import (
+    ErrorMessages
+)
+
+from app.core.logger import (
+    logger
+)
+
+from app.core.password_encryption import (
+    decrypt_password,
+    validate_password_strength
+)
+
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -6,7 +22,11 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from app.enums.user_role import UserRole
+
+from app.enums.user_role import (
+    UserRole
+)
+
 from app.exceptions.customexceptions import (
     AdminAlreadyExistsException,
     InvalidPasswordException,
@@ -15,9 +35,18 @@ from app.exceptions.customexceptions import (
     UserNotFoundException,
     UsernameAlreadyExistsException,
 )
-from app.models.user import User
-from app.repositories.user_repository import UserRepository
-from app.schemas.auth_schema import RegisterRequest
+
+from app.models.user import (
+    User
+)
+
+from app.repositories.user_repository import (
+    UserRepository
+)
+
+from app.schemas.auth_schema import (
+    RegisterRequest
+)
 
 
 class AuthService:
@@ -28,22 +57,70 @@ class AuthService:
         role: UserRole = UserRole.STUDENT,
     ) -> dict:
 
-        if UserRepository.get_user_by_email(request.email):
+        if UserRepository.get_user_by_email(
+            request.email
+        ):
+
+            logger.warning(
+                "Registration failed: "
+                "email already exists."
+            )
+
             raise UserAlreadyExistsException()
 
-        if UserRepository.get_user_by_username(request.username):
+        if UserRepository.get_user_by_username(
+            request.username
+        ):
+
+            logger.warning(
+                "Registration failed for username '%s': "
+                "username already exists.",
+                request.username
+            )
+
             raise UsernameAlreadyExistsException()
 
         if (
             role == UserRole.ADMIN
             and UserRepository.admin_exists()
         ):
+
+            logger.warning(
+                "Admin registration failed: "
+                "an admin already exists."
+            )
+
             raise AdminAlreadyExistsException()
+
+        decrypted_password = decrypt_password(
+            request.password
+        )
+
+        try:
+
+            validate_password_strength(
+                decrypted_password
+            )
+
+        except ValueError as error:
+
+            logger.warning(
+                "Registration failed for username '%s': "
+                "password validation failed.",
+                request.username
+            )
+
+            raise HTTPException(
+                status_code=422,
+                detail=str(error)
+            ) from error
 
         user = User(
             username=request.username,
             email=request.email,
-            password=hash_password(request.password),
+            password=hash_password(
+                decrypted_password
+            ),
             role=role,
         )
 
@@ -51,28 +128,68 @@ class AuthService:
             user.model_dump()
         )
 
+        logger.info(
+            "User registered successfully: "
+            "username='%s', role='%s'.",
+            request.username,
+            role.value
+            if hasattr(role, "value")
+            else role
+        )
+
         return {
-            "message": ErrorMessages.REGISTER_SUCCESS,
+            "message": (
+                ErrorMessages.REGISTER_SUCCESS
+            ),
             "user_id": user_id,
         }
+
 
     @staticmethod
     def login_user(
         username: str,
         password: str,
+        is_encrypted: bool = True,
     ) -> dict:
 
-        user = UserRepository.get_user_by_username(
-            username
+        user = (
+            UserRepository
+            .get_user_by_username(
+                username
+            )
         )
 
         if not user:
+
+            logger.warning(
+                "Login failed for username '%s': "
+                "user not found.",
+                username
+            )
+
             raise UserNotFoundException()
 
+        if is_encrypted:
+
+            actual_password = decrypt_password(
+                password
+            )
+
+        else:
+
+            actual_password = password
+
         if not verify_password(
-            password,
+            actual_password,
             user["password"],
         ):
+
+            logger.warning(
+                "Login failed for username '%s': "
+                "invalid password.",
+                username
+            )
+
             raise InvalidPasswordException()
 
         payload = {
@@ -80,15 +197,28 @@ class AuthService:
             "role": user["role"],
         }
 
-        access_token = create_access_token(payload)
+        access_token = create_access_token(
+            payload
+        )
 
-        refresh_token = create_refresh_token(payload)
+        refresh_token = create_refresh_token(
+            payload
+        )
+
+        logger.info(
+            "User logged in successfully: "
+            "username='%s', role='%s'.",
+            user["username"],
+            user["role"]
+        )
 
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
+            "role": user["role"],
         }
+
 
     @staticmethod
     def refresh_access_token(
@@ -100,6 +230,12 @@ class AuthService:
         )
 
         if not payload:
+
+            logger.warning(
+                "Access-token refresh failed: "
+                "invalid refresh token."
+            )
+
             raise InvalidTokenException()
 
         access_token = create_access_token(
@@ -109,8 +245,15 @@ class AuthService:
             }
         )
 
+        logger.info(
+            "Access token refreshed successfully "
+            "for username='%s'.",
+            payload["sub"]
+        )
+
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
+            "role": payload["role"],
         }

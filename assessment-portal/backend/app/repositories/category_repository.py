@@ -15,6 +15,25 @@ class CategoryRepository:
 
     collection = db["categories"]
 
+
+    @staticmethod
+    def _serialize_category(
+        category: dict | None
+    ):
+
+        if not category:
+
+            return None
+
+        category = category.copy()
+
+        category["id"] = str(
+            category.pop("_id")
+        )
+
+        return category
+
+
     @classmethod
     def create_category(
         cls,
@@ -29,6 +48,7 @@ class CategoryRepository:
             result.inserted_id
         )
 
+
     @classmethod
     def get_category_by_name(
         cls,
@@ -40,6 +60,7 @@ class CategoryRepository:
                 "name": name
             }
         )
+
 
     @classmethod
     def get_category_by_id(
@@ -57,26 +78,51 @@ class CategoryRepository:
                 }
             )
 
-        except InvalidId:
+        except (
+            InvalidId,
+            TypeError
+        ):
 
             return None
 
+
     @classmethod
     def get_all_categories(
-        cls
+        cls,
+        page: int | None = None,
+        limit: int | None = None
     ):
 
-        categories = list(
-            cls.collection.find()
-        )
+        query = cls.collection.find()
 
-        for category in categories:
+        # Apply pagination only when both page
+        # and limit are explicitly provided.
+        if (
+            page is not None
+            and limit is not None
+        ):
 
-            category["_id"] = str(
-                category["_id"]
+            skip = (
+                page - 1
+            ) * limit
+
+            query = (
+                query
+                .skip(skip)
+                .limit(limit)
             )
 
-        return categories
+        categories = list(
+            query
+        )
+
+        return [
+            cls._serialize_category(
+                category
+            )
+            for category in categories
+        ]
+
 
     @classmethod
     def update_category(
@@ -98,9 +144,13 @@ class CategoryRepository:
                 }
             )
 
-        except InvalidId:
+        except (
+            InvalidId,
+            TypeError
+        ):
 
             return None
+
 
     @classmethod
     def delete_category(
@@ -118,6 +168,9 @@ class CategoryRepository:
                 }
             )
 
-        except InvalidId:
+        except (
+            InvalidId,
+            TypeError
+        ):
 
             return None

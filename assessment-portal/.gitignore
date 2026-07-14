@@ -1,28 +1,46 @@
-# Python
+# Python Cache
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual Environment
+# Virtual Environments
 venv/
 .venv/
 env/
 
 # Environment Variables
 .env
+backend/.env
 
-# VS Code
+# Node.js
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Package Manager Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# IDE and Editors
 .vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Pytest
+# Testing and Coverage
 .pytest_cache/
-
-# mypy
 .mypy_cache/
-
-# Coverage
 .coverage
+.coverage.*
 htmlcov/
+coverage.xml
 
 # OS Files
 .DS_Store
@@ -30,10 +48,15 @@ Thumbs.db
 
 # Temporary Files
 tempCodeRunnerFile.py
+**/tempCodeRunnerFile.py
 
 # Logs
+logs/
 *.log
 
+# Local Backend Files
 backend/test_*.py
 backend/cleanup.py
-backend/tempCodeRunnerFile.py
+
+# Private Keys
+backend/keys/private_key.pem

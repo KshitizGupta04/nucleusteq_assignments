@@ -33,12 +33,10 @@ def start_attempt(
     )
 ):
 
-    response = AttemptService.start_attempt(
+    return AttemptService.start_attempt(
         request,
         current_user
     )
-
-    return response
 
 
 @router.put("/{attempt_id}/answer")
@@ -50,12 +48,11 @@ def save_answer(
     )
 ):
 
-    response = AttemptService.save_answer(
+    return AttemptService.save_answer(
         attempt_id,
-        request
+        request,
+        current_user
     )
-
-    return response
 
 
 @router.get(
@@ -69,11 +66,10 @@ def resume_attempt(
     )
 ):
 
-    response = AttemptService.resume_attempt(
-        attempt_id
+    return AttemptService.resume_attempt(
+        attempt_id,
+        current_user
     )
-
-    return response
 
 
 @router.post("/{attempt_id}/submit")
@@ -85,9 +81,8 @@ def submit_attempt(
     )
 ):
 
-    response = AttemptService.submit_attempt(
+    return AttemptService.submit_attempt(
         attempt_id,
-        request
+        request,
+        current_user
     )
-
-    return response

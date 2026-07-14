@@ -1,3 +1,7 @@
+from datetime import (
+    datetime
+)
+
 from typing import (
     Dict,
     List
@@ -7,6 +11,9 @@ from pydantic import (
     BaseModel,
     Field
 )
+
+
+AnswerType = str | List[str]
 
 
 class StartAttemptRequest(
@@ -22,10 +29,7 @@ class SaveAnswerRequest(
 
     question_id: str
 
-    answer: str = Field(
-        ...,
-        min_length=1
-    )
+    answer: AnswerType
 
 
 class SubmitAttemptRequest(
@@ -34,8 +38,25 @@ class SubmitAttemptRequest(
 
     answers: Dict[
         str,
-        str
+        AnswerType
     ]
+
+
+class AttemptQuestionResponse(
+    BaseModel
+):
+
+    id: str
+
+    quiz_id: str
+
+    question: str
+
+    options: List[str]
+
+    question_type: str
+
+    difficulty: str
 
 
 class AttemptResponse(
@@ -50,16 +71,22 @@ class AttemptResponse(
 
     attempt_number: int
 
-    question_snapshot: List
+    question_snapshot: List[
+        AttemptQuestionResponse
+    ]
 
     answers: Dict[
         str,
-        str
+        AnswerType
     ]
 
-    score: int
+    score: float
 
     status: str
+
+    started_at: datetime
+
+    expires_at: datetime
 
 
 class AttemptCreateResponse(
@@ -69,6 +96,12 @@ class AttemptCreateResponse(
     message: str
 
     attempt_id: str
+
+    resumed: bool
+
+    started_at: datetime
+
+    expires_at: datetime
 
 
 class AttemptMessageResponse(
@@ -86,11 +119,17 @@ class ResumeAttemptResponse(
 
     quiz_id: str
 
-    question_snapshot: List
+    question_snapshot: List[
+        AttemptQuestionResponse
+    ]
 
     answers: Dict[
         str,
-        str
+        AnswerType
     ]
 
     status: str
+
+    started_at: datetime
+
+    expires_at: datetime

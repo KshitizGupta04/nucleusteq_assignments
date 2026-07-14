@@ -4,6 +4,10 @@ from app.constants.messages import (
     ErrorMessages
 )
 
+from app.core.logger import (
+    logger
+)
+
 from app.exceptions.customexceptions import (
     CategoryAlreadyExistsException,
     CategoryNotFoundException
@@ -30,9 +34,20 @@ class CategoryService:
         request: CategoryRequest
     ):
 
-        if CategoryRepository.get_category_by_name(
-            request.name
-        ):
+        existing_category = (
+            CategoryRepository.get_category_by_name(
+                request.name
+            )
+        )
+
+        if existing_category:
+
+            logger.warning(
+                "Category creation failed: "
+                "category name '%s' already exists.",
+                request.name
+            )
+
             raise CategoryAlreadyExistsException()
 
         category = Category(
@@ -46,15 +61,32 @@ class CategoryService:
             )
         )
 
+        logger.info(
+            "Category created successfully: "
+            "category_id='%s', name='%s'.",
+            category_id,
+            request.name
+        )
+
         return {
             "message": ErrorMessages.CATEGORY_CREATED,
             "category_id": category_id
         }
 
-    @staticmethod
-    def get_all_categories():
 
-        return CategoryRepository.get_all_categories()
+    @staticmethod
+    def get_all_categories(
+        page: int | None = None,
+        limit: int | None = None
+    ):
+
+        return (
+            CategoryRepository.get_all_categories(
+                page=page,
+                limit=limit
+            )
+        )
+
 
     @staticmethod
     def get_category_by_id(
@@ -68,13 +100,23 @@ class CategoryService:
         )
 
         if not category:
+
+            logger.warning(
+                "Category retrieval failed: "
+                "category_id='%s' not found.",
+                category_id
+            )
+
             raise CategoryNotFoundException()
 
-        category["_id"] = str(
-            category["_id"]
+        category = category.copy()
+
+        category["id"] = str(
+            category.pop("_id")
         )
 
         return category
+
 
     @staticmethod
     def update_category(
@@ -89,6 +131,13 @@ class CategoryService:
         )
 
         if not category:
+
+            logger.warning(
+                "Category update failed: "
+                "category_id='%s' not found.",
+                category_id
+            )
+
             raise CategoryNotFoundException()
 
         existing_category = (
@@ -99,8 +148,17 @@ class CategoryService:
 
         if (
             existing_category
-            and str(existing_category["_id"]) != category_id
+            and str(
+                existing_category["_id"]
+            ) != category_id
         ):
+
+            logger.warning(
+                "Category update failed: "
+                "category name '%s' already exists.",
+                request.name
+            )
+
             raise CategoryAlreadyExistsException()
 
         CategoryRepository.update_category(
@@ -112,9 +170,17 @@ class CategoryService:
             }
         )
 
+        logger.info(
+            "Category updated successfully: "
+            "category_id='%s', name='%s'.",
+            category_id,
+            request.name
+        )
+
         return {
             "message": ErrorMessages.CATEGORY_UPDATED
         }
+
 
     @staticmethod
     def delete_category(
@@ -128,9 +194,22 @@ class CategoryService:
         )
 
         if not category:
+
+            logger.warning(
+                "Category deletion failed: "
+                "category_id='%s' not found.",
+                category_id
+            )
+
             raise CategoryNotFoundException()
 
         CategoryRepository.delete_category(
+            category_id
+        )
+
+        logger.info(
+            "Category deleted successfully: "
+            "category_id='%s'.",
             category_id
         )
 

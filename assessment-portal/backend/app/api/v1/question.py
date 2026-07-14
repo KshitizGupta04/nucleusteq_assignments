@@ -10,6 +10,8 @@ from app.core.dependencies import (
 
 from app.schemas.question_schema import (
     QuestionRequest,
+    QuestionResponse,
+    StudentQuestionResponse,
     UpdateQuestionRequest
 )
 
@@ -37,8 +39,28 @@ def create_question(
     )
 
 
-@router.get("/quiz/{quiz_id}")
-def get_questions_by_quiz(
+@router.get(
+    "/admin/quiz/{quiz_id}",
+    response_model=list[QuestionResponse]
+)
+def get_questions_by_quiz_for_admin(
+    quiz_id: str,
+    current_admin=Depends(
+        get_current_admin
+    )
+):
+
+    return QuestionService.get_questions_by_quiz(
+        quiz_id,
+        include_correct_answer=True
+    )
+
+
+@router.get(
+    "/quiz/{quiz_id}",
+    response_model=list[StudentQuestionResponse]
+)
+def get_questions_by_quiz_for_student(
     quiz_id: str,
     current_user=Depends(
         get_current_user
@@ -46,7 +68,8 @@ def get_questions_by_quiz(
 ):
 
     return QuestionService.get_questions_by_quiz(
-        quiz_id
+        quiz_id,
+        include_correct_answer=False
     )
 
 

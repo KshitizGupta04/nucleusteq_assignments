@@ -1,15 +1,38 @@
-from bson import ObjectId
-
-from app.core.database import db
+from bson import (
+    ObjectId
+)
 
 from bson.errors import (
     InvalidId
+)
+
+from app.core.database import (
+    db
 )
 
 
 class QuizRepository:
 
     collection = db["quizzes"]
+
+
+    @staticmethod
+    def _serialize_quiz(
+        quiz: dict | None
+    ):
+
+        if not quiz:
+
+            return None
+
+        quiz = quiz.copy()
+
+        quiz["id"] = str(
+            quiz.pop("_id")
+        )
+
+        return quiz
+
 
     @classmethod
     def create_quiz(
@@ -25,6 +48,7 @@ class QuizRepository:
             result.inserted_id
         )
 
+
     @classmethod
     def get_quiz_by_title_and_category(
         cls,
@@ -38,6 +62,7 @@ class QuizRepository:
                 "category_id": category_id
             }
         )
+
 
     @classmethod
     def get_quiz_by_id(
@@ -54,9 +79,14 @@ class QuizRepository:
                     )
                 }
             )
-        except InvalidId:
+
+        except (
+            InvalidId,
+            TypeError
+        ):
 
             return None
+
 
     @classmethod
     def get_all_quizzes(
@@ -67,13 +97,32 @@ class QuizRepository:
             cls.collection.find()
         )
 
-        for quiz in quizzes:
-
-            quiz["_id"] = str(
-                quiz["_id"]
+        return [
+            cls._serialize_quiz(
+                quiz
             )
+            for quiz in quizzes
+        ]
+
+
+    # Get all quizzes belonging to a category.
+    # Used for category cascading deletion.
+    @classmethod
+    def get_quizzes_by_category_id(
+        cls,
+        category_id: str
+    ):
+
+        quizzes = list(
+            cls.collection.find(
+                {
+                    "category_id": category_id
+                }
+            )
+        )
 
         return quizzes
+
 
     @classmethod
     def update_quiz(
@@ -95,10 +144,14 @@ class QuizRepository:
                 }
             )
 
-        except InvalidId:
+        except (
+            InvalidId,
+            TypeError
+        ):
 
             return None
-        
+
+
     @classmethod
     def delete_quiz(
         cls,
@@ -115,6 +168,9 @@ class QuizRepository:
                 }
             )
 
-        except InvalidId:
+        except (
+            InvalidId,
+            TypeError
+        ):
 
             return None

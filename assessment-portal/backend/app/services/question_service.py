@@ -4,21 +4,25 @@ from app.constants.messages import (
     ErrorMessages
 )
 
+from app.core.logger import (
+    logger
+)
+
 from app.exceptions.customexceptions import (
-    QuizNotFoundException,
-    QuestionNotFoundException
+    QuestionNotFoundException,
+    QuizNotFoundException
 )
 
 from app.models.question import (
     Question
 )
 
-from app.repositories.quiz_repository import (
-    QuizRepository
-)
-
 from app.repositories.question_repository import (
     QuestionRepository
+)
+
+from app.repositories.quiz_repository import (
+    QuizRepository
 )
 
 from app.schemas.question_schema import (
@@ -42,6 +46,12 @@ class QuestionService:
 
         if not quiz:
 
+            logger.warning(
+                "Question creation failed: "
+                "quiz_id='%s' not found.",
+                request.quiz_id
+            )
+
             raise QuizNotFoundException()
 
         question = Question(
@@ -59,14 +69,25 @@ class QuestionService:
             )
         )
 
+        logger.info(
+            "Question created successfully: "
+            "question_id='%s', quiz_id='%s', "
+            "question_type='%s'.",
+            question_id,
+            request.quiz_id,
+            request.question_type
+        )
+
         return {
             "message": ErrorMessages.QUESTION_CREATED,
             "question_id": question_id
         }
 
+
     @staticmethod
     def get_questions_by_quiz(
-        quiz_id: str
+        quiz_id: str,
+        include_correct_answer: bool = False
     ):
 
         quiz = (
@@ -77,13 +98,33 @@ class QuestionService:
 
         if not quiz:
 
+            logger.warning(
+                "Question retrieval failed: "
+                "quiz_id='%s' not found.",
+                quiz_id
+            )
+
             raise QuizNotFoundException()
 
-        return (
+        questions = (
             QuestionRepository.get_questions_by_quiz_id(
                 quiz_id
             )
         )
+
+        if include_correct_answer:
+
+            return questions
+
+        return [
+            {
+                key: value
+                for key, value in question.items()
+                if key != "correct_answer"
+            }
+            for question in questions
+        ]
+
 
     @staticmethod
     def update_question(
@@ -99,6 +140,12 @@ class QuestionService:
 
         if not question:
 
+            logger.warning(
+                "Question update failed: "
+                "question_id='%s' not found.",
+                question_id
+            )
+
             raise QuestionNotFoundException()
 
         QuestionRepository.update_question(
@@ -113,9 +160,18 @@ class QuestionService:
             }
         )
 
+        logger.info(
+            "Question updated successfully: "
+            "question_id='%s', "
+            "question_type='%s'.",
+            question_id,
+            request.question_type
+        )
+
         return {
             "message": ErrorMessages.QUESTION_UPDATED
         }
+
 
     @staticmethod
     def delete_question(
@@ -130,9 +186,21 @@ class QuestionService:
 
         if not question:
 
+            logger.warning(
+                "Question deletion failed: "
+                "question_id='%s' not found.",
+                question_id
+            )
+
             raise QuestionNotFoundException()
 
         QuestionRepository.delete_question(
+            question_id
+        )
+
+        logger.info(
+            "Question deleted successfully: "
+            "question_id='%s'.",
             question_id
         )
 
