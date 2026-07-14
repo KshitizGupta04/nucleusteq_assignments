@@ -14,7 +14,12 @@ import {
 
 import {
     loginUser
-} from "../services/api";
+} from "../../services/authService";
+
+import {
+    validateLoginField,
+    validateLoginForm
+} from "../../utils/authValidation";
 
 
 function Login() {
@@ -55,84 +60,6 @@ function Login() {
     ] = useState(false);
 
 
-    const validateField = (
-        name,
-        value
-    ) => {
-
-        switch (name) {
-
-            case "username":
-
-                if (!value.trim()) {
-
-                    return "Username is required.";
-                }
-
-                if (value.length < 3) {
-
-                    return (
-                        "Username must be at least 3 characters."
-                    );
-                }
-
-                if (value.length > 30) {
-
-                    return (
-                        "Username cannot exceed 30 characters."
-                    );
-                }
-
-                if (
-                    !/^[a-zA-Z0-9_]+$/.test(
-                        value
-                    )
-                ) {
-
-                    return (
-                        "Username can contain only letters, numbers, and underscores."
-                    );
-                }
-
-                return "";
-
-
-            case "password":
-
-                if (!value) {
-
-                    return "Password is required.";
-                }
-
-                return "";
-
-
-            default:
-
-                return "";
-        }
-    };
-
-
-    const validateForm = (
-        data
-    ) => {
-
-        return {
-
-            username: validateField(
-                "username",
-                data.username
-            ),
-
-            password: validateField(
-                "password",
-                data.password
-            )
-        };
-    };
-
-
     const handleChange = (
         event
     ) => {
@@ -161,7 +88,7 @@ function Login() {
         setErrors(
             previous => ({
                 ...previous,
-                [name]: validateField(
+                [name]: validateLoginField(
                     name,
                     value
                 )
@@ -191,7 +118,7 @@ function Login() {
         setErrors(
             previous => ({
                 ...previous,
-                [name]: validateField(
+                [name]: validateLoginField(
                     name,
                     value
                 )
@@ -203,7 +130,7 @@ function Login() {
     const isFormValid = () => {
 
         const validationErrors = (
-            validateForm(
+            validateLoginForm(
                 formData
             )
         );
@@ -225,7 +152,7 @@ function Login() {
         setServerError("");
 
         const validationErrors = (
-            validateForm(
+            validateLoginForm(
                 formData
             )
         );

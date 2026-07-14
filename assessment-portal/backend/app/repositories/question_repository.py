@@ -145,3 +145,17 @@ class QuestionRepository:
         ):
 
             return None
+
+
+    # Delete all questions belonging to a quiz.
+    @classmethod
+    def delete_questions_by_quiz(
+        cls,
+        quiz_id: str
+    ):
+
+        return cls.collection.delete_many(
+            {
+                "quiz_id": quiz_id
+            }
+        )

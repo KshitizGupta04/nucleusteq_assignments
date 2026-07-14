@@ -738,8 +738,6 @@ def test_attempt_already_submitted(
 
 
 # ADDITIONAL: Attempt Already In Progress
-
-
 def test_attempt_already_in_progress(
     client,
     admin_headers,
@@ -761,6 +759,12 @@ def test_attempt_already_in_progress(
 
     assert first_response.status_code == 200
 
+    first_attempt_id = (
+        first_response.json()[
+            "attempt_id"
+        ]
+    )
+
     response = client.post(
         ATTEMPT_URL + "/start",
         json={
@@ -769,14 +773,21 @@ def test_attempt_already_in_progress(
         headers=student_headers
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 200
+
+    data = response.json()
 
     assert (
-        response.json()["detail"]
+        data["attempt_id"]
+        == first_attempt_id
+    )
+
+    assert data["resumed"] is True
+
+    assert (
+        data["message"]
         == (
-            "You already have an ongoing "
-            "attempt. Please submit it "
-            "before starting a new attempt."
+            "Active attempt resumed successfully."
         )
     )
 
@@ -953,3 +964,211 @@ def test_ext_001_randomize_question_order_per_attempt(
     ]
 
     assert resumed_order == stored_order
+
+
+# EXT-008:
+# Verify quiz scheduling and availability-window restrictions.
+def test_ext_008_quiz_scheduling(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    from datetime import (
+        datetime,
+        timedelta
+    )
+
+
+    # Create a category for EXT-008 quizzes.
+    category_response = client.post(
+        "/api/v1/categories",
+        json={
+            "name": "EXT-008 Category",
+            "description": (
+                "Category for testing "
+                "quiz scheduling."
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert category_response.status_code in [
+        200,
+        201
+    ]
+
+    category_id = category_response.json()[
+        "category_id"
+    ]
+
+
+    current_time = datetime.now()
+
+
+    # CASE 1:
+    # Quiz availability has not started yet.
+    future_quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-008 Future Quiz",
+            "description": (
+                "Quiz that is not yet available."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 10,
+            "available_from": (
+                current_time
+                + timedelta(hours=1)
+            ).isoformat(),
+            "available_until": (
+                current_time
+                + timedelta(hours=2)
+            ).isoformat()
+        },
+        headers=admin_headers
+    )
+
+    assert future_quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    future_quiz_id = (
+        future_quiz_response.json()[
+            "quiz_id"
+        ]
+    )
+
+
+    future_attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": future_quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert (
+        future_attempt_response.status_code
+        == 403
+    )
+
+    assert future_attempt_response.json()[
+        "detail"
+    ] == "Quiz is not available yet."
+
+
+    
+    # CASE 2:
+    # Quiz availability period has ended.
+    expired_quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-008 Expired Quiz",
+            "description": (
+                "Quiz whose availability "
+                "period has ended."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 10,
+            "available_from": (
+                current_time
+                - timedelta(hours=2)
+            ).isoformat(),
+            "available_until": (
+                current_time
+                - timedelta(hours=1)
+            ).isoformat()
+        },
+        headers=admin_headers
+    )
+
+    assert expired_quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    expired_quiz_id = (
+        expired_quiz_response.json()[
+            "quiz_id"
+        ]
+    )
+
+
+    expired_attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": expired_quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert (
+        expired_attempt_response.status_code
+        == 403
+    )
+
+    assert expired_attempt_response.json()[
+        "detail"
+    ] == (
+        "Quiz availability period has ended."
+    )
+
+
+    # CASE 3:
+    # Current time is inside availability window.
+    active_quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-008 Active Quiz",
+            "description": (
+                "Quiz that is currently available."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 10,
+            "available_from": (
+                current_time
+                - timedelta(hours=1)
+            ).isoformat(),
+            "available_until": (
+                current_time
+                + timedelta(hours=1)
+            ).isoformat()
+        },
+        headers=admin_headers
+    )
+
+    assert active_quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    active_quiz_id = (
+        active_quiz_response.json()[
+            "quiz_id"
+        ]
+    )
+
+
+    active_attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": active_quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert active_attempt_response.status_code in [
+        200,
+        201
+    ]
+
+    assert (
+        active_attempt_response.json()[
+            "attempt_id"
+        ]
+    )

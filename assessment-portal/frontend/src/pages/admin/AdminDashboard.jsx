@@ -7,64 +7,39 @@ import {
 } from "react-router-dom";
 
 import {
-    FaBars,
-    FaBook,
-    FaClipboardCheck,
-    FaFolderOpen,
-    FaQuestionCircle,
-    FaSignOutAlt,
-    FaTimes
+    FaBars
 } from "react-icons/fa";
+
+import MyProfile from "../../components/MyProfile";
+import ProfileMenu from "../../components/ProfileMenu";
+
+import {
+    ADMIN_SIDEBAR_ITEMS
+} from "../../constants/adminSidebar";
+
+import {
+    logoutUser
+} from "../../utils/logout";
 
 import AdminOverview from "./AdminOverview";
 import AdminResults from "./AdminResults";
+import AdminSidebar from "./AdminSidebar";
 import CategoryManagement from "./CategoryManagement";
 import QuestionManagement from "./QuestionManagement";
+import QuizAnalytics from "./QuizAnalytics";
 import QuizManagement from "./QuizManagement";
-
-
-const SIDEBAR_ITEMS = [
-    {
-        id: "dashboard",
-        label: "Dashboard",
-        title: "Dashboard Overview",
-        icon: FaClipboardCheck
-    },
-    {
-        id: "categories",
-        label: "Categories",
-        title: "Category Management",
-        icon: FaFolderOpen
-    },
-    {
-        id: "quizzes",
-        label: "Quizzes",
-        title: "Quiz Management",
-        icon: FaBook
-    },
-    {
-        id: "questions",
-        label: "Questions",
-        title: "Question Management",
-        icon: FaQuestionCircle
-    },
-    {
-        id: "results",
-        label: "Results",
-        title: "Student Results",
-        icon: FaClipboardCheck
-    }
-];
 
 
 function AdminDashboard() {
 
     const navigate = useNavigate();
 
+
     const [
         activeSection,
         setActiveSection
     ] = useState("dashboard");
+
 
     const [
         sidebarOpen,
@@ -74,23 +49,8 @@ function AdminDashboard() {
 
     const handleLogout = () => {
 
-        localStorage.removeItem(
-            "access_token"
-        );
-
-        localStorage.removeItem(
-            "refresh_token"
-        );
-
-        localStorage.removeItem(
-            "role"
-        );
-
-        navigate(
-            "/login",
-            {
-                replace: true
-            }
+        logoutUser(
+            navigate
         );
     };
 
@@ -109,11 +69,36 @@ function AdminDashboard() {
     };
 
 
+    const handleViewProfile = () => {
+
+        setActiveSection(
+            "profile"
+        );
+
+        setSidebarOpen(
+            false
+        );
+    };
+
+
     const getSectionTitle = () => {
 
-        const currentItem = SIDEBAR_ITEMS.find(
-            item => item.id === activeSection
+        if (
+            activeSection === "profile"
+        ) {
+
+            return "My Profile";
+        }
+
+
+        const currentItem = (
+            ADMIN_SIDEBAR_ITEMS.find(
+                item =>
+                    item.id ===
+                    activeSection
+            )
         );
+
 
         return (
             currentItem?.title ||
@@ -122,9 +107,28 @@ function AdminDashboard() {
     };
 
 
+    const getSectionDescription = () => {
+
+        if (
+            activeSection === "profile"
+        ) {
+
+            return (
+                "View your account information"
+            );
+        }
+
+
+        return (
+            "Manage your assessment portal"
+        );
+    };
+
+
     const renderSectionContent = () => {
 
         const managementComponents = {
+
             dashboard: (
                 <AdminOverview
                     onNavigate={
@@ -147,6 +151,14 @@ function AdminDashboard() {
 
             results: (
                 <AdminResults />
+            ),
+
+            analytics: (
+                <QuizAnalytics />
+            ),
+
+            profile: (
+                <MyProfile />
             )
         };
 
@@ -163,124 +175,26 @@ function AdminDashboard() {
 
         <div className="dashboard-layout">
 
-            <aside
-                className={
-                    sidebarOpen
-                        ? (
-                            "dashboard-sidebar " +
-                            "sidebar-open"
-                        )
-                        : "dashboard-sidebar"
+            <AdminSidebar
+                activeSection={
+                    activeSection
                 }
-            >
-
-                <div className="sidebar-header">
-
-                    <h2>
-                        Assessment Portal
-                    </h2>
-
-                    <button
-                        type="button"
-                        className="sidebar-close-button"
-                        onClick={
-                            () =>
-                                setSidebarOpen(
-                                    false
-                                )
-                        }
-                        aria-label="Close sidebar"
-                    >
-                        <FaTimes />
-                    </button>
-
-                </div>
-
-
-                <nav className="sidebar-navigation">
-
-                    {
-                        SIDEBAR_ITEMS.map(
-                            item => {
-
-                                const Icon = (
-                                    item.icon
-                                );
-
-                                const isActive = (
-                                    activeSection ===
-                                    item.id
-                                );
-
-
-                                return (
-
-                                    <button
-                                        key={item.id}
-                                        type="button"
-                                        className={
-                                            isActive
-                                                ? (
-                                                    "sidebar-link " +
-                                                    "active"
-                                                )
-                                                : "sidebar-link"
-                                        }
-                                        onClick={
-                                            () =>
-                                                handleSectionChange(
-                                                    item.id
-                                                )
-                                        }
-                                    >
-
-                                        <Icon />
-
-                                        <span>
-                                            {item.label}
-                                        </span>
-
-                                    </button>
-                                );
-                            }
+                sidebarOpen={
+                    sidebarOpen
+                }
+                onClose={
+                    () =>
+                        setSidebarOpen(
+                            false
                         )
-                    }
-
-                </nav>
-
-
-                <button
-                    type="button"
-                    className="sidebar-logout-button"
-                    onClick={handleLogout}
-                >
-
-                    <FaSignOutAlt />
-
-                    <span>
-                        Logout
-                    </span>
-
-                </button>
-
-            </aside>
-
-
-            {
-                sidebarOpen && (
-
-                    <div
-                        className="sidebar-overlay"
-                        onClick={
-                            () =>
-                                setSidebarOpen(
-                                    false
-                                )
-                        }
-                    />
-
-                )
-            }
+                }
+                onSectionChange={
+                    handleSectionChange
+                }
+                onLogout={
+                    handleLogout
+                }
+            />
 
 
             <main className="dashboard-main">
@@ -298,19 +212,48 @@ function AdminDashboard() {
                         }
                         aria-label="Open sidebar"
                     >
+
                         <FaBars />
+
                     </button>
 
 
-                    <div>
+                    <div className="dashboard-topbar-content">
 
-                        <h1>
-                            {getSectionTitle()}
-                        </h1>
+                        <div
+                            className={
+                                "dashboard-topbar-title"
+                            }
+                        >
 
-                        <p>
-                            Manage your assessment portal
-                        </p>
+                            <h1>
+                                {
+                                    getSectionTitle()
+                                }
+                            </h1>
+
+                            <p>
+                                {
+                                    getSectionDescription()
+                                }
+                            </p>
+
+                        </div>
+
+
+                        <div
+                            className={
+                                "dashboard-topbar-actions"
+                            }
+                        >
+
+                            <ProfileMenu
+                                onViewProfile={
+                                    handleViewProfile
+                                }
+                            />
+
+                        </div>
 
                     </div>
 
@@ -319,7 +262,9 @@ function AdminDashboard() {
 
                 <section className="dashboard-content">
 
-                    {renderSectionContent()}
+                    {
+                        renderSectionContent()
+                    }
 
                 </section>
 

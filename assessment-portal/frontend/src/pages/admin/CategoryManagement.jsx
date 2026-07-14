@@ -20,7 +20,7 @@ import {
     deleteCategory,
     getCategories,
     updateCategory
-} from "../../services/api";
+} from "../../services/adminService";
 
 
 const ITEMS_PER_PAGE = 5;

@@ -14,7 +14,12 @@ import {
 import {
     getMyResults,
     getQuizzes
-} from "../../services/api";
+} from "../../services/studentService";
+
+import {
+    formatPercentage,
+    formatScore
+} from "../../utils/resultFormatter";
 
 
 function MyResults({
@@ -119,54 +124,6 @@ function MyResults({
             quizzes
         ]
     );
-
-
-    const formatPercentage = (
-        percentage
-    ) => {
-
-        const numericPercentage = Number(
-            percentage
-        );
-
-        if (
-            Number.isNaN(
-                numericPercentage
-            )
-        ) {
-
-            return "0.00";
-        }
-
-        return numericPercentage.toFixed(
-            2
-        );
-    };
-
-
-    const formatScore = (
-        score
-    ) => {
-
-        const numericScore = Number(
-            score
-        );
-
-        if (
-            Number.isNaN(
-                numericScore
-            )
-        ) {
-
-            return "0";
-        }
-
-        return Number.isInteger(
-            numericScore
-        )
-            ? numericScore
-            : numericScore.toFixed(2);
-    };
 
 
     if (loading) {

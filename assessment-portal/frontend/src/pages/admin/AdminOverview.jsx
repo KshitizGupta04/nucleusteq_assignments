@@ -15,7 +15,7 @@ import {
     getAdminResults,
     getCategories,
     getQuizzes
-} from "../../services/api";
+} from "../../services/adminService";
 
 
 function AdminOverview({

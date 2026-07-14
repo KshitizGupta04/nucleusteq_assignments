@@ -9,6 +9,10 @@ from app.constants.messages import (
     ErrorMessages
 )
 
+from app.core.logger import (
+    logger
+)
+
 from app.exceptions.customexceptions import (
     AttemptAlreadySubmittedException,
     AttemptNotFoundException,
@@ -16,8 +20,9 @@ from app.exceptions.customexceptions import (
     InvalidAnswerException,
     MaxAttemptReachedException,
     QuestionNotFoundException,
-    AttemptAlreadyInProgressException,
-    QuizNotFoundException
+    QuizExpiredException,
+    QuizNotFoundException,
+    QuizNotStartedException
 )
 
 from app.models.attempt import (
@@ -66,6 +71,14 @@ class AttemptService:
             attempt["student_id"]
             != current_user["sub"]
         ):
+
+            logger.warning(
+                "Attempt access denied: "
+                "student='%s' tried to access "
+                "an attempt owned by student='%s'.",
+                current_user["sub"],
+                attempt["student_id"]
+            )
 
             raise ForbiddenException()
 
@@ -129,6 +142,107 @@ class AttemptService:
 
 
     @staticmethod
+    def _validate_quiz_availability(
+        quiz: dict
+    ):
+
+        current_time = datetime.now()
+
+        available_from = quiz.get(
+            "available_from"
+        )
+
+        available_until = quiz.get(
+            "available_until"
+        )
+
+
+        if (
+            available_from is not None
+            and current_time < available_from
+        ):
+
+            logger.warning(
+                "Quiz attempt blocked: "
+                "quiz_id='%s' is not available yet.",
+                str(
+                    quiz.get(
+                        "_id",
+                        ""
+                    )
+                )
+            )
+
+            raise QuizNotStartedException()
+
+
+        if (
+            available_until is not None
+            and current_time > available_until
+        ):
+
+            logger.warning(
+                "Quiz attempt blocked: "
+                "quiz_id='%s' availability "
+                "period has ended.",
+                str(
+                    quiz.get(
+                        "_id",
+                        ""
+                    )
+                )
+            )
+
+            raise QuizExpiredException()
+
+
+    @staticmethod
+    def _calculate_multiple_select_score(
+        student_answer: list,
+        correct_answer: list,
+        marks_per_question: float
+    ) -> float:
+
+        selected_answers = set(
+            student_answer
+        )
+
+        correct_answers = set(
+            correct_answer
+        )
+
+        correct_selections = len(
+            selected_answers
+            & correct_answers
+        )
+
+        incorrect_selections = len(
+            selected_answers
+            - correct_answers
+        )
+
+        partial_ratio = (
+            (
+                correct_selections
+                - incorrect_selections
+            )
+            / len(correct_answers)
+            if correct_answers
+            else 0.0
+        )
+
+        partial_ratio = max(
+            partial_ratio,
+            0.0
+        )
+
+        return (
+            marks_per_question
+            * partial_ratio
+        )
+
+
+    @staticmethod
     def _calculate_score(
         attempt: dict,
         answers: dict,
@@ -151,7 +265,15 @@ class AttemptService:
             else 0.0
         )
 
+        negative_marks = float(
+            quiz.get(
+                "negative_marks",
+                0.0
+            )
+        )
+
         score = 0.0
+
 
         for question in attempt[
             "question_snapshot"
@@ -169,15 +291,76 @@ class AttemptService:
                 )
             )
 
+
+            if student_answer is None:
+
+                continue
+
+
+            question_type = question.get(
+                "question_type"
+            )
+
+
             if (
-                student_answer is not None
-                and student_answer ==
-                question["correct_answer"]
+                question_type
+                == "multiple_select"
             ):
+
+                partial_score = (
+                    AttemptService
+                    ._calculate_multiple_select_score(
+                        student_answer,
+                        question[
+                            "correct_answer"
+                        ],
+                        marks_per_question
+                    )
+                )
+
+                score += partial_score
+
+                continue
+
+
+            if (
+                question_type
+                == "short_answer"
+            ):
+
+                is_correct = (
+                    student_answer
+                    .strip()
+                    .casefold()
+                    ==
+                    question[
+                        "correct_answer"
+                    ]
+                    .strip()
+                    .casefold()
+                )
+
+            else:
+
+                is_correct = (
+                    student_answer ==
+                    question["correct_answer"]
+                )
+
+
+            if is_correct:
 
                 score += marks_per_question
 
-        return score
+            else:
+
+                score -= negative_marks
+
+
+        return max(
+            score,
+            0.0
+        )
 
 
     @staticmethod
@@ -196,6 +379,7 @@ class AttemptService:
             )
         )
 
+
         AttemptRepository.update_attempt(
             attempt_id,
             {
@@ -206,8 +390,20 @@ class AttemptService:
             }
         )
 
+
         ResultService.generate_result(
             attempt_id
+        )
+
+
+        logger.info(
+            "Attempt completed successfully: "
+            "attempt_id='%s', quiz_id='%s', "
+            "student_id='%s', score='%s'.",
+            attempt_id,
+            attempt["quiz_id"],
+            attempt["student_id"],
+            score
         )
 
 
@@ -219,15 +415,28 @@ class AttemptService:
 
         student_id = current_user["sub"]
 
+
         quiz = (
             QuizRepository.get_quiz_by_id(
                 request.quiz_id
             )
         )
 
+
         if not quiz:
 
+            logger.warning(
+                "Attempt start failed: "
+                "quiz_id='%s' not found.",
+                request.quiz_id
+            )
+
             raise QuizNotFoundException()
+
+
+        AttemptService._validate_quiz_availability(
+            quiz
+        )
 
 
         active_attempt = (
@@ -238,6 +447,7 @@ class AttemptService:
             )
         )
 
+
         if active_attempt:
 
             expires_at = (
@@ -247,9 +457,10 @@ class AttemptService:
                 )
             )
 
+
             if (
-                datetime.utcnow() >=
-                expires_at
+                datetime.utcnow()
+                >= expires_at
             ):
 
                 attempt_id = str(
@@ -263,6 +474,7 @@ class AttemptService:
                     )
                 )
 
+
                 AttemptService._complete_attempt(
                     attempt_id,
                     active_attempt,
@@ -270,10 +482,45 @@ class AttemptService:
                     quiz
                 )
 
+
+                logger.info(
+                    "Expired active attempt "
+                    "auto-submitted: "
+                    "attempt_id='%s', "
+                    "student_id='%s'.",
+                    attempt_id,
+                    student_id
+                )
+
+
             else:
 
-                raise (
-                    AttemptAlreadyInProgressException()
+                attempt_id = str(
+                    active_attempt["_id"]
+                )
+
+
+                logger.info(
+                    "Existing active attempt returned: "
+                    "attempt_id='%s', "
+                    "student_id='%s', "
+                    "quiz_id='%s'.",
+                    attempt_id,
+                    student_id,
+                    request.quiz_id
+                )
+
+
+                return AttemptCreateResponse(
+                    message=(
+                        "Active attempt resumed successfully."
+                    ),
+                    attempt_id=attempt_id,
+                    resumed=True,
+                    started_at=active_attempt[
+                        "started_at"
+                    ],
+                    expires_at=expires_at
                 )
 
 
@@ -290,6 +537,14 @@ class AttemptService:
             AttemptService.MAX_ATTEMPTS
         ):
 
+            logger.warning(
+                "Attempt start failed: "
+                "student_id='%s' reached maximum "
+                "attempts for quiz_id='%s'.",
+                student_id,
+                request.quiz_id
+            )
+
             raise MaxAttemptReachedException()
 
 
@@ -301,15 +556,38 @@ class AttemptService:
         )
 
 
-        snapshot = [
-            question.copy()
-            for question in questions
-        ]
-
-
-        random.shuffle(
-            snapshot
+        question_count = quiz.get(
+            "question_count"
         )
+
+
+        if (
+            question_count is not None
+            and question_count < len(
+                questions
+            )
+        ):
+
+            snapshot = random.sample(
+                questions,
+                question_count
+            )
+
+            snapshot = [
+                question.copy()
+                for question in snapshot
+            ]
+
+        else:
+
+            snapshot = [
+                question.copy()
+                for question in questions
+            ]
+
+            random.shuffle(
+                snapshot
+            )
 
 
         attempt = Attempt(
@@ -332,6 +610,17 @@ class AttemptService:
             + timedelta(
                 minutes=quiz["duration"]
             )
+        )
+
+
+        logger.info(
+            "Attempt started successfully: "
+            "attempt_id='%s', quiz_id='%s', "
+            "student_id='%s', attempt_number='%s'.",
+            attempt_id,
+            request.quiz_id,
+            student_id,
+            attempt_count + 1
         )
 
 
@@ -360,6 +649,12 @@ class AttemptService:
 
         if not attempt:
 
+            logger.warning(
+                "Answer save failed: "
+                "attempt_id='%s' not found.",
+                attempt_id
+            )
+
             raise AttemptNotFoundException()
 
 
@@ -370,9 +665,15 @@ class AttemptService:
 
 
         if (
-            attempt["status"] ==
-            "submitted"
+            attempt["status"]
+            == "submitted"
         ):
+
+            logger.warning(
+                "Answer save failed: "
+                "attempt_id='%s' is already submitted.",
+                attempt_id
+            )
 
             raise AttemptAlreadySubmittedException()
 
@@ -386,6 +687,12 @@ class AttemptService:
 
         if not quiz:
 
+            logger.warning(
+                "Answer save failed: "
+                "quiz_id='%s' not found.",
+                attempt["quiz_id"]
+            )
+
             raise QuizNotFoundException()
 
 
@@ -398,8 +705,8 @@ class AttemptService:
 
 
         if (
-            datetime.utcnow() >=
-            expires_at
+            datetime.utcnow()
+            >= expires_at
         ):
 
             saved_answers = (
@@ -409,12 +716,22 @@ class AttemptService:
                 )
             )
 
+
             AttemptService._complete_attempt(
                 attempt_id,
                 attempt,
                 saved_answers,
                 quiz
             )
+
+
+            logger.info(
+                "Expired attempt auto-submitted "
+                "during answer save: "
+                "attempt_id='%s'.",
+                attempt_id
+            )
+
 
             raise AttemptAlreadySubmittedException()
 
@@ -432,9 +749,10 @@ class AttemptService:
                 )
             )
 
+
             if (
-                question_id ==
-                request.question_id
+                question_id
+                == request.question_id
             ):
 
                 selected_question = question
@@ -444,21 +762,114 @@ class AttemptService:
 
         if not selected_question:
 
+            logger.warning(
+                "Answer save failed: "
+                "question_id='%s' not found "
+                "in attempt_id='%s'.",
+                request.question_id,
+                attempt_id
+            )
+
             raise QuestionNotFoundException()
 
 
+        question_type = (
+            selected_question.get(
+                "question_type"
+            )
+        )
+
+
         if (
-            request.answer not in
-            selected_question["options"]
+            question_type
+            == "multiple_select"
         ):
 
-            raise InvalidAnswerException()
+            if (
+                not isinstance(
+                    request.answer,
+                    list
+                )
+                or not request.answer
+                or len(
+                    set(request.answer)
+                ) != len(request.answer)
+                or any(
+                    answer not in
+                    selected_question["options"]
+                    for answer in request.answer
+                )
+            ):
+
+                logger.warning(
+                    "Invalid multiple-select answer: "
+                    "attempt_id='%s', "
+                    "question_id='%s'.",
+                    attempt_id,
+                    request.question_id
+                )
+
+                raise InvalidAnswerException()
+
+
+        elif (
+            question_type
+            == "short_answer"
+        ):
+
+            if (
+                not isinstance(
+                    request.answer,
+                    str
+                )
+                or not request.answer.strip()
+            ):
+
+                logger.warning(
+                    "Invalid short answer: "
+                    "attempt_id='%s', "
+                    "question_id='%s'.",
+                    attempt_id,
+                    request.question_id
+                )
+
+                raise InvalidAnswerException()
+
+
+        else:
+
+            if (
+                not isinstance(
+                    request.answer,
+                    str
+                )
+                or request.answer not in
+                selected_question["options"]
+            ):
+
+                logger.warning(
+                    "Invalid answer: "
+                    "attempt_id='%s', "
+                    "question_id='%s'.",
+                    attempt_id,
+                    request.question_id
+                )
+
+                raise InvalidAnswerException()
 
 
         AttemptRepository.save_answer(
             attempt_id,
             request.question_id,
             request.answer
+        )
+
+
+        logger.info(
+            "Answer saved successfully: "
+            "attempt_id='%s', question_id='%s'.",
+            attempt_id,
+            request.question_id
         )
 
 
@@ -482,6 +893,12 @@ class AttemptService:
 
         if not attempt:
 
+            logger.warning(
+                "Attempt resume failed: "
+                "attempt_id='%s' not found.",
+                attempt_id
+            )
+
             raise AttemptNotFoundException()
 
 
@@ -500,6 +917,12 @@ class AttemptService:
 
         if not quiz:
 
+            logger.warning(
+                "Attempt resume failed: "
+                "quiz_id='%s' not found.",
+                attempt["quiz_id"]
+            )
+
             raise QuizNotFoundException()
 
 
@@ -512,10 +935,10 @@ class AttemptService:
 
 
         if (
-            attempt["status"] ==
-            "in_progress"
-            and datetime.utcnow() >=
-            expires_at
+            attempt["status"]
+            == "in_progress"
+            and datetime.utcnow()
+            >= expires_at
         ):
 
             saved_answers = (
@@ -525,12 +948,22 @@ class AttemptService:
                 )
             )
 
+
             AttemptService._complete_attempt(
                 attempt_id,
                 attempt,
                 saved_answers,
                 quiz
             )
+
+
+            logger.info(
+                "Expired attempt auto-submitted "
+                "during resume: "
+                "attempt_id='%s'.",
+                attempt_id
+            )
+
 
             attempt = (
                 AttemptRepository
@@ -547,6 +980,16 @@ class AttemptService:
                     "question_snapshot"
                 ]
             )
+        )
+
+
+        logger.info(
+            "Attempt resumed successfully: "
+            "attempt_id='%s', student_id='%s', "
+            "status='%s'.",
+            attempt_id,
+            current_user["sub"],
+            attempt["status"]
         )
 
 
@@ -588,6 +1031,12 @@ class AttemptService:
 
         if not attempt:
 
+            logger.warning(
+                "Attempt submission failed: "
+                "attempt_id='%s' not found.",
+                attempt_id
+            )
+
             raise AttemptNotFoundException()
 
 
@@ -598,9 +1047,15 @@ class AttemptService:
 
 
         if (
-            attempt["status"] ==
-            "submitted"
+            attempt["status"]
+            == "submitted"
         ):
+
+            logger.warning(
+                "Attempt submission failed: "
+                "attempt_id='%s' is already submitted.",
+                attempt_id
+            )
 
             raise AttemptAlreadySubmittedException()
 
@@ -625,16 +1080,98 @@ class AttemptService:
                 question_id
             )
 
+
             if not question:
+
+                logger.warning(
+                    "Attempt submission failed: "
+                    "question_id='%s' not found "
+                    "in attempt_id='%s'.",
+                    question_id,
+                    attempt_id
+                )
 
                 raise QuestionNotFoundException()
 
+
+            question_type = question.get(
+                "question_type"
+            )
+
+
             if (
-                answer not in
-                question["options"]
+                question_type
+                == "multiple_select"
             ):
 
-                raise InvalidAnswerException()
+                if (
+                    not isinstance(
+                        answer,
+                        list
+                    )
+                    or not answer
+                    or len(
+                        set(answer)
+                    ) != len(answer)
+                    or any(
+                        selected_option
+                        not in question["options"]
+                        for selected_option in answer
+                    )
+                ):
+
+                    logger.warning(
+                        "Attempt submission failed: "
+                        "invalid multiple-select answer "
+                        "for question_id='%s'.",
+                        question_id
+                    )
+
+                    raise InvalidAnswerException()
+
+
+            elif (
+                question_type
+                == "short_answer"
+            ):
+
+                if (
+                    not isinstance(
+                        answer,
+                        str
+                    )
+                    or not answer.strip()
+                ):
+
+                    logger.warning(
+                        "Attempt submission failed: "
+                        "invalid short answer "
+                        "for question_id='%s'.",
+                        question_id
+                    )
+
+                    raise InvalidAnswerException()
+
+
+            else:
+
+                if (
+                    not isinstance(
+                        answer,
+                        str
+                    )
+                    or answer not in
+                    question["options"]
+                ):
+
+                    logger.warning(
+                        "Attempt submission failed: "
+                        "invalid answer "
+                        "for question_id='%s'.",
+                        question_id
+                    )
+
+                    raise InvalidAnswerException()
 
 
         quiz = (
@@ -646,14 +1183,44 @@ class AttemptService:
 
         if not quiz:
 
+            logger.warning(
+                "Attempt submission failed: "
+                "quiz_id='%s' not found.",
+                attempt["quiz_id"]
+            )
+
             raise QuizNotFoundException()
+
+
+        saved_answers = (
+            attempt.get(
+                "answers",
+                {}
+            )
+        )
+
+
+        final_answers = {
+            **saved_answers,
+            **request.answers
+        }
 
 
         AttemptService._complete_attempt(
             attempt_id,
             attempt,
-            request.answers,
+            final_answers,
             quiz
+        )
+
+
+        logger.info(
+            "Attempt submitted successfully: "
+            "attempt_id='%s', quiz_id='%s', "
+            "student_id='%s'.",
+            attempt_id,
+            attempt["quiz_id"],
+            current_user["sub"]
         )
 
 

@@ -46,7 +46,9 @@ def get_all_quizzes(
     )
 ):
 
-    response = QuizService.get_all_quizzes()
+    response = QuizService.get_all_quizzes(
+        current_user
+    )
 
     return response
 

@@ -1,4 +1,7 @@
 import {
+    useCallback,
+    useEffect,
+    useRef,
     useState
 } from "react";
 
@@ -7,54 +10,32 @@ import {
 } from "react-router-dom";
 
 import {
-    FaBars,
-    FaBook,
-    FaChartBar,
-    FaClipboardCheck,
-    FaHome,
-    FaSignOutAlt,
-    FaTimes
+    FaBars
 } from "react-icons/fa";
 
+import {
+    submitAttempt
+} from "../../services/studentService";
+
+import {
+    logoutUser
+} from "../../utils/logout";
+
+import {
+    STUDENT_SIDEBAR_ITEMS
+} from "../../constants/studentSidebar";
+
 import AvailableQuizzes from "./AvailableQuizzes";
+import MyProfile from "../../components/MyProfile";
 import MyResults from "./MyResults";
 import QuizAttempt from "./QuizAttempt";
 import ResultBreakdown from "./ResultBreakdown";
+import StudentCategories from "./StudentCategories";
+import StudentOverview from "./StudentOverview";
+import StudentSidebar from "./StudentSidebar";
 
 
-const ACTIVE_ATTEMPT_KEY = (
-    "active_attempt_id"
-);
-
-
-const getStoredAttemptId = () => {
-
-    return sessionStorage.getItem(
-        ACTIVE_ATTEMPT_KEY
-    );
-};
-
-
-const SIDEBAR_ITEMS = [
-    {
-        id: "dashboard",
-        label: "Dashboard",
-        title: "Student Dashboard",
-        icon: FaHome
-    },
-    {
-        id: "quizzes",
-        label: "Available Quizzes",
-        title: "Available Quizzes",
-        icon: FaBook
-    },
-    {
-        id: "results",
-        label: "My Results",
-        title: "My Results",
-        icon: FaChartBar
-    }
-];
+const ATTEMPT_GRACE_PERIOD_MS = 20000;
 
 
 function StudentDashboard() {
@@ -63,24 +44,9 @@ function StudentDashboard() {
 
 
     const [
-        activeAttemptId,
-        setActiveAttemptId
-    ] = useState(
-        getStoredAttemptId
-    );
-
-
-    const [
         activeSection,
         setActiveSection
-    ] = useState(
-        () => {
-
-            return getStoredAttemptId()
-                ? "attempt"
-                : "dashboard";
-        }
-    );
+    ] = useState("dashboard");
 
 
     const [
@@ -90,49 +56,314 @@ function StudentDashboard() {
 
 
     const [
+        selectedCategory,
+        setSelectedCategory
+    ] = useState(null);
+
+
+    const [
+        currentAttemptId,
+        setCurrentAttemptId
+    ] = useState(null);
+
+
+    const [
+        currentAttemptQuizId,
+        setCurrentAttemptQuizId
+    ] = useState(null);
+
+
+    const [
+        pendingAttemptId,
+        setPendingAttemptId
+    ] = useState(null);
+
+
+    const [
+        pendingAttemptQuizId,
+        setPendingAttemptQuizId
+    ] = useState(null);
+
+
+    const [
         selectedResultId,
         setSelectedResultId
     ] = useState(null);
 
 
-    const handleLogout = () => {
+    const [
+        attemptNotice,
+        setAttemptNotice
+    ] = useState("");
 
-        localStorage.removeItem(
-            "access_token"
-        );
 
-        localStorage.removeItem(
-            "refresh_token"
-        );
+    const graceTimerRef = useRef(null);
 
-        localStorage.removeItem(
-            "role"
-        );
+    const graceStartedAtRef = useRef(null);
 
-        sessionStorage.removeItem(
-            ACTIVE_ATTEMPT_KEY
-        );
+    const autoSubmittingRef = useRef(false);
 
-        navigate(
-            "/login",
-            {
-                replace: true
+
+    const clearGraceTimer = useCallback(
+        () => {
+
+            if (
+                graceTimerRef.current
+            ) {
+
+                clearTimeout(
+                    graceTimerRef.current
+                );
+
+                graceTimerRef.current = null;
             }
-        );
-    };
+
+
+            graceStartedAtRef.current = null;
+
+        },
+        []
+    );
+
+
+    const clearActiveAttempt = useCallback(
+        () => {
+
+            clearGraceTimer();
+
+
+            setCurrentAttemptId(
+                null
+            );
+
+            setCurrentAttemptQuizId(
+                null
+            );
+
+            setPendingAttemptId(
+                null
+            );
+
+            setPendingAttemptQuizId(
+                null
+            );
+
+
+            autoSubmittingRef.current = false;
+
+        },
+        [
+            clearGraceTimer
+        ]
+    );
+
+
+    const autoSubmitPendingAttempt = useCallback(
+        async (
+            attemptId
+        ) => {
+
+            if (
+                !attemptId ||
+                autoSubmittingRef.current
+            ) {
+
+                return;
+            }
+
+
+            autoSubmittingRef.current = true;
+
+
+            try {
+
+                await submitAttempt(
+                    attemptId,
+                    {}
+                );
+
+
+                clearActiveAttempt();
+
+
+                setAttemptNotice(
+                    "Your quiz was automatically " +
+                    "submitted because you did not " +
+                    "resume it within 20 seconds."
+                );
+
+
+                setActiveSection(
+                    "results"
+                );
+
+            } catch (err) {
+
+                const message = (
+                    err.message ||
+                    "Failed to automatically submit quiz."
+                );
+
+
+                if (
+                    message
+                        .toLowerCase()
+                        .includes(
+                            "already submitted"
+                        )
+                ) {
+
+                    clearActiveAttempt();
+
+
+                    setAttemptNotice(
+                        "Your quiz has already been submitted."
+                    );
+
+
+                    setActiveSection(
+                        "results"
+                    );
+
+
+                    return;
+                }
+
+
+                setAttemptNotice(
+                    message
+                );
+
+
+                autoSubmittingRef.current = false;
+            }
+
+        },
+        [
+            clearActiveAttempt
+        ]
+    );
+
+
+    const startGracePeriod = useCallback(
+        (
+            attemptId,
+            quizId
+        ) => {
+
+            if (!attemptId) {
+
+                return;
+            }
+
+
+            clearGraceTimer();
+
+
+            setPendingAttemptId(
+                attemptId
+            );
+
+            setPendingAttemptQuizId(
+                quizId
+            );
+
+
+            graceStartedAtRef.current = (
+                Date.now()
+            );
+
+
+            graceTimerRef.current = setTimeout(
+                () => {
+
+                    autoSubmitPendingAttempt(
+                        attemptId
+                    );
+
+                },
+                ATTEMPT_GRACE_PERIOD_MS
+            );
+
+        },
+        [
+            autoSubmitPendingAttempt,
+            clearGraceTimer
+        ]
+    );
+
+
+    const handleLeaveAttempt = useCallback(
+        (
+            nextSection
+        ) => {
+
+            if (
+                currentAttemptId
+            ) {
+
+                startGracePeriod(
+                    currentAttemptId,
+                    currentAttemptQuizId
+                );
+
+
+                setCurrentAttemptId(
+                    null
+                );
+
+                setCurrentAttemptQuizId(
+                    null
+                );
+
+
+                setAttemptNotice(
+                    "You have 20 seconds to resume " +
+                    "your active quiz. After that, " +
+                    "it will be automatically submitted."
+                );
+            }
+
+
+            setActiveSection(
+                "results"
+            );
+
+
+            setSidebarOpen(
+                false
+            );
+
+        },
+        [
+            currentAttemptId,
+            currentAttemptQuizId,
+            startGracePeriod
+        ]
+    );
 
 
     const handleSectionChange = (
         section
     ) => {
 
+        if (
+            activeSection === "attempt" &&
+            currentAttemptId
+        ) {
+
+            handleLeaveAttempt(
+                section
+            );
+
+            return;
+        }
+
+
         setActiveSection(
             section
         );
 
-        setSelectedResultId(
-            null
-        );
 
         setSidebarOpen(
             false
@@ -140,18 +371,83 @@ function StudentDashboard() {
     };
 
 
-    const handleStartAttempt = (
-        attemptId
+    const handleViewQuizzes = (
+        category
     ) => {
 
-        sessionStorage.setItem(
-            ACTIVE_ATTEMPT_KEY,
+        setSelectedCategory(
+            category
+        );
+
+
+        if (
+            activeSection === "attempt" &&
+            currentAttemptId
+        ) {
+
+            handleLeaveAttempt(
+                "quizzes"
+            );
+
+            return;
+        }
+
+
+        setActiveSection(
+            "quizzes"
+        );
+    };
+
+
+    const handleBackToCategories = () => {
+
+        setSelectedCategory(
+            null
+        );
+
+
+        setActiveSection(
+            "categories"
+        );
+    };
+
+
+    const handleStartAttempt = (
+        attemptId,
+        resumed = false,
+        quizId = null
+    ) => {
+
+        clearGraceTimer();
+
+
+        setPendingAttemptId(
+            null
+        );
+
+        setPendingAttemptQuizId(
+            null
+        );
+
+
+        setCurrentAttemptId(
             attemptId
         );
 
-        setActiveAttemptId(
-            attemptId
+        setCurrentAttemptQuizId(
+            quizId
         );
+
+
+        setAttemptNotice(
+            resumed
+                ? "Your active quiz has been resumed."
+                : ""
+        );
+
+
+        autoSubmittingRef.current = false;
+
 
         setActiveSection(
             "attempt"
@@ -159,15 +455,63 @@ function StudentDashboard() {
     };
 
 
-    const handleAttemptSubmitted = () => {
+    const handleResumeAttempt = (
+        attemptId,
+        quizId
+    ) => {
 
-        sessionStorage.removeItem(
-            ACTIVE_ATTEMPT_KEY
-        );
+        if (
+            !attemptId
+        ) {
 
-        setActiveAttemptId(
+            return;
+        }
+
+
+        clearGraceTimer();
+
+
+        setPendingAttemptId(
             null
         );
+
+        setPendingAttemptQuizId(
+            null
+        );
+
+
+        setCurrentAttemptId(
+            attemptId
+        );
+
+        setCurrentAttemptQuizId(
+            quizId
+        );
+
+
+        setAttemptNotice(
+            "Your active quiz has been resumed."
+        );
+
+
+        autoSubmittingRef.current = false;
+
+
+        setActiveSection(
+            "attempt"
+        );
+    };
+
+
+    const handleAttemptComplete = () => {
+
+        clearActiveAttempt();
+
+
+        setAttemptNotice(
+            ""
+        );
+
 
         setActiveSection(
             "results"
@@ -179,17 +523,215 @@ function StudentDashboard() {
         resultId
     ) => {
 
+        if (!resultId) {
+
+            setAttemptNotice(
+                "Result ID is missing."
+            );
+
+            return;
+        }
+
+
         setSelectedResultId(
             resultId
         );
 
+
         setActiveSection(
-            "result-breakdown"
+            "result-details"
         );
     };
 
 
+    const handleBackToResults = () => {
+
+        setSelectedResultId(
+            null
+        );
+
+
+        setActiveSection(
+            "results"
+        );
+    };
+
+
+    const handleLogout = async () => {
+
+        if (
+            currentAttemptId
+        ) {
+
+            try {
+
+                await submitAttempt(
+                    currentAttemptId,
+                    {}
+                );
+
+            } catch (err) {
+
+                const message = (
+                    err.message || ""
+                ).toLowerCase();
+
+
+                if (
+                    !message.includes(
+                        "already submitted"
+                    )
+                ) {
+
+                    setAttemptNotice(
+                        err.message ||
+                        "Failed to submit active quiz."
+                    );
+
+                    return;
+                }
+            }
+        }
+
+
+        if (
+            pendingAttemptId
+        ) {
+
+            try {
+
+                await submitAttempt(
+                    pendingAttemptId,
+                    {}
+                );
+
+            } catch (err) {
+
+                const message = (
+                    err.message || ""
+                ).toLowerCase();
+
+
+                if (
+                    !message.includes(
+                        "already submitted"
+                    )
+                ) {
+
+                    setAttemptNotice(
+                        err.message ||
+                        "Failed to submit active quiz."
+                    );
+
+                    return;
+                }
+            }
+        }
+
+
+        clearActiveAttempt();
+
+
+        logoutUser(
+            navigate
+        );
+    };
+
+
+    useEffect(
+        () => {
+
+            if (
+                !pendingAttemptId ||
+                !graceStartedAtRef.current
+            ) {
+
+                return;
+            }
+
+
+            const handleVisibilityChange = () => {
+
+                if (
+                    document.hidden
+                ) {
+
+                    return;
+                }
+
+
+                const elapsedTime = (
+                    Date.now() -
+                    graceStartedAtRef.current
+                );
+
+
+                if (
+                    elapsedTime >=
+                    ATTEMPT_GRACE_PERIOD_MS
+                ) {
+
+                    autoSubmitPendingAttempt(
+                        pendingAttemptId
+                    );
+                }
+            };
+
+
+            document.addEventListener(
+                "visibilitychange",
+                handleVisibilityChange
+            );
+
+
+            return () => {
+
+                document.removeEventListener(
+                    "visibilitychange",
+                    handleVisibilityChange
+                );
+            };
+
+        },
+        [
+            pendingAttemptId,
+            autoSubmitPendingAttempt
+        ]
+    );
+
+
+    useEffect(
+        () => {
+
+            return () => {
+
+                if (
+                    graceTimerRef.current
+                ) {
+
+                    clearTimeout(
+                        graceTimerRef.current
+                    );
+                }
+            };
+
+        },
+        []
+    );
+
+
     const getSectionTitle = () => {
+
+        if (
+            activeSection === "quizzes"
+        ) {
+
+            return (
+                selectedCategory?.name ||
+                "Available Quizzes"
+            );
+        }
+
 
         if (
             activeSection === "attempt"
@@ -198,63 +740,27 @@ function StudentDashboard() {
             return "Quiz Attempt";
         }
 
+
         if (
-            activeSection ===
-            "result-breakdown"
+            activeSection === "result-details"
         ) {
 
-            return "Result Breakdown";
+            return "Result Details";
         }
 
+
         const currentItem = (
-            SIDEBAR_ITEMS.find(
+            STUDENT_SIDEBAR_ITEMS.find(
                 item =>
                     item.id ===
                     activeSection
             )
         );
 
+
         return (
             currentItem?.title ||
             "Student Dashboard"
-        );
-    };
-
-
-    const renderDashboardOverview = () => {
-
-        return (
-
-            <div className="dashboard-welcome">
-
-                <FaClipboardCheck
-                    className="dashboard-welcome-icon"
-                />
-
-                <h2>
-                    Welcome to the Assessment Portal
-                </h2>
-
-                <p>
-                    Choose an available quiz,
-                    complete your assessment,
-                    and view your results.
-                </p>
-
-                <button
-                    type="button"
-                    className="primary-button"
-                    onClick={
-                        () =>
-                            handleSectionChange(
-                                "quizzes"
-                            )
-                    }
-                >
-                    View Available Quizzes
-                </button>
-
-            </div>
         );
     };
 
@@ -265,13 +771,55 @@ function StudentDashboard() {
             activeSection
         ) {
 
+            case "dashboard":
+
+                return (
+
+                    <StudentOverview
+                        onNavigate={
+                            handleSectionChange
+                        }
+                        onViewResult={
+                            handleViewResult
+                        }
+                    />
+                );
+
+
+            case "categories":
+
+                return (
+
+                    <StudentCategories
+                        onViewQuizzes={
+                            handleViewQuizzes
+                        }
+                    />
+                );
+
+
             case "quizzes":
 
                 return (
 
                     <AvailableQuizzes
+                        selectedCategory={
+                            selectedCategory
+                        }
+                        onBackToCategories={
+                            handleBackToCategories
+                        }
                         onStartAttempt={
                             handleStartAttempt
+                        }
+                        onResumeAttempt={
+                            handleResumeAttempt
+                        }
+                        pendingAttemptId={
+                            pendingAttemptId
+                        }
+                        pendingAttemptQuizId={
+                            pendingAttemptQuizId
                         }
                     />
                 );
@@ -279,21 +827,14 @@ function StudentDashboard() {
 
             case "attempt":
 
-                if (!activeAttemptId) {
-
-                    return (
-                        renderDashboardOverview()
-                    );
-                }
-
                 return (
 
                     <QuizAttempt
                         attemptId={
-                            activeAttemptId
+                            currentAttemptId
                         }
                         onSubmitted={
-                            handleAttemptSubmitted
+                            handleAttemptComplete
                         }
                     />
                 );
@@ -311,7 +852,7 @@ function StudentDashboard() {
                 );
 
 
-            case "result-breakdown":
+            case "result-details":
 
                 return (
 
@@ -320,27 +861,23 @@ function StudentDashboard() {
                             selectedResultId
                         }
                         onBack={
-                            () => {
-
-                                setSelectedResultId(
-                                    null
-                                );
-
-                                setActiveSection(
-                                    "results"
-                                );
-                            }
+                            handleBackToResults
                         }
                     />
                 );
 
 
-            case "dashboard":
-            default:
+            case "profile":
 
                 return (
-                    renderDashboardOverview()
+
+                    <MyProfile />
                 );
+
+
+            default:
+
+                return null;
         }
     };
 
@@ -349,125 +886,26 @@ function StudentDashboard() {
 
         <div className="dashboard-layout">
 
-            <aside
-                className={
-                    sidebarOpen
-                        ? (
-                            "dashboard-sidebar " +
-                            "sidebar-open"
-                        )
-                        : "dashboard-sidebar"
+            <StudentSidebar
+                activeSection={
+                    activeSection
                 }
-            >
-
-                <div className="sidebar-header">
-
-                    <h2>
-                        Assessment Portal
-                    </h2>
-
-                    <button
-                        type="button"
-                        className="sidebar-close-button"
-                        onClick={
-                            () =>
-                                setSidebarOpen(
-                                    false
-                                )
-                        }
-                        aria-label="Close sidebar"
-                    >
-                        <FaTimes />
-                    </button>
-
-                </div>
-
-
-                <nav className="sidebar-navigation">
-
-                    {
-                        SIDEBAR_ITEMS.map(
-                            item => {
-
-                                const Icon = (
-                                    item.icon
-                                );
-
-                                const isActive = (
-                                    activeSection ===
-                                    item.id
-                                );
-
-                                return (
-
-                                    <button
-                                        key={item.id}
-                                        type="button"
-                                        className={
-                                            isActive
-                                                ? (
-                                                    "sidebar-link " +
-                                                    "active"
-                                                )
-                                                : "sidebar-link"
-                                        }
-                                        onClick={
-                                            () =>
-                                                handleSectionChange(
-                                                    item.id
-                                                )
-                                        }
-                                    >
-
-                                        <Icon />
-
-                                        <span>
-                                            {item.label}
-                                        </span>
-
-                                    </button>
-                                );
-                            }
+                sidebarOpen={
+                    sidebarOpen
+                }
+                onClose={
+                    () =>
+                        setSidebarOpen(
+                            false
                         )
-                    }
-
-                </nav>
-
-
-                <button
-                    type="button"
-                    className="sidebar-logout-button"
-                    onClick={
-                        handleLogout
-                    }
-                >
-
-                    <FaSignOutAlt />
-
-                    <span>
-                        Logout
-                    </span>
-
-                </button>
-
-            </aside>
-
-
-            {
-                sidebarOpen && (
-
-                    <div
-                        className="sidebar-overlay"
-                        onClick={
-                            () =>
-                                setSidebarOpen(
-                                    false
-                                )
-                        }
-                    />
-
-                )
-            }
+                }
+                onSectionChange={
+                    handleSectionChange
+                }
+                onLogout={
+                    handleLogout
+                }
+            />
 
 
             <main className="dashboard-main">
@@ -485,19 +923,23 @@ function StudentDashboard() {
                         }
                         aria-label="Open sidebar"
                     >
+
                         <FaBars />
+
                     </button>
 
 
                     <div>
 
                         <h1>
-                            {getSectionTitle()}
+                            {
+                                getSectionTitle()
+                            }
                         </h1>
 
                         <p>
-                            Take assessments and
-                            track your performance
+                            Explore assessments and
+                            track your progress
                         </p>
 
                     </div>
@@ -506,6 +948,22 @@ function StudentDashboard() {
 
 
                 <section className="dashboard-content">
+
+                    {
+                        attemptNotice && (
+
+                            <div
+                                className={
+                                    "success-message"
+                                }
+                            >
+
+                                {attemptNotice}
+
+                            </div>
+                        )
+                    }
+
 
                     {
                         renderSectionContent()

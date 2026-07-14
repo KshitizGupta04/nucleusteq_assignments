@@ -4,6 +4,10 @@ from app.constants.messages import (
     ErrorMessages
 )
 
+from app.core.logger import (
+    logger
+)
+
 from app.exceptions.customexceptions import (
     QuestionNotFoundException,
     QuizNotFoundException
@@ -42,6 +46,12 @@ class QuestionService:
 
         if not quiz:
 
+            logger.warning(
+                "Question creation failed: "
+                "quiz_id='%s' not found.",
+                request.quiz_id
+            )
+
             raise QuizNotFoundException()
 
         question = Question(
@@ -57,6 +67,15 @@ class QuestionService:
             QuestionRepository.create_question(
                 question.model_dump()
             )
+        )
+
+        logger.info(
+            "Question created successfully: "
+            "question_id='%s', quiz_id='%s', "
+            "question_type='%s'.",
+            question_id,
+            request.quiz_id,
+            request.question_type
         )
 
         return {
@@ -78,6 +97,12 @@ class QuestionService:
         )
 
         if not quiz:
+
+            logger.warning(
+                "Question retrieval failed: "
+                "quiz_id='%s' not found.",
+                quiz_id
+            )
 
             raise QuizNotFoundException()
 
@@ -115,6 +140,12 @@ class QuestionService:
 
         if not question:
 
+            logger.warning(
+                "Question update failed: "
+                "question_id='%s' not found.",
+                question_id
+            )
+
             raise QuestionNotFoundException()
 
         QuestionRepository.update_question(
@@ -127,6 +158,14 @@ class QuestionService:
                 "difficulty": request.difficulty,
                 "updated_at": datetime.utcnow()
             }
+        )
+
+        logger.info(
+            "Question updated successfully: "
+            "question_id='%s', "
+            "question_type='%s'.",
+            question_id,
+            request.question_type
         )
 
         return {
@@ -147,9 +186,21 @@ class QuestionService:
 
         if not question:
 
+            logger.warning(
+                "Question deletion failed: "
+                "question_id='%s' not found.",
+                question_id
+            )
+
             raise QuestionNotFoundException()
 
         QuestionRepository.delete_question(
+            question_id
+        )
+
+        logger.info(
+            "Question deleted successfully: "
+            "question_id='%s'.",
             question_id
         )
 

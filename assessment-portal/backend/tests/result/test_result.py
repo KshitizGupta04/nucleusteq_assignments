@@ -831,3 +831,1083 @@ def test_ext_003_leaderboard_per_test(
     assert leaderboard_entry[
         "percentage"
     ] == 100.0
+
+
+
+# EXT-004: Verify short answer question type with
+# case-insensitive and whitespace-tolerant evaluation.
+def test_ext_004_short_answer_question_type(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={
+            "name": "EXT-004 Category",
+            "description": (
+                "Category for testing "
+                "short answer questions."
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert category_response.status_code in [
+        200,
+        201
+    ]
+
+    category_id = category_response.json()[
+        "category_id"
+    ]
+
+
+    quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-004 Quiz",
+            "description": (
+                "Quiz for testing short "
+                "answer question support."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 100
+        },
+        headers=admin_headers
+    )
+
+    assert quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    quiz_id = quiz_response.json()[
+        "quiz_id"
+    ]
+
+
+    question_response = client.post(
+        "/api/v1/questions",
+        json={
+            "quiz_id": quiz_id,
+            "question": (
+                "What does JVM stand for?"
+            ),
+            "options": [],
+            "correct_answer": (
+                "Java Virtual Machine"
+            ),
+            "question_type": "short_answer",
+            "difficulty": "easy"
+        },
+        headers=admin_headers
+    )
+
+    assert question_response.status_code in [
+        200,
+        201
+    ]
+
+    question_id = question_response.json()[
+        "question_id"
+    ]
+
+
+    attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert attempt_response.status_code in [
+        200,
+        201
+    ]
+
+    attempt_id = attempt_response.json()[
+        "attempt_id"
+    ]
+
+
+    submit_response = client.post(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": {
+                question_id: (
+                    "  java virtual machine  "
+                )
+            }
+        },
+        headers=student_headers
+    )
+
+    assert submit_response.status_code == 200
+
+
+    results_response = client.get(
+        "/api/v1/results/me",
+        headers=student_headers
+    )
+
+    assert results_response.status_code == 200
+
+    results = results_response.json()
+
+    matching_result = next(
+        result
+        for result in results
+        if result["attempt_id"] == attempt_id
+    )
+
+
+    assert matching_result[
+        "score_obtained"
+    ] == 100.0
+
+    assert matching_result[
+        "percentage"
+    ] == 100.0
+
+    assert matching_result[
+        "status"
+    ] == "pass"
+
+
+    result_id = matching_result[
+        "result_id"
+    ]
+
+
+    breakdown_response = client.get(
+        (
+            f"/api/v1/results/"
+            f"{result_id}/breakdown"
+        ),
+        headers=student_headers
+    )
+
+    assert breakdown_response.status_code == 200
+
+    breakdown = breakdown_response.json()
+
+
+    assert len(breakdown) == 1
+
+    assert breakdown[0][
+        "selected_answer"
+    ] == "  java virtual machine  "
+
+    assert breakdown[0][
+        "correct_answer"
+    ] == "Java Virtual Machine"
+
+    assert breakdown[0][
+        "is_correct"
+    ] is True
+
+    assert breakdown[0][
+        "marks_obtained"
+    ] == 100.0
+
+# EXT-006: Verify negative marking for wrong answers.
+def test_ext_006_negative_marking(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={
+            "name": "EXT-006 Category",
+            "description": (
+                "Category for testing "
+                "negative marking."
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert category_response.status_code in [
+        200,
+        201
+    ]
+
+    category_id = category_response.json()[
+        "category_id"
+    ]
+
+
+    quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-006 Quiz",
+            "description": (
+                "Quiz for testing "
+                "negative marking."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 100,
+            "negative_marks": 5
+        },
+        headers=admin_headers
+    )
+
+    assert quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    quiz_id = quiz_response.json()[
+        "quiz_id"
+    ]
+
+
+    for index in range(
+        1,
+        5
+    ):
+
+        question_response = client.post(
+            "/api/v1/questions",
+            json={
+                "quiz_id": quiz_id,
+                "question": (
+                    f"EXT-006 question "
+                    f"number {index}?"
+                ),
+                "options": [
+                    f"Correct {index}",
+                    f"Wrong A {index}",
+                    f"Wrong B {index}",
+                    f"Wrong C {index}"
+                ],
+                "correct_answer": (
+                    f"Correct {index}"
+                ),
+                "question_type": "mcq",
+                "difficulty": "easy"
+            },
+            headers=admin_headers
+        )
+
+        assert question_response.status_code in [
+            200,
+            201
+        ]
+
+
+    attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert attempt_response.status_code in [
+        200,
+        201
+    ]
+
+    attempt_id = attempt_response.json()[
+        "attempt_id"
+    ]
+
+
+    resume_response = client.get(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}"
+        ),
+        headers=student_headers
+    )
+
+    assert resume_response.status_code == 200
+
+    questions = resume_response.json()[
+        "question_snapshot"
+    ]
+
+    assert len(questions) == 4
+
+
+    first_question = questions[0]
+
+    second_question = questions[1]
+
+    third_question = questions[2]
+
+
+    answers = {
+        first_question["id"]:
+            first_question["options"][0],
+
+        second_question["id"]:
+            second_question["options"][0],
+
+        third_question["id"]:
+            third_question["options"][1]
+    }
+
+
+    submit_response = client.post(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": answers
+        },
+        headers=student_headers
+    )
+
+    assert submit_response.status_code == 200
+
+
+    results_response = client.get(
+        "/api/v1/results/me",
+        headers=student_headers
+    )
+
+    assert results_response.status_code == 200
+
+    matching_results = [
+        result
+        for result in results_response.json()
+        if result["attempt_id"] == attempt_id
+    ]
+
+    assert len(matching_results) == 1
+
+    result = matching_results[0]
+
+
+    assert result[
+        "score_obtained"
+    ] == 45.0
+
+    assert result[
+        "percentage"
+    ] == 45.0
+
+    assert result[
+        "status"
+    ] == "pass"
+
+
+    result_id = result[
+        "result_id"
+    ]
+
+
+    breakdown_response = client.get(
+        (
+            f"/api/v1/results/"
+            f"{result_id}/breakdown"
+        ),
+        headers=student_headers
+    )
+
+    assert breakdown_response.status_code == 200
+
+    breakdown = breakdown_response.json()
+
+
+    correct_questions = [
+        question
+        for question in breakdown
+        if question["is_correct"] is True
+    ]
+
+    wrong_questions = [
+        question
+        for question in breakdown
+        if (
+            question["selected_answer"]
+            is not None
+            and question["is_correct"] is False
+        )
+    ]
+
+    unanswered_questions = [
+        question
+        for question in breakdown
+        if question["selected_answer"] is None
+    ]
+
+
+    assert len(correct_questions) == 2
+
+    assert len(wrong_questions) == 1
+
+    assert len(unanswered_questions) == 1
+
+
+    for question in correct_questions:
+
+        assert question[
+            "marks_obtained"
+        ] == 25.0
+
+
+    assert wrong_questions[0][
+        "marks_obtained"
+    ] == -5.0
+
+
+    assert unanswered_questions[0][
+        "marks_obtained"
+    ] == 0.0
+
+# EXT-005: Verify random selection of a configured number
+# of questions from a larger question pool.
+def test_ext_005_question_pool_random_selection(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={
+            "name": "EXT-005 Category",
+            "description": (
+                "Category for testing random "
+                "question pool selection."
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert category_response.status_code in [
+        200,
+        201
+    ]
+
+    category_id = category_response.json()[
+        "category_id"
+    ]
+
+
+    quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-005 Quiz",
+            "description": (
+                "Quiz for testing random "
+                "question pool selection."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 100,
+            "question_count": 3
+        },
+        headers=admin_headers
+    )
+
+    assert quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    quiz_id = quiz_response.json()[
+        "quiz_id"
+    ]
+
+
+    for index in range(
+        1,
+        6
+    ):
+
+        question_response = client.post(
+            "/api/v1/questions",
+            json={
+                "quiz_id": quiz_id,
+                "question": (
+                    f"EXT-005 question number "
+                    f"{index}?"
+                ),
+                "options": [
+                    f"Option A {index}",
+                    f"Option B {index}",
+                    f"Option C {index}",
+                    f"Option D {index}"
+                ],
+                "correct_answer": (
+                    f"Option A {index}"
+                ),
+                "question_type": "mcq",
+                "difficulty": "easy"
+            },
+            headers=admin_headers
+        )
+
+        assert question_response.status_code in [
+            200,
+            201
+        ]
+
+
+    attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert attempt_response.status_code in [
+        200,
+        201
+    ]
+
+    attempt_id = attempt_response.json()[
+        "attempt_id"
+    ]
+
+
+    resume_response = client.get(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}"
+        ),
+        headers=student_headers
+    )
+
+    assert resume_response.status_code == 200
+
+    attempt_data = resume_response.json()
+
+    questions = attempt_data[
+        "question_snapshot"
+    ]
+
+
+    assert len(questions) == 3
+
+    question_ids = [
+        question["id"]
+        for question in questions
+    ]
+
+    assert len(
+        set(question_ids)
+    ) == 3
+
+
+    for question in questions:
+
+        assert question[
+            "quiz_id"
+        ] == quiz_id
+
+        assert question[
+            "question_type"
+        ] == "mcq"
+
+        assert question[
+            "difficulty"
+        ] == "easy"
+
+        assert "correct_answer" not in question
+
+
+# EXT-006: Verify negative marking for wrong answers.
+def test_ext_006_negative_marking(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={
+            "name": "EXT-006 Category",
+            "description": (
+                "Category for testing "
+                "negative marking."
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert category_response.status_code in [
+        200,
+        201
+    ]
+
+    category_id = category_response.json()[
+        "category_id"
+    ]
+
+
+    quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-006 Quiz",
+            "description": (
+                "Quiz for testing "
+                "negative marking."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 100,
+            "negative_marks": 5
+        },
+        headers=admin_headers
+    )
+
+    assert quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    quiz_id = quiz_response.json()[
+        "quiz_id"
+    ]
+
+
+    for index in range(
+        1,
+        5
+    ):
+
+        question_response = client.post(
+            "/api/v1/questions",
+            json={
+                "quiz_id": quiz_id,
+                "question": (
+                    f"EXT-006 question "
+                    f"number {index}?"
+                ),
+                "options": [
+                    f"Correct {index}",
+                    f"Wrong A {index}",
+                    f"Wrong B {index}",
+                    f"Wrong C {index}"
+                ],
+                "correct_answer": (
+                    f"Correct {index}"
+                ),
+                "question_type": "mcq",
+                "difficulty": "easy"
+            },
+            headers=admin_headers
+        )
+
+        assert question_response.status_code in [
+            200,
+            201
+        ]
+
+
+    attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert attempt_response.status_code in [
+        200,
+        201
+    ]
+
+    attempt_id = attempt_response.json()[
+        "attempt_id"
+    ]
+
+
+    resume_response = client.get(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}"
+        ),
+        headers=student_headers
+    )
+
+    assert resume_response.status_code == 200
+
+    questions = resume_response.json()[
+        "question_snapshot"
+    ]
+
+    assert len(questions) == 4
+
+
+    first_question = questions[0]
+
+    second_question = questions[1]
+
+    third_question = questions[2]
+
+
+    answers = {
+        first_question["id"]:
+            first_question["options"][0],
+
+        second_question["id"]:
+            second_question["options"][0],
+
+        third_question["id"]:
+            third_question["options"][1]
+    }
+
+
+    submit_response = client.post(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": answers
+        },
+        headers=student_headers
+    )
+
+    assert submit_response.status_code == 200
+
+
+    results_response = client.get(
+        "/api/v1/results/me",
+        headers=student_headers
+    )
+
+    assert results_response.status_code == 200
+
+    matching_results = [
+        result
+        for result in results_response.json()
+        if result["attempt_id"] == attempt_id
+    ]
+
+    assert len(matching_results) == 1
+
+    result = matching_results[0]
+
+
+    assert result[
+        "score_obtained"
+    ] == 45.0
+
+    assert result[
+        "percentage"
+    ] == 45.0
+
+    assert result[
+        "status"
+    ] == "pass"
+
+
+    result_id = result[
+        "result_id"
+    ]
+
+
+    breakdown_response = client.get(
+        (
+            f"/api/v1/results/"
+            f"{result_id}/breakdown"
+        ),
+        headers=student_headers
+    )
+
+    assert breakdown_response.status_code == 200
+
+    breakdown = breakdown_response.json()
+
+
+    correct_questions = [
+        question
+        for question in breakdown
+        if question["is_correct"] is True
+    ]
+
+    wrong_questions = [
+        question
+        for question in breakdown
+        if (
+            question["selected_answer"]
+            is not None
+            and question["is_correct"] is False
+        )
+    ]
+
+    unanswered_questions = [
+        question
+        for question in breakdown
+        if question["selected_answer"] is None
+    ]
+
+
+    assert len(correct_questions) == 2
+
+    assert len(wrong_questions) == 1
+
+    assert len(unanswered_questions) == 1
+
+
+    for question in correct_questions:
+
+        assert question[
+            "marks_obtained"
+        ] == 25.0
+
+
+    assert wrong_questions[0][
+        "marks_obtained"
+    ] == -5.0
+
+
+    assert unanswered_questions[0][
+        "marks_obtained"
+    ] == 0.0
+
+
+    # EXT-007: Verify partial marking for multiple-select questions.
+def test_ext_007_partial_marking_multiple_select(
+    client,
+    admin_headers,
+    student_headers
+):
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={
+            "name": "EXT-007 Category",
+            "description": (
+                "Category for testing "
+                "multiple-select partial marking."
+            )
+        },
+        headers=admin_headers
+    )
+
+    assert category_response.status_code in [
+        200,
+        201
+    ]
+
+    category_id = category_response.json()[
+        "category_id"
+    ]
+
+
+    quiz_response = client.post(
+        "/api/v1/quizzes",
+        json={
+            "title": "EXT-007 Quiz",
+            "description": (
+                "Quiz for testing partial marking "
+                "for multiple-select questions."
+            ),
+            "category_id": category_id,
+            "duration": 30,
+            "total_marks": 10,
+            "negative_marks": 0
+        },
+        headers=admin_headers
+    )
+
+    assert quiz_response.status_code in [
+        200,
+        201
+    ]
+
+    quiz_id = quiz_response.json()[
+        "quiz_id"
+    ]
+
+
+    question_response = client.post(
+        "/api/v1/questions",
+        json={
+            "quiz_id": quiz_id,
+            "question": (
+                "Which of the following are "
+                "programming languages?"
+            ),
+            "options": [
+                "Python",
+                "Java",
+                "HTML",
+                "C++"
+            ],
+            "correct_answer": [
+                "Python",
+                "Java",
+                "C++"
+            ],
+            "question_type": (
+                "multiple_select"
+            ),
+            "difficulty": "medium"
+        },
+        headers=admin_headers
+    )
+
+    assert question_response.status_code in [
+        200,
+        201
+    ]
+
+
+    attempt_response = client.post(
+        "/api/v1/attempts/start",
+        json={
+            "quiz_id": quiz_id
+        },
+        headers=student_headers
+    )
+
+    assert attempt_response.status_code in [
+        200,
+        201
+    ]
+
+    attempt_id = attempt_response.json()[
+        "attempt_id"
+    ]
+
+
+    resume_response = client.get(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}"
+        ),
+        headers=student_headers
+    )
+
+    assert resume_response.status_code == 200
+
+    questions = resume_response.json()[
+        "question_snapshot"
+    ]
+
+    assert len(questions) == 1
+
+    question_id = questions[0][
+        "id"
+    ]
+
+
+    submit_response = client.post(
+        (
+            f"/api/v1/attempts/"
+            f"{attempt_id}/submit"
+        ),
+        json={
+            "answers": {
+                question_id: [
+                    "Python",
+                    "Java"
+                ]
+            }
+        },
+        headers=student_headers
+    )
+
+    assert submit_response.status_code == 200
+
+
+    results_response = client.get(
+        "/api/v1/results/me",
+        headers=student_headers
+    )
+
+    assert results_response.status_code == 200
+
+    matching_results = [
+        result
+        for result in results_response.json()
+        if result["attempt_id"] == attempt_id
+    ]
+
+    assert len(matching_results) == 1
+
+    result = matching_results[0]
+
+
+    expected_score = round(
+        (
+            2 / 3
+        ) * 10,
+        2
+    )
+
+    assert round(
+        result["score_obtained"],
+        2
+    ) == expected_score
+
+    assert round(
+        result["percentage"],
+        2
+    ) == 66.67
+
+    assert result[
+        "status"
+    ] == "pass"
+
+
+    result_id = result[
+        "result_id"
+    ]
+
+
+    breakdown_response = client.get(
+        (
+            f"/api/v1/results/"
+            f"{result_id}/breakdown"
+        ),
+        headers=student_headers
+    )
+
+    assert breakdown_response.status_code == 200
+
+    breakdown = breakdown_response.json()
+
+    assert len(breakdown) == 1
+
+    question_result = breakdown[0]
+
+
+    assert question_result[
+        "selected_answer"
+    ] == [
+        "Python",
+        "Java"
+    ]
+
+    assert set(
+        question_result[
+            "correct_answer"
+        ]
+    ) == {
+        "Python",
+        "Java",
+        "C++"
+    }
+
+    assert question_result[
+        "is_correct"
+    ] is False
+
+    assert round(
+        question_result[
+            "marks_obtained"
+        ],
+        2
+    ) == 6.67

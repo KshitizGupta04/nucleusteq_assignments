@@ -18,6 +18,8 @@ import "./styles/student/student.css";
 import "./styles/student/quizAttempt.css";
 import "./styles/student/resultBreakdown.css";
 
+import "./styles/profile.css";
+import "./styles/student/studentOverview.css";
 
 
 import App from "./App.jsx";

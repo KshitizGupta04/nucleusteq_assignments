@@ -237,3 +237,26 @@ class ResultAlreadyExistsException(
         super().__init__(
             message
         )
+
+class QuizNotStartedException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.QUIZ_NOT_STARTED
+    ):
+
+        super().__init__(
+            message
+        )
+
+
+class QuizExpiredException(Exception):
+
+    def __init__(
+        self,
+        message: str = ErrorMessages.QUIZ_EXPIRED
+    ):
+
+        super().__init__(
+            message
+        )

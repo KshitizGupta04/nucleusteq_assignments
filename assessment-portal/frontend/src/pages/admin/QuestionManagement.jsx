@@ -21,7 +21,7 @@ import {
     getAdminQuestionsByQuiz,
     getQuizzes,
     updateQuestion
-} from "../../services/api";
+} from "../../services/adminService";
 
 
 const ITEMS_PER_PAGE = 5;
@@ -42,10 +42,65 @@ const TRUE_FALSE_OPTIONS = [
 const INITIAL_FORM = {
     quiz_id: "",
     question: "",
-    options: MCQ_OPTIONS,
+    options: [...MCQ_OPTIONS],
     correct_answer: "",
     question_type: "mcq",
     difficulty: "easy"
+};
+
+
+const getInitialOptions = (
+    questionType
+) => {
+
+    if (
+        questionType === "true_false"
+    ) {
+
+        return [
+            ...TRUE_FALSE_OPTIONS
+        ];
+    }
+
+    if (
+        questionType === "short_answer"
+    ) {
+
+        return [];
+    }
+
+    return [
+        ...MCQ_OPTIONS
+    ];
+};
+
+
+const getQuestionTypeLabel = (
+    questionType
+) => {
+
+    if (
+        questionType === "true_false"
+    ) {
+
+        return "True / False";
+    }
+
+    if (
+        questionType === "short_answer"
+    ) {
+
+        return "Short Answer";
+    }
+
+    if (
+        questionType === "multiple_select"
+    ) {
+
+        return "Multiple Select";
+    }
+
+    return "MCQ";
 };
 
 
@@ -88,6 +143,16 @@ function QuestionManagement() {
         submitting,
         setSubmitting
     ] = useState(false);
+
+    const [
+        deletingQuestionId,
+        setDeletingQuestionId
+    ] = useState(null);
+
+    const [
+        questionToDelete,
+        setQuestionToDelete
+    ] = useState(null);
 
 
     const {
@@ -254,14 +319,19 @@ function QuestionManagement() {
             previous => ({
                 ...previous,
 
-                question_type: questionType,
+                question_type:
+                    questionType,
 
                 options:
-                    questionType === "true_false"
-                        ? [...TRUE_FALSE_OPTIONS]
-                        : [...MCQ_OPTIONS],
+                    getInitialOptions(
+                        questionType
+                    ),
 
-                correct_answer: ""
+                correct_answer:
+                    questionType ===
+                    "multiple_select"
+                        ? []
+                        : ""
             })
         );
     };
@@ -285,16 +355,93 @@ function QuestionManagement() {
 
                 updatedOptions[index] = value;
 
+
+                let updatedCorrectAnswer = (
+                    previous.correct_answer
+                );
+
+
+                if (
+                    previous.question_type ===
+                    "multiple_select"
+                ) {
+
+                    const currentAnswers = (
+                        Array.isArray(
+                            previous.correct_answer
+                        )
+                            ? previous.correct_answer
+                            : []
+                    );
+
+                    updatedCorrectAnswer = (
+                        currentAnswers.map(
+                            answer =>
+                                answer === oldOption
+                                    ? value
+                                    : answer
+                        )
+                    );
+
+                } else if (
+                    previous.correct_answer ===
+                    oldOption
+                ) {
+
+                    updatedCorrectAnswer = "";
+                }
+
+
                 return {
                     ...previous,
 
-                    options: updatedOptions,
+                    options:
+                        updatedOptions,
 
                     correct_answer:
-                        previous.correct_answer ===
-                        oldOption
-                            ? ""
-                            : previous.correct_answer
+                        updatedCorrectAnswer
+                };
+            }
+        );
+    };
+
+
+    const handleMultipleAnswerChange = (
+        option
+    ) => {
+
+        setFormData(
+            previous => {
+
+                const currentAnswers = (
+                    Array.isArray(
+                        previous.correct_answer
+                    )
+                        ? previous.correct_answer
+                        : []
+                );
+
+
+                const isSelected = (
+                    currentAnswers.includes(
+                        option
+                    )
+                );
+
+
+                return {
+                    ...previous,
+
+                    correct_answer:
+                        isSelected
+                            ? currentAnswers.filter(
+                                answer =>
+                                    answer !== option
+                            )
+                            : [
+                                ...currentAnswers,
+                                option
+                            ]
                 };
             }
         );
@@ -326,6 +473,41 @@ function QuestionManagement() {
         }
 
 
+        if (
+            formData.question.trim().length >
+            500
+        ) {
+
+            showError(
+                "Question cannot exceed 500 characters."
+            );
+
+            return false;
+        }
+
+
+        if (
+            formData.question_type ===
+            "short_answer"
+        ) {
+
+            if (
+                !String(
+                    formData.correct_answer
+                ).trim()
+            ) {
+
+                showError(
+                    "Correct answer is required."
+                );
+
+                return false;
+            }
+
+            return true;
+        }
+
+
         const expectedOptionCount = (
             formData.question_type ===
             "true_false"
@@ -347,7 +529,7 @@ function QuestionManagement() {
                         "contain exactly 2 options."
                     )
                     : (
-                        "MCQ question must contain " +
+                        "Question must contain " +
                         "exactly 4 options."
                     )
             );
@@ -393,6 +575,56 @@ function QuestionManagement() {
 
 
         if (
+            formData.question_type ===
+            "multiple_select"
+        ) {
+
+            const correctAnswers = (
+                Array.isArray(
+                    formData.correct_answer
+                )
+                    ? formData.correct_answer
+                    : []
+            );
+
+
+            if (
+                correctAnswers.length === 0
+            ) {
+
+                showError(
+                    "Select at least one correct answer."
+                );
+
+                return false;
+            }
+
+
+            const hasInvalidAnswer = (
+                correctAnswers.some(
+                    answer =>
+                        !cleanedOptions.includes(
+                            answer.trim()
+                        )
+                )
+            );
+
+
+            if (hasInvalidAnswer) {
+
+                showError(
+                    "Every correct answer must be one of the options."
+                );
+
+                return false;
+            }
+
+
+            return true;
+        }
+
+
+        if (
             !formData.correct_answer
         ) {
 
@@ -428,30 +660,15 @@ function QuestionManagement() {
 
         event.preventDefault();
 
-        console.log(
-        "CREATE QUESTION SUBMIT CLICKED",
-        formData,
-        selectedQuizId
-        );
 
-
-        const isValid = validateForm();
-
-        console.log(
-            "VALIDATION RESULT:",
-            isValid
-        );
-
-        if (!isValid) {
+        if (!validateForm()) {
 
             return;
         }
 
-        console.log(
-            "VALIDATION PASSED - CALLING API"
-        );
 
         setSubmitting(true);
+
 
         try {
 
@@ -462,14 +679,54 @@ function QuestionManagement() {
             );
 
 
+            let correctAnswer = (
+                formData.correct_answer
+            );
+
+
+            if (
+                formData.question_type ===
+                "short_answer"
+            ) {
+
+                correctAnswer = (
+                    String(
+                        formData.correct_answer
+                    ).trim()
+                );
+            }
+
+
+            if (
+                formData.question_type ===
+                "multiple_select"
+            ) {
+
+                correctAnswer = (
+                    Array.isArray(
+                        formData.correct_answer
+                    )
+                        ? formData.correct_answer.map(
+                            answer =>
+                                answer.trim()
+                        )
+                        : []
+                );
+            }
+
+
             const commonData = {
                 question:
                     formData.question.trim(),
 
-                options: cleanedOptions,
+                options:
+                    formData.question_type ===
+                    "short_answer"
+                        ? []
+                        : cleanedOptions,
 
                 correct_answer:
-                    formData.correct_answer,
+                    correctAnswer,
 
                 question_type:
                     formData.question_type,
@@ -479,25 +736,30 @@ function QuestionManagement() {
             };
 
 
+            let response;
+
+
             if (editingQuestionId) {
 
-                await updateQuestion(
+                response = await updateQuestion(
                     editingQuestionId,
                     commonData
                 );
 
                 showSuccess(
+                    response?.message ||
                     "Question updated successfully."
                 );
 
             } else {
 
-                await createQuestion({
+                response = await createQuestion({
                     quiz_id: selectedQuizId,
                     ...commonData
                 });
 
                 showSuccess(
+                    response?.message ||
                     "Question created successfully."
                 );
             }
@@ -512,7 +774,8 @@ function QuestionManagement() {
         } catch (error) {
 
             showError(
-                error.message
+                error.message ||
+                "Failed to save question."
             );
 
         } finally {
@@ -531,25 +794,60 @@ function QuestionManagement() {
             "mcq"
         );
 
-        const options = (
-            questionType === "true_false"
-                ? [...TRUE_FALSE_OPTIONS]
-                : (
-                    Array.isArray(
-                        question.options
-                    )
-                        ? [...question.options]
-                        : [...MCQ_OPTIONS]
-                )
+
+        let options = (
+            getInitialOptions(
+                questionType
+            )
         );
+
+
+        if (
+            questionType !==
+            "true_false" &&
+            questionType !==
+            "short_answer" &&
+            Array.isArray(
+                question.options
+            )
+        ) {
+
+            options = [
+                ...question.options
+            ];
+        }
+
+
+        let correctAnswer = (
+            question.correct_answer ?? ""
+        );
+
+
+        if (
+            questionType ===
+            "multiple_select"
+        ) {
+
+            correctAnswer = (
+                Array.isArray(
+                    question.correct_answer
+                )
+                    ? [
+                        ...question.correct_answer
+                    ]
+                    : []
+            );
+        }
 
 
         setEditingQuestionId(
             question.id
         );
 
+
         setFormData({
-            quiz_id: selectedQuizId,
+            quiz_id:
+                selectedQuizId,
 
             question:
                 question.question || "",
@@ -557,7 +855,7 @@ function QuestionManagement() {
             options,
 
             correct_answer:
-                question.correct_answer || "",
+                correctAnswer,
 
             question_type:
                 questionType,
@@ -567,6 +865,9 @@ function QuestionManagement() {
         });
 
 
+        clearToast();
+
+
         window.scrollTo({
             top: 0,
             behavior: "smooth"
@@ -574,28 +875,70 @@ function QuestionManagement() {
     };
 
 
-    const handleDelete = async (
-        questionId
+    const handleDeleteRequest = (
+        question
     ) => {
 
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this question?"
+        setQuestionToDelete(
+            question
         );
+    };
 
-        if (!confirmed) {
+
+    const handleCancelDelete = () => {
+
+        setQuestionToDelete(
+            null
+        );
+    };
+
+
+    const handleConfirmDelete = async () => {
+
+        if (!questionToDelete) {
 
             return;
         }
 
+
+        const question = (
+            questionToDelete
+        );
+
+
+        setDeletingQuestionId(
+            question.id
+        );
+
+
         try {
 
-            await deleteQuestion(
-                questionId
+            const response = (
+                await deleteQuestion(
+                    question.id
+                )
             );
 
+
+            if (
+                editingQuestionId ===
+                question.id
+            ) {
+
+                resetForm();
+            }
+
+
+            setQuestionToDelete(
+                null
+            );
+
+
             showSuccess(
+                response?.message ||
                 "Question deleted successfully."
             );
+
 
             await loadQuestions(
                 selectedQuizId
@@ -604,9 +947,39 @@ function QuestionManagement() {
         } catch (error) {
 
             showError(
-                error.message
+                error.message ||
+                "Failed to delete question."
+            );
+
+        } finally {
+
+            setDeletingQuestionId(
+                null
             );
         }
+    };
+
+
+    const renderCorrectAnswer = (
+        question
+    ) => {
+
+        if (
+            Array.isArray(
+                question.correct_answer
+            )
+        ) {
+
+            return (
+                question.correct_answer.join(
+                    ", "
+                )
+            );
+        }
+
+        return (
+            question.correct_answer || "-"
+        );
     };
 
 
@@ -618,6 +991,68 @@ function QuestionManagement() {
                 toast={toast}
                 onClose={clearToast}
             />
+
+
+            {
+                questionToDelete && (
+
+                    <div className="confirmation-overlay">
+
+                        <div className="confirmation-dialog">
+
+                            <h3>
+                                Delete Question
+                            </h3>
+
+                            <p>
+                                Are you sure you want to delete
+                                this question?
+                            </p>
+
+                            <div className="form-actions">
+
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={
+                                        handleCancelDelete
+                                    }
+                                    disabled={
+                                        deletingQuestionId !==
+                                        null
+                                    }
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="delete-button"
+                                    onClick={
+                                        handleConfirmDelete
+                                    }
+                                    disabled={
+                                        deletingQuestionId !==
+                                        null
+                                    }
+                                >
+
+                                    {
+                                        deletingQuestionId !==
+                                        null
+                                            ? "Deleting..."
+                                            : "Delete"
+                                    }
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                )
+            }
 
 
             <div className="management-form-card">
@@ -685,6 +1120,7 @@ function QuestionManagement() {
 
                         <form
                             onSubmit={handleSubmit}
+                            noValidate
                         >
 
                             <div className="form-group">
@@ -705,8 +1141,19 @@ function QuestionManagement() {
                                     }
                                     minLength="5"
                                     maxLength="500"
+                                    rows="4"
                                     required
                                 />
+
+                                <span
+                                    className="character-count"
+                                >
+                                    {
+                                        formData
+                                            .question
+                                            .length
+                                    }/500
+                                </span>
 
                             </div>
 
@@ -739,6 +1186,14 @@ function QuestionManagement() {
 
                                         <option value="true_false">
                                             True / False
+                                        </option>
+
+                                        <option value="short_answer">
+                                            Short Answer
+                                        </option>
+
+                                        <option value="multiple_select">
+                                            Multiple Select
                                         </option>
 
                                     </select>
@@ -785,128 +1240,263 @@ function QuestionManagement() {
 
                             {
                                 formData.question_type ===
-                                "true_false" ? (
+                                "short_answer" ? (
 
                                     <div className="form-group">
 
-                                        <label>
-                                            Options
+                                        <label
+                                            htmlFor="correct-answer-text"
+                                        >
+                                            Correct Answer
                                         </label>
 
-                                        <div className="true-false-options">
-
-                                            <span className="option-badge">
-                                                True
-                                            </span>
-
-                                            <span className="option-badge">
-                                                False
-                                            </span>
-
-                                        </div>
+                                        <input
+                                            id="correct-answer-text"
+                                            name="correct_answer"
+                                            type="text"
+                                            className="form-input"
+                                            value={
+                                                formData.correct_answer
+                                            }
+                                            onChange={
+                                                handleInputChange
+                                            }
+                                            placeholder={
+                                                "Enter the expected answer"
+                                            }
+                                            required
+                                        />
 
                                     </div>
 
                                 ) : (
 
-                                    formData.options.map(
-                                        (
-                                            option,
-                                            index
-                                        ) => (
+                                    <>
 
-                                            <div
-                                                className="form-group"
-                                                key={index}
-                                            >
+                                        {
+                                            formData.question_type ===
+                                            "true_false" ? (
 
-                                                <label
-                                                    htmlFor={
-                                                        `option-${index}`
-                                                    }
-                                                >
-                                                    Option {
-                                                        index + 1
-                                                    }
-                                                </label>
+                                                <div className="form-group">
 
-                                                <input
-                                                    id={
-                                                        `option-${index}`
-                                                    }
-                                                    type="text"
-                                                    className="form-input"
-                                                    value={option}
-                                                    onChange={
-                                                        event =>
-                                                            handleOptionChange(
-                                                                index,
-                                                                event
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                    }
-                                                    required
-                                                />
+                                                    <label>
+                                                        Options
+                                                    </label>
 
-                                            </div>
-                                        )
-                                    )
+                                                    <div
+                                                        className={
+                                                            "true-false-options"
+                                                        }
+                                                    >
+
+                                                        <span
+                                                            className={
+                                                                "option-badge"
+                                                            }
+                                                        >
+                                                            True
+                                                        </span>
+
+                                                        <span
+                                                            className={
+                                                                "option-badge"
+                                                            }
+                                                        >
+                                                            False
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                            ) : (
+
+                                                formData.options.map(
+                                                    (
+                                                        option,
+                                                        index
+                                                    ) => (
+
+                                                        <div
+                                                            className={
+                                                                "form-group"
+                                                            }
+                                                            key={index}
+                                                        >
+
+                                                            <label
+                                                                htmlFor={
+                                                                    `option-${index}`
+                                                                }
+                                                            >
+                                                                Option {
+                                                                    index + 1
+                                                                }
+                                                            </label>
+
+                                                            <input
+                                                                id={
+                                                                    `option-${index}`
+                                                                }
+                                                                type="text"
+                                                                className={
+                                                                    "form-input"
+                                                                }
+                                                                value={option}
+                                                                onChange={
+                                                                    event =>
+                                                                        handleOptionChange(
+                                                                            index,
+                                                                            event
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                }
+                                                                required
+                                                            />
+
+                                                        </div>
+                                                    )
+                                                )
+
+                                            )
+                                        }
+
+
+                                        {
+                                            formData.question_type ===
+                                            "multiple_select" ? (
+
+                                                <div className="form-group">
+
+                                                    <label>
+                                                        Correct Answers
+                                                    </label>
+
+                                                    <div
+                                                        className={
+                                                            "multiple-select-options"
+                                                        }
+                                                    >
+
+                                                        {
+                                                            formData.options
+                                                                .filter(
+                                                                    option =>
+                                                                        option.trim()
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        option,
+                                                                        index
+                                                                    ) => (
+
+                                                                        <label
+                                                                            key={
+                                                                                `${option}-${index}`
+                                                                            }
+                                                                            className={
+                                                                                "checkbox-option"
+                                                                            }
+                                                                        >
+
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={
+                                                                                    Array.isArray(
+                                                                                        formData.correct_answer
+                                                                                    ) &&
+                                                                                    formData.correct_answer.includes(
+                                                                                        option
+                                                                                    )
+                                                                                }
+                                                                                onChange={
+                                                                                    () =>
+                                                                                        handleMultipleAnswerChange(
+                                                                                            option
+                                                                                        )
+                                                                                }
+                                                                            />
+
+                                                                            <span>
+                                                                                {
+                                                                                    option
+                                                                                }
+                                                                            </span>
+
+                                                                        </label>
+                                                                    )
+                                                                )
+                                                        }
+
+                                                    </div>
+
+                                                </div>
+
+                                            ) : (
+
+                                                <div className="form-group">
+
+                                                    <label
+                                                        htmlFor="correct-answer"
+                                                    >
+                                                        Correct Answer
+                                                    </label>
+
+                                                    <select
+                                                        id="correct-answer"
+                                                        name="correct_answer"
+                                                        className="form-input"
+                                                        value={
+                                                            formData.correct_answer
+                                                        }
+                                                        onChange={
+                                                            handleInputChange
+                                                        }
+                                                        required
+                                                    >
+
+                                                        <option value="">
+                                                            Select correct answer
+                                                        </option>
+
+                                                        {
+                                                            formData.options
+                                                                .filter(
+                                                                    option =>
+                                                                        option.trim()
+                                                                )
+                                                                .map(
+                                                                    (
+                                                                        option,
+                                                                        index
+                                                                    ) => (
+
+                                                                        <option
+                                                                            key={
+                                                                                `${option}-${index}`
+                                                                            }
+                                                                            value={option}
+                                                                        >
+                                                                            {
+                                                                                option
+                                                                            }
+                                                                        </option>
+                                                                    )
+                                                                )
+                                                        }
+
+                                                    </select>
+
+                                                </div>
+
+                                            )
+                                        }
+
+                                    </>
 
                                 )
                             }
-
-
-                            <div className="form-group">
-
-                                <label htmlFor="correct-answer">
-                                    Correct Answer
-                                </label>
-
-                                <select
-                                    id="correct-answer"
-                                    name="correct_answer"
-                                    className="form-input"
-                                    value={
-                                        formData.correct_answer
-                                    }
-                                    onChange={
-                                        handleInputChange
-                                    }
-                                    required
-                                >
-
-                                    <option value="">
-                                        Select correct answer
-                                    </option>
-
-                                    {
-                                        formData.options
-                                            .filter(
-                                                option =>
-                                                    option.trim()
-                                            )
-                                            .map(
-                                                (
-                                                    option,
-                                                    index
-                                                ) => (
-
-                                                    <option
-                                                        key={
-                                                            `${option}-${index}`
-                                                        }
-                                                        value={option}
-                                                    >
-                                                        {option}
-                                                    </option>
-                                                )
-                                            )
-                                    }
-
-                                </select>
-
-                            </div>
 
 
                             <div className="form-actions">
@@ -917,7 +1507,11 @@ function QuestionManagement() {
                                     disabled={submitting}
                                 >
 
-                                    <FaPlus />
+                                    {
+                                        editingQuestionId
+                                            ? <FaEdit />
+                                            : <FaPlus />
+                                    }
 
                                     {
                                         submitting
@@ -937,6 +1531,7 @@ function QuestionManagement() {
                                             type="button"
                                             className="secondary-button"
                                             onClick={resetForm}
+                                            disabled={submitting}
                                         >
                                             Cancel
                                         </button>
@@ -965,8 +1560,20 @@ function QuestionManagement() {
                         </h2>
 
                         <p>
-                            View and manage questions
-                            for the selected quiz.
+                            {
+                                selectedQuizId
+                                    ? (
+                                        `${questions.length} ${
+                                            questions.length === 1
+                                                ? "question"
+                                                : "questions"
+                                        } available`
+                                    )
+                                    : (
+                                        "View and manage questions " +
+                                        "for the selected quiz."
+                                    )
+                            }
                         </p>
 
                     </div>
@@ -1015,9 +1622,15 @@ function QuestionManagement() {
 
                         <>
 
-                            <div className="management-table-wrapper">
+                            <div
+                                className={
+                                    "management-table-wrapper"
+                                }
+                            >
 
-                                <table className="management-table">
+                                <table
+                                    className="management-table"
+                                >
 
                                     <thead>
 
@@ -1062,18 +1675,16 @@ function QuestionManagement() {
 
                                                         <td>
                                                             {
-                                                                question
-                                                                    .question
+                                                                question.question
                                                             }
                                                         </td>
 
                                                         <td>
                                                             {
-                                                                question
-                                                                    .question_type ===
-                                                                "true_false"
-                                                                    ? "True / False"
-                                                                    : "MCQ"
+                                                                getQuestionTypeLabel(
+                                                                    question
+                                                                        .question_type
+                                                                )
                                                             }
                                                         </td>
 
@@ -1086,14 +1697,19 @@ function QuestionManagement() {
 
                                                         <td>
                                                             {
-                                                                question
-                                                                    .correct_answer
+                                                                renderCorrectAnswer(
+                                                                    question
+                                                                )
                                                             }
                                                         </td>
 
                                                         <td>
 
-                                                            <div className="table-actions">
+                                                            <div
+                                                                className={
+                                                                    "table-actions"
+                                                                }
+                                                            >
 
                                                                 <button
                                                                     type="button"
@@ -1107,7 +1723,9 @@ function QuestionManagement() {
                                                                                 question
                                                                             )
                                                                     }
-                                                                    aria-label="Edit question"
+                                                                    aria-label={
+                                                                        "Edit question"
+                                                                    }
                                                                 >
                                                                     <FaEdit />
                                                                 </button>
@@ -1121,13 +1739,26 @@ function QuestionManagement() {
                                                                     }
                                                                     onClick={
                                                                         () =>
-                                                                            handleDelete(
-                                                                                question.id
+                                                                            handleDeleteRequest(
+                                                                                question
                                                                             )
                                                                     }
-                                                                    aria-label="Delete question"
+                                                                    disabled={
+                                                                        deletingQuestionId ===
+                                                                        question.id
+                                                                    }
+                                                                    aria-label={
+                                                                        "Delete question"
+                                                                    }
                                                                 >
-                                                                    <FaTrash />
+
+                                                                    {
+                                                                        deletingQuestionId ===
+                                                                        question.id
+                                                                            ? "..."
+                                                                            : <FaTrash />
+                                                                    }
+
                                                                 </button>
 
                                                             </div>

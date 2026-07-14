@@ -32,6 +32,20 @@ class Quiz(BaseModel):
         gt=0
     )
 
+    question_count: int | None = Field(
+        default=None,
+        gt=0
+    )
+
+    negative_marks: float = Field(
+        default=0.0,
+        ge=0
+    )
+
+    available_from: datetime | None = None
+
+    available_until: datetime | None = None
+
     created_at: datetime = Field(
         default_factory=datetime.utcnow
     )

@@ -9,6 +9,9 @@ from pydantic import (
 )
 
 
+AnswerType = str | List[str]
+
+
 class QuestionBreakdownResponse(
     BaseModel
 ):
@@ -17,9 +20,11 @@ class QuestionBreakdownResponse(
 
     question: str
 
-    selected_answer: Optional[str] = None
+    selected_answer: Optional[
+        AnswerType
+    ] = None
 
-    correct_answer: str
+    correct_answer: AnswerType
 
     is_correct: bool
 
@@ -115,6 +120,7 @@ class QuizStatisticsResponse(
 
     pass_rate: float
 
+
 class LeaderboardResponse(
     BaseModel
 ):
@@ -123,13 +129,12 @@ class LeaderboardResponse(
 
     student_id: str
 
-
     score_obtained: float
 
     total_marks: float
 
     percentage: float
-    
+
 
 class ResultMessageResponse(
     BaseModel

@@ -12,7 +12,11 @@ import {
 
 import {
     getResultById
-} from "../../services/api";
+} from "../../services/studentService";
+
+import {
+    formatNumber
+} from "../../utils/resultFormatter";
 
 
 function ResultBreakdown({
@@ -92,28 +96,42 @@ function ResultBreakdown({
     );
 
 
-    const formatNumber = (
-        value
+    const formatAnswer = (
+        answer
     ) => {
 
-        const numericValue = Number(
-            value
-        );
-
         if (
-            Number.isNaN(
-                numericValue
+            Array.isArray(
+                answer
             )
         ) {
 
-            return "0";
+            if (
+                answer.length === 0
+            ) {
+
+                return "Not answered";
+            }
+
+            return answer.join(
+                ", "
+            );
         }
 
-        return Number.isInteger(
-            numericValue
-        )
-            ? numericValue
-            : numericValue.toFixed(2);
+
+        if (
+            answer === null ||
+            answer === undefined ||
+            String(answer).trim() === ""
+        ) {
+
+            return "Not answered";
+        }
+
+
+        return String(
+            answer
+        );
     };
 
 
@@ -471,8 +489,9 @@ function ResultBreakdown({
                                                         <strong>
 
                                                             {
-                                                                item.selected_answer ||
-                                                                "Not answered"
+                                                                formatAnswer(
+                                                                    item.selected_answer
+                                                                )
                                                             }
 
                                                         </strong>
@@ -493,7 +512,9 @@ function ResultBreakdown({
                                                         <strong>
 
                                                             {
-                                                                item.correct_answer
+                                                                formatAnswer(
+                                                                    item.correct_answer
+                                                                )
                                                             }
 
                                                         </strong>

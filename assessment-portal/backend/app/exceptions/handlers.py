@@ -10,26 +10,28 @@ from fastapi.responses import (
 
 from app.exceptions.customexceptions import (
     AdminAlreadyExistsException,
-    ResultAlreadyExistsException,
-    ResultNotFoundException,
     AttemptAlreadyInProgressException,
-    InvalidAnswerException,
     AttemptAlreadySubmittedException,
-    StudentAccessRequiredException,
     AttemptNotFoundException,
     CategoryAlreadyExistsException,
     CategoryNotFoundException,
     ForbiddenException,
+    InvalidAnswerException,
     InvalidPasswordException,
     InvalidTokenException,
     MaxAttemptReachedException,
     QuestionNotFoundException,
     QuizAlreadyExistsException,
+    QuizExpiredException,
     QuizNotFoundException,
+    QuizNotStartedException,
+    ResultAlreadyExistsException,
+    ResultNotFoundException,
+    StudentAccessRequiredException,
     UnauthorizedException,
     UserAlreadyExistsException,
     UserNotFoundException,
-    UsernameAlreadyExistsException,
+    UsernameAlreadyExistsException
 )
 
 
@@ -52,6 +54,7 @@ def register_exception_handlers(
             }
         )
 
+
     @app.exception_handler(
         UsernameAlreadyExistsException
     )
@@ -66,6 +69,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
+
 
     @app.exception_handler(
         UserNotFoundException
@@ -82,6 +86,7 @@ def register_exception_handlers(
             }
         )
 
+
     @app.exception_handler(
         InvalidPasswordException
     )
@@ -96,6 +101,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
+
 
     @app.exception_handler(
         AdminAlreadyExistsException
@@ -112,6 +118,7 @@ def register_exception_handlers(
             }
         )
 
+
     @app.exception_handler(
         InvalidTokenException
     )
@@ -126,6 +133,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
+
 
     @app.exception_handler(
         UnauthorizedException
@@ -142,6 +150,7 @@ def register_exception_handlers(
             }
         )
 
+
     @app.exception_handler(
         ForbiddenException
     )
@@ -156,6 +165,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
+
 
     @app.exception_handler(
         CategoryAlreadyExistsException
@@ -172,6 +182,7 @@ def register_exception_handlers(
             }
         )
 
+
     @app.exception_handler(
         CategoryNotFoundException
     )
@@ -186,6 +197,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
+
 
     @app.exception_handler(
         QuizAlreadyExistsException
@@ -202,6 +214,7 @@ def register_exception_handlers(
             }
         )
 
+
     @app.exception_handler(
         QuizNotFoundException
     )
@@ -216,7 +229,46 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
+
+    # EXT-008:
+    # Quiz exists, but its availability window
+    # has not started yet.
+    @app.exception_handler(
+        QuizNotStartedException
+    )
+    async def quiz_not_started_exception_handler(
+        request: Request,
+        exc: QuizNotStartedException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+
+    # EXT-008:
+    # Quiz exists, but its availability window
+    # has already ended.
+    @app.exception_handler(
+        QuizExpiredException
+    )
+    async def quiz_expired_exception_handler(
+        request: Request,
+        exc: QuizExpiredException
+    ):
+
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "detail": str(exc)
+            }
+        )
+
+
     @app.exception_handler(
         QuestionNotFoundException
     )
@@ -231,7 +283,8 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
+
     @app.exception_handler(
         AttemptNotFoundException
     )
@@ -262,9 +315,10 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
+
     @app.exception_handler(
-    StudentAccessRequiredException
+        StudentAccessRequiredException
     )
     async def student_access_required_exception_handler(
         request: Request,
@@ -277,7 +331,8 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
+
     @app.exception_handler(
         AttemptAlreadySubmittedException
     )
@@ -292,7 +347,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
 
     @app.exception_handler(
         InvalidAnswerException
@@ -308,7 +363,8 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
+
     @app.exception_handler(
         AttemptAlreadyInProgressException
     )
@@ -323,7 +379,7 @@ def register_exception_handlers(
                 "detail": str(exc)
             }
         )
-    
+
 
     @app.exception_handler(
         ResultNotFoundException

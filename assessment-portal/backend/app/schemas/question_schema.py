@@ -9,7 +9,9 @@ from pydantic import (
 
 QuestionType = Literal[
     "mcq",
-    "true_false"
+    "true_false",
+    "short_answer",
+    "multiple_select"
 ]
 
 DifficultyType = Literal[
@@ -29,7 +31,7 @@ class QuestionBase(BaseModel):
 
     options: list[str]
 
-    correct_answer: str
+    correct_answer: str | list[str]
 
     question_type: QuestionType
 
@@ -65,6 +67,36 @@ class QuestionBase(BaseModel):
             )
 
 
+        if (
+            self.question_type == "short_answer"
+        ):
+
+            if self.options:
+
+                raise ValueError(
+                    "Short answer question must "
+                    "not contain options."
+                )
+
+            if not isinstance(
+                self.correct_answer,
+                str
+            ):
+
+                raise ValueError(
+                    "Short answer question must "
+                    "have a single correct answer."
+                )
+
+            if not self.correct_answer.strip():
+
+                raise ValueError(
+                    "Correct answer cannot be empty."
+                )
+
+            return self
+
+
         cleaned_options = [
             option.strip()
             for option in self.options
@@ -88,6 +120,78 @@ class QuestionBase(BaseModel):
 
             raise ValueError(
                 "All options must be unique."
+            )
+
+
+        if (
+            self.question_type ==
+            "multiple_select"
+        ):
+
+            if len(self.options) < 2:
+
+                raise ValueError(
+                    "Multiple-select question must "
+                    "contain at least 2 options."
+                )
+
+            if not isinstance(
+                self.correct_answer,
+                list
+            ):
+
+                raise ValueError(
+                    "Multiple-select question must "
+                    "have multiple correct answers."
+                )
+
+            if len(
+                self.correct_answer
+            ) < 2:
+
+                raise ValueError(
+                    "Multiple-select question must "
+                    "have at least 2 correct answers."
+                )
+
+            if (
+                len(
+                    set(
+                        self.correct_answer
+                    )
+                )
+                !=
+                len(
+                    self.correct_answer
+                )
+            ):
+
+                raise ValueError(
+                    "Correct answers must be unique."
+                )
+
+            if any(
+                answer not in self.options
+                for answer in
+                self.correct_answer
+            ):
+
+                raise ValueError(
+                    "Every correct answer must be "
+                    "one of the options."
+                )
+
+            return self
+
+
+        if not isinstance(
+            self.correct_answer,
+            str
+        ):
+
+            raise ValueError(
+                "Correct answer must be a string "
+                "for this question type."
             )
 
 
@@ -129,7 +233,7 @@ class QuestionResponse(BaseModel):
 
     options: list[str]
 
-    correct_answer: str
+    correct_answer: str | list[str]
 
     question_type: QuestionType
 

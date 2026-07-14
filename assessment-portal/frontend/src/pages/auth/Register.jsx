@@ -14,7 +14,12 @@ import {
 
 import {
     registerUser
-} from "../services/api";
+} from "../../services/authService";
+
+import {
+    validateRegisterField,
+    validateRegisterForm
+} from "../../utils/authValidation";
 
 
 function Register() {
@@ -67,185 +72,6 @@ function Register() {
     ] = useState(false);
 
 
-    const validateField = (
-        name,
-        value,
-        currentFormData = formData
-    ) => {
-
-        switch (name) {
-
-            case "username":
-
-                if (!value.trim()) {
-
-                    return "Username is required.";
-                }
-
-                if (value.length < 3) {
-
-                    return "Username must be at least 3 characters.";
-                }
-
-                if (value.length > 30) {
-
-                    return "Username cannot exceed 30 characters.";
-                }
-
-                if (
-                    !/^[a-zA-Z0-9_]+$/.test(
-                        value
-                    )
-                ) {
-
-                    return (
-                        "Username can contain only letters, numbers, and underscores."
-                    );
-                }
-
-                return "";
-
-
-            case "email":
-
-                if (!value.trim()) {
-
-                    return "Email is required.";
-                }
-
-                if (
-                    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-                        value
-                    )
-                ) {
-
-                    return "Enter a valid email address.";
-                }
-
-                return "";
-
-
-            case "password":
-
-                if (!value) {
-
-                    return "Password is required.";
-                }
-
-                if (value.length < 8) {
-
-                    return "Password must be at least 8 characters.";
-                }
-
-                if (value.length > 32) {
-
-                    return "Password cannot exceed 32 characters.";
-                }
-
-                if (
-                    !/[A-Z]/.test(
-                        value
-                    )
-                ) {
-
-                    return (
-                        "Password must contain at least one uppercase letter."
-                    );
-                }
-
-                if (
-                    !/[a-z]/.test(
-                        value
-                    )
-                ) {
-
-                    return (
-                        "Password must contain at least one lowercase letter."
-                    );
-                }
-
-                if (
-                    !/[0-9]/.test(
-                        value
-                    )
-                ) {
-
-                    return (
-                        "Password must contain at least one number."
-                    );
-                }
-
-                if (
-                    !/[^A-Za-z0-9]/.test(
-                        value
-                    )
-                ) {
-
-                    return (
-                        "Password must contain at least one special character."
-                    );
-                }
-
-                return "";
-
-
-            case "confirmPassword":
-
-                if (!value) {
-
-                    return "Please confirm your password.";
-                }
-
-                if (
-                    value !==
-                    currentFormData.password
-                ) {
-
-                    return "Passwords do not match.";
-                }
-
-                return "";
-
-
-            default:
-
-                return "";
-        }
-    };
-
-
-    const validateForm = (
-        data
-    ) => {
-
-        return {
-            username: validateField(
-                "username",
-                data.username,
-                data
-            ),
-
-            email: validateField(
-                "email",
-                data.email,
-                data
-            ),
-
-            password: validateField(
-                "password",
-                data.password,
-                data
-            ),
-
-            confirmPassword: validateField(
-                "confirmPassword",
-                data.confirmPassword,
-                data
-            )
-        };
-    };
-
-
     const handleChange = (
         event
     ) => {
@@ -273,7 +99,8 @@ function Register() {
 
         const updatedErrors = {
             ...errors,
-            [name]: validateField(
+
+            [name]: validateRegisterField(
                 name,
                 value,
                 updatedFormData
@@ -286,7 +113,7 @@ function Register() {
         ) {
 
             updatedErrors.confirmPassword = (
-                validateField(
+                validateRegisterField(
                     "confirmPassword",
                     updatedFormData.confirmPassword,
                     updatedFormData
@@ -321,7 +148,8 @@ function Register() {
         setErrors(
             previous => ({
                 ...previous,
-                [name]: validateField(
+
+                [name]: validateRegisterField(
                     name,
                     value,
                     formData
@@ -334,7 +162,7 @@ function Register() {
     const isFormValid = () => {
 
         const validationErrors = (
-            validateForm(
+            validateRegisterForm(
                 formData
             )
         );
@@ -358,7 +186,7 @@ function Register() {
         setSuccess("");
 
         const validationErrors = (
-            validateForm(
+            validateRegisterForm(
                 formData
             )
         );
@@ -396,7 +224,8 @@ function Register() {
             );
 
             setSuccess(
-                "Registration successful. Redirecting to login..."
+                "Registration successful. " +
+                "Redirecting to login..."
             );
 
             setTimeout(
@@ -432,7 +261,9 @@ function Register() {
             errors[fieldName]
         ) {
 
-            return "form-input input-error";
+            return (
+                "form-input input-error"
+            );
         }
 
         if (
@@ -441,7 +272,9 @@ function Register() {
             formData[fieldName]
         ) {
 
-            return "form-input input-valid";
+            return (
+                "form-input input-valid"
+            );
         }
 
         return "form-input";
@@ -466,6 +299,7 @@ function Register() {
 
                 </div>
 
+
                 {
                     serverError && (
 
@@ -477,6 +311,7 @@ function Register() {
                     )
                 }
 
+
                 {
                     success && (
 
@@ -487,6 +322,7 @@ function Register() {
                         </div>
                     )
                 }
+
 
                 <form
                     onSubmit={
@@ -528,7 +364,9 @@ function Register() {
                             errors.username && (
 
                                 <p className="field-error">
+
                                     {errors.username}
+
                                 </p>
                             )
                         }
@@ -569,7 +407,9 @@ function Register() {
                             errors.email && (
 
                                 <p className="field-error">
+
                                     {errors.email}
+
                                 </p>
                             )
                         }
@@ -615,10 +455,11 @@ function Register() {
                                 type="button"
                                 className="password-toggle"
                                 onClick={
-                                    () => setShowPassword(
-                                        previous =>
-                                            !previous
-                                    )
+                                    () =>
+                                        setShowPassword(
+                                            previous =>
+                                                !previous
+                                        )
                                 }
                                 aria-label={
                                     showPassword
@@ -642,7 +483,9 @@ function Register() {
                             errors.password && (
 
                                 <p className="field-error">
+
                                     {errors.password}
+
                                 </p>
                             )
                         }
@@ -688,10 +531,11 @@ function Register() {
                                 type="button"
                                 className="password-toggle"
                                 onClick={
-                                    () => setShowConfirmPassword(
-                                        previous =>
-                                            !previous
-                                    )
+                                    () =>
+                                        setShowConfirmPassword(
+                                            previous =>
+                                                !previous
+                                        )
                                 }
                                 aria-label={
                                     showConfirmPassword
@@ -715,7 +559,11 @@ function Register() {
                             errors.confirmPassword && (
 
                                 <p className="field-error">
-                                    {errors.confirmPassword}
+
+                                    {
+                                        errors.confirmPassword
+                                    }
+
                                 </p>
                             )
                         }

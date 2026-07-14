@@ -4,6 +4,10 @@ from app.constants.messages import (
     ErrorMessages
 )
 
+from app.core.logger import (
+    logger
+)
+
 from app.exceptions.customexceptions import (
     CategoryAlreadyExistsException,
     CategoryNotFoundException
@@ -38,6 +42,12 @@ class CategoryService:
 
         if existing_category:
 
+            logger.warning(
+                "Category creation failed: "
+                "category name '%s' already exists.",
+                request.name
+            )
+
             raise CategoryAlreadyExistsException()
 
         category = Category(
@@ -51,6 +61,13 @@ class CategoryService:
             )
         )
 
+        logger.info(
+            "Category created successfully: "
+            "category_id='%s', name='%s'.",
+            category_id,
+            request.name
+        )
+
         return {
             "message": ErrorMessages.CATEGORY_CREATED,
             "category_id": category_id
@@ -58,10 +75,16 @@ class CategoryService:
 
 
     @staticmethod
-    def get_all_categories():
+    def get_all_categories(
+        page: int | None = None,
+        limit: int | None = None
+    ):
 
         return (
-            CategoryRepository.get_all_categories()
+            CategoryRepository.get_all_categories(
+                page=page,
+                limit=limit
+            )
         )
 
 
@@ -77,6 +100,12 @@ class CategoryService:
         )
 
         if not category:
+
+            logger.warning(
+                "Category retrieval failed: "
+                "category_id='%s' not found.",
+                category_id
+            )
 
             raise CategoryNotFoundException()
 
@@ -103,6 +132,12 @@ class CategoryService:
 
         if not category:
 
+            logger.warning(
+                "Category update failed: "
+                "category_id='%s' not found.",
+                category_id
+            )
+
             raise CategoryNotFoundException()
 
         existing_category = (
@@ -118,6 +153,12 @@ class CategoryService:
             ) != category_id
         ):
 
+            logger.warning(
+                "Category update failed: "
+                "category name '%s' already exists.",
+                request.name
+            )
+
             raise CategoryAlreadyExistsException()
 
         CategoryRepository.update_category(
@@ -127,6 +168,13 @@ class CategoryService:
                 "description": request.description,
                 "updated_at": datetime.utcnow()
             }
+        )
+
+        logger.info(
+            "Category updated successfully: "
+            "category_id='%s', name='%s'.",
+            category_id,
+            request.name
         )
 
         return {
@@ -147,9 +195,21 @@ class CategoryService:
 
         if not category:
 
+            logger.warning(
+                "Category deletion failed: "
+                "category_id='%s' not found.",
+                category_id
+            )
+
             raise CategoryNotFoundException()
 
         CategoryRepository.delete_category(
+            category_id
+        )
+
+        logger.info(
+            "Category deleted successfully: "
+            "category_id='%s'.",
             category_id
         )
 

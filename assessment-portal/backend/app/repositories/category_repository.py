@@ -88,11 +88,32 @@ class CategoryRepository:
 
     @classmethod
     def get_all_categories(
-        cls
+        cls,
+        page: int | None = None,
+        limit: int | None = None
     ):
 
+        query = cls.collection.find()
+
+        # Apply pagination only when both page
+        # and limit are explicitly provided.
+        if (
+            page is not None
+            and limit is not None
+        ):
+
+            skip = (
+                page - 1
+            ) * limit
+
+            query = (
+                query
+                .skip(skip)
+                .limit(limit)
+            )
+
         categories = list(
-            cls.collection.find()
+            query
         )
 
         return [

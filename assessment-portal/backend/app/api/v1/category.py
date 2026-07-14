@@ -1,6 +1,7 @@
 from fastapi import (
     APIRouter,
-    Depends
+    Depends,
+    Query
 )
 
 from app.core.dependencies import (
@@ -39,12 +40,24 @@ def create_category(
 
 @router.get("/")
 def get_categories(
+    page: int | None = Query(
+        default=None,
+        ge=1
+    ),
+    limit: int | None = Query(
+        default=None,
+        ge=1,
+        le=100
+    ),
     current_user=Depends(
         get_current_user
     )
 ):
 
-    return CategoryService.get_all_categories()
+    return CategoryService.get_all_categories(
+        page=page,
+        limit=limit
+    )
 
 
 @router.get("/{category_id}")

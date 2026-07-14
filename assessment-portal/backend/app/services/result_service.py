@@ -1,3 +1,7 @@
+from app.core.logger import (
+    logger
+)
+
 from app.exceptions.customexceptions import (
     ForbiddenException,
     ResultAlreadyExistsException,
@@ -22,11 +26,11 @@ from app.repositories.result_repository import (
 
 from app.schemas.result_schema import (
     AdminResultResponse,
+    LeaderboardResponse,
     QuestionBreakdownResponse,
     QuizStatisticsResponse,
     ResultHistoryResponse,
-    ResultResponse,
-    LeaderboardResponse,
+    ResultResponse
 )
 
 
@@ -49,6 +53,52 @@ class ResultService:
 
 
     @staticmethod
+    def _calculate_multiple_select_score(
+        selected_answer: list,
+        correct_answer: list,
+        marks_per_question: float
+    ) -> float:
+
+        selected_answers = set(
+            selected_answer
+        )
+
+        correct_answers = set(
+            correct_answer
+        )
+
+        correct_selections = len(
+            selected_answers
+            & correct_answers
+        )
+
+        incorrect_selections = len(
+            selected_answers
+            - correct_answers
+        )
+
+        partial_ratio = (
+            (
+                correct_selections
+                - incorrect_selections
+            )
+            / len(correct_answers)
+            if correct_answers
+            else 0.0
+        )
+
+        partial_ratio = max(
+            partial_ratio,
+            0.0
+        )
+
+        return (
+            marks_per_question
+            * partial_ratio
+        )
+
+
+    @staticmethod
     def generate_result(
         attempt_id: str
     ):
@@ -61,6 +111,13 @@ class ResultService:
 
         if existing_result:
 
+            logger.warning(
+                "Result generation failed: "
+                "result already exists for "
+                "attempt_id='%s'.",
+                attempt_id
+            )
+
             raise ResultAlreadyExistsException()
 
 
@@ -72,6 +129,12 @@ class ResultService:
 
         if not attempt:
 
+            logger.warning(
+                "Result generation failed: "
+                "attempt_id='%s' not found.",
+                attempt_id
+            )
+
             raise ResultNotFoundException()
 
 
@@ -82,6 +145,12 @@ class ResultService:
         )
 
         if not quiz:
+
+            logger.warning(
+                "Result generation failed: "
+                "quiz_id='%s' not found.",
+                attempt["quiz_id"]
+            )
 
             raise ResultNotFoundException()
 
@@ -99,6 +168,14 @@ class ResultService:
             total_marks / total_questions
             if total_questions > 0
             else 0.0
+        )
+
+
+        negative_marks = float(
+            quiz.get(
+                "negative_marks",
+                0.0
+            )
         )
 
 
@@ -130,17 +207,86 @@ class ResultService:
                 "correct_answer"
             ]
 
-            is_correct = (
-                selected_answer is not None
-                and selected_answer ==
-                correct_answer
+            question_type = question.get(
+                "question_type",
+                "mcq"
             )
 
-            marks_obtained = (
-                marks_per_question
-                if is_correct
-                else 0.0
-            )
+
+            if selected_answer is None:
+
+                is_correct = False
+
+                marks_obtained = 0.0
+
+
+            elif (
+                question_type
+                == "multiple_select"
+            ):
+
+                marks_obtained = (
+                    ResultService
+                    ._calculate_multiple_select_score(
+                        selected_answer,
+                        correct_answer,
+                        marks_per_question
+                    )
+                )
+
+                is_correct = (
+                    set(selected_answer)
+                    == set(correct_answer)
+                )
+
+
+            elif (
+                question_type
+                == "short_answer"
+            ):
+
+                is_correct = (
+                    selected_answer
+                    .strip()
+                    .casefold()
+                    ==
+                    correct_answer
+                    .strip()
+                    .casefold()
+                )
+
+                if is_correct:
+
+                    marks_obtained = (
+                        marks_per_question
+                    )
+
+                else:
+
+                    marks_obtained = (
+                        -negative_marks
+                    )
+
+
+            else:
+
+                is_correct = (
+                    selected_answer
+                    == correct_answer
+                )
+
+                if is_correct:
+
+                    marks_obtained = (
+                        marks_per_question
+                    )
+
+                else:
+
+                    marks_obtained = (
+                        -negative_marks
+                    )
+
 
             score_obtained += (
                 marks_obtained
@@ -168,6 +314,12 @@ class ResultService:
                         marks_obtained
                 }
             )
+
+
+        score_obtained = max(
+            score_obtained,
+            0.0
+        )
 
 
         percentage = (
@@ -222,6 +374,23 @@ class ResultService:
             )
         )
 
+
+        logger.info(
+            "Result generated successfully: "
+            "result_id='%s', attempt_id='%s', "
+            "quiz_id='%s', student_id='%s', "
+            "score='%s', percentage='%s', "
+            "status='%s'.",
+            result_id,
+            attempt_id,
+            attempt["quiz_id"],
+            attempt["student_id"],
+            score_obtained,
+            percentage,
+            status
+        )
+
+
         return result_id
 
 
@@ -239,6 +408,12 @@ class ResultService:
 
         if not result:
 
+            logger.warning(
+                "Result retrieval failed: "
+                "result_id='%s' not found.",
+                result_id
+            )
+
             raise ResultNotFoundException()
 
 
@@ -247,6 +422,16 @@ class ResultService:
             and result["student_id"] !=
             current_user["sub"]
         ):
+
+            logger.warning(
+                "Result access denied: "
+                "student_id='%s' tried to access "
+                "result_id='%s' owned by "
+                "student_id='%s'.",
+                current_user["sub"],
+                result_id,
+                result["student_id"]
+            )
 
             raise ForbiddenException()
 
@@ -365,6 +550,12 @@ class ResultService:
 
         if not result:
 
+            logger.warning(
+                "Result breakdown retrieval failed: "
+                "result_id='%s' not found.",
+                result_id
+            )
+
             raise ResultNotFoundException()
 
 
@@ -373,6 +564,16 @@ class ResultService:
             and result["student_id"] !=
             current_user["sub"]
         ):
+
+            logger.warning(
+                "Result breakdown access denied: "
+                "student_id='%s' tried to access "
+                "result_id='%s' owned by "
+                "student_id='%s'.",
+                current_user["sub"],
+                result_id,
+                result["student_id"]
+            )
 
             raise ForbiddenException()
 
@@ -452,6 +653,12 @@ class ResultService:
 
         if not quiz:
 
+            logger.warning(
+                "Quiz statistics retrieval failed: "
+                "quiz_id='%s' not found.",
+                quiz_id
+            )
+
             raise ResultNotFoundException()
 
 
@@ -524,7 +731,7 @@ class ResultService:
             fail_count=fail_count,
             pass_rate=pass_rate
         )
-    
+
 
     @staticmethod
     def get_quiz_leaderboard(
@@ -538,6 +745,12 @@ class ResultService:
         )
 
         if not quiz:
+
+            logger.warning(
+                "Quiz leaderboard retrieval failed: "
+                "quiz_id='%s' not found.",
+                quiz_id
+            )
 
             raise ResultNotFoundException()
 

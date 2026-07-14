@@ -6,6 +6,10 @@ from app.constants.messages import (
     ErrorMessages
 )
 
+from app.core.logger import (
+    logger
+)
+
 from app.core.password_encryption import (
     decrypt_password,
     validate_password_strength
@@ -57,11 +61,22 @@ class AuthService:
             request.email
         ):
 
+            logger.warning(
+                "Registration failed: "
+                "email already exists."
+            )
+
             raise UserAlreadyExistsException()
 
         if UserRepository.get_user_by_username(
             request.username
         ):
+
+            logger.warning(
+                "Registration failed for username '%s': "
+                "username already exists.",
+                request.username
+            )
 
             raise UsernameAlreadyExistsException()
 
@@ -69,6 +84,11 @@ class AuthService:
             role == UserRole.ADMIN
             and UserRepository.admin_exists()
         ):
+
+            logger.warning(
+                "Admin registration failed: "
+                "an admin already exists."
+            )
 
             raise AdminAlreadyExistsException()
 
@@ -83,6 +103,12 @@ class AuthService:
             )
 
         except ValueError as error:
+
+            logger.warning(
+                "Registration failed for username '%s': "
+                "password validation failed.",
+                request.username
+            )
 
             raise HTTPException(
                 status_code=422,
@@ -100,6 +126,15 @@ class AuthService:
 
         user_id = UserRepository.create_user(
             user.model_dump()
+        )
+
+        logger.info(
+            "User registered successfully: "
+            "username='%s', role='%s'.",
+            request.username,
+            role.value
+            if hasattr(role, "value")
+            else role
         )
 
         return {
@@ -126,6 +161,12 @@ class AuthService:
 
         if not user:
 
+            logger.warning(
+                "Login failed for username '%s': "
+                "user not found.",
+                username
+            )
+
             raise UserNotFoundException()
 
         if is_encrypted:
@@ -143,6 +184,12 @@ class AuthService:
             user["password"],
         ):
 
+            logger.warning(
+                "Login failed for username '%s': "
+                "invalid password.",
+                username
+            )
+
             raise InvalidPasswordException()
 
         payload = {
@@ -156,6 +203,13 @@ class AuthService:
 
         refresh_token = create_refresh_token(
             payload
+        )
+
+        logger.info(
+            "User logged in successfully: "
+            "username='%s', role='%s'.",
+            user["username"],
+            user["role"]
         )
 
         return {
@@ -177,6 +231,11 @@ class AuthService:
 
         if not payload:
 
+            logger.warning(
+                "Access-token refresh failed: "
+                "invalid refresh token."
+            )
+
             raise InvalidTokenException()
 
         access_token = create_access_token(
@@ -184,6 +243,12 @@ class AuthService:
                 "sub": payload["sub"],
                 "role": payload["role"],
             }
+        )
+
+        logger.info(
+            "Access token refreshed successfully "
+            "for username='%s'.",
+            payload["sub"]
         )
 
         return {

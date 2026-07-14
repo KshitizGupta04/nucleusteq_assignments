@@ -15,6 +15,7 @@ class ResultRepository:
 
     collection = db["results"]
 
+
     @classmethod
     def create_result(
         cls,
@@ -28,6 +29,7 @@ class ResultRepository:
         return str(
             result.inserted_id
         )
+
 
     @classmethod
     def get_result_by_id(
@@ -49,6 +51,7 @@ class ResultRepository:
 
             return None
 
+
     @classmethod
     def get_result_by_attempt_id(
         cls,
@@ -60,6 +63,7 @@ class ResultRepository:
                 "attempt_id": attempt_id
             }
         )
+
 
     @classmethod
     def get_results_by_student(
@@ -86,6 +90,7 @@ class ResultRepository:
 
         return results
 
+
     @classmethod
     def get_results_by_quiz(
         cls,
@@ -111,6 +116,7 @@ class ResultRepository:
 
         return results
 
+
     @classmethod
     def get_all_results(
         cls
@@ -130,3 +136,17 @@ class ResultRepository:
             )
 
         return results
+
+
+    # Delete all results belonging to a quiz.
+    @classmethod
+    def delete_results_by_quiz(
+        cls,
+        quiz_id: str
+    ):
+
+        return cls.collection.delete_many(
+            {
+                "quiz_id": quiz_id
+            }
+        )

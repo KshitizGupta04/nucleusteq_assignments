@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import (
     BaseModel,
     EmailStr,
@@ -52,3 +54,14 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
     role: str
+
+
+class ProfileResponse(BaseModel):
+
+    username: str
+
+    email: EmailStr
+
+    role: str
+
+    created_at: datetime

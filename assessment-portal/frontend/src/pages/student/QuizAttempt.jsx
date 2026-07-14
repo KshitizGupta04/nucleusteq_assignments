@@ -8,7 +8,6 @@ import {
 import {
     FaArrowLeft,
     FaArrowRight,
-    FaCheck,
     FaClipboardCheck,
     FaClock
 } from "react-icons/fa";
@@ -17,7 +16,7 @@ import {
     resumeAttempt,
     saveAttemptAnswer,
     submitAttempt
-} from "../../services/api";
+} from "../../services/studentService";
 
 
 function QuizAttempt({
@@ -70,6 +69,10 @@ function QuizAttempt({
 
     const autoSubmittingRef = useRef(false);
 
+    const submissionCompletedRef = useRef(false);
+
+    const shortAnswerTimersRef = useRef({});
+
 
     useEffect(
         () => {
@@ -80,6 +83,33 @@ function QuizAttempt({
         [
             answers
         ]
+    );
+
+
+    useEffect(
+        () => {
+
+            const timers = (
+                shortAnswerTimersRef.current
+            );
+
+
+            return () => {
+
+                Object.values(
+                    timers
+                ).forEach(
+                    timerId => {
+
+                        clearTimeout(
+                            timerId
+                        );
+                    }
+                );
+            };
+
+        },
+        []
     );
 
 
@@ -99,11 +129,13 @@ function QuizAttempt({
                     return;
                 }
 
+
                 try {
 
                     setLoading(true);
 
                     setError("");
+
 
                     const data = (
                         await resumeAttempt(
@@ -111,23 +143,31 @@ function QuizAttempt({
                         )
                     );
 
+
                     if (
                         data.status ===
                         "submitted"
                     ) {
+
+                        submissionCompletedRef.current = (
+                            true
+                        );
 
                         onSubmitted();
 
                         return;
                     }
 
+
                     setAttempt(
                         data
                     );
 
+
                     const savedAnswers = (
                         data.answers || {}
                     );
+
 
                     setAnswers(
                         savedAnswers
@@ -136,6 +176,7 @@ function QuizAttempt({
                     answersRef.current = (
                         savedAnswers
                     );
+
 
                 } catch (err) {
 
@@ -156,6 +197,7 @@ function QuizAttempt({
         },
         [
             attemptId,
+            onSubmitted
         ]
     );
 
@@ -166,7 +208,7 @@ function QuizAttempt({
         ) => {
 
             if (
-                submitting ||
+                submissionCompletedRef.current ||
                 autoSubmittingRef.current
             ) {
 
@@ -174,10 +216,7 @@ function QuizAttempt({
             }
 
 
-            if (isAutoSubmit) {
-
-                autoSubmittingRef.current = true;
-            }
+            autoSubmittingRef.current = true;
 
 
             try {
@@ -186,12 +225,20 @@ function QuizAttempt({
 
                 setError("");
 
+
                 await submitAttempt(
                     attemptId,
                     answersRef.current
                 );
 
+
+                submissionCompletedRef.current = (
+                    true
+                );
+
+
                 onSubmitted();
+
 
             } catch (err) {
 
@@ -199,6 +246,7 @@ function QuizAttempt({
                     err.message ||
                     "Failed to submit attempt."
                 );
+
 
                 if (
                     message
@@ -208,25 +256,35 @@ function QuizAttempt({
                         )
                 ) {
 
+                    submissionCompletedRef.current = (
+                        true
+                    );
+
                     onSubmitted();
 
                     return;
                 }
 
+
                 setError(
                     isAutoSubmit
                         ? (
-                            "Time expired. " +
+                            "Quiz could not be " +
+                            "automatically submitted. " +
                             message
                         )
                         : message
                 );
 
+
             } finally {
 
                 setSubmitting(false);
 
-                if (!isAutoSubmit) {
+
+                if (
+                    !submissionCompletedRef.current
+                ) {
 
                     autoSubmittingRef.current = (
                         false
@@ -237,8 +295,7 @@ function QuizAttempt({
         },
         [
             attemptId,
-            onSubmitted,
-            submitting
+            onSubmitted
         ]
     );
 
@@ -262,6 +319,7 @@ function QuizAttempt({
                     attempt.expires_at
                 );
 
+
                 const hasTimezone = (
                     expiryValue.endsWith("Z") ||
                     /[+-]\d{2}:\d{2}$/.test(
@@ -269,10 +327,12 @@ function QuizAttempt({
                     )
                 );
 
+
                 if (!hasTimezone) {
 
                     expiryValue += "Z";
                 }
+
 
                 const expiryTime = (
                     new Date(
@@ -280,14 +340,17 @@ function QuizAttempt({
                     ).getTime()
                 );
 
+
                 const currentTime = (
                     Date.now()
                 );
+
 
                 const difference = (
                     expiryTime -
                     currentTime
                 );
+
 
                 return Math.max(
                     0,
@@ -297,18 +360,22 @@ function QuizAttempt({
                 );
             };
 
+
             const updateTimer = () => {
 
                 const seconds = (
                     calculateRemainingTime()
                 );
 
+
                 setRemainingSeconds(
                     seconds
                 );
 
+
                 if (
                     seconds <= 0 &&
+                    !submissionCompletedRef.current &&
                     !autoSubmittingRef.current
                 ) {
 
@@ -343,7 +410,7 @@ function QuizAttempt({
     );
 
 
-    const handleAnswerChange = async (
+    const saveAnswer = async (
         questionId,
         answer
     ) => {
@@ -351,6 +418,15 @@ function QuizAttempt({
         if (
             remainingSeconds !== null &&
             remainingSeconds <= 0
+        ) {
+
+            return;
+        }
+
+
+        if (
+            submissionCompletedRef.current ||
+            autoSubmittingRef.current
         ) {
 
             return;
@@ -387,11 +463,13 @@ function QuizAttempt({
 
             setError("");
 
+
             await saveAttemptAnswer(
                 attemptId,
                 questionId,
                 answer
             );
+
 
         } catch (err) {
 
@@ -401,8 +479,7 @@ function QuizAttempt({
 
 
             if (
-                previousAnswer ===
-                undefined
+                previousAnswer === undefined
             ) {
 
                 delete revertedAnswers[
@@ -431,12 +508,207 @@ function QuizAttempt({
                 "Failed to save answer."
             );
 
+
         } finally {
 
             setSavingQuestionId(
                 null
             );
         }
+    };
+
+
+    const handleSingleAnswerChange = (
+        questionId,
+        answer
+    ) => {
+
+        saveAnswer(
+            questionId,
+            answer
+        );
+    };
+
+
+    const handleMultipleSelectChange = (
+        questionId,
+        option
+    ) => {
+
+        const currentAnswer = (
+            Array.isArray(
+                answersRef.current[
+                    questionId
+                ]
+            )
+                ? answersRef.current[
+                    questionId
+                ]
+                : []
+        );
+
+
+        const isSelected = (
+            currentAnswer.includes(
+                option
+            )
+        );
+
+
+        const updatedAnswer = (
+            isSelected
+                ? currentAnswer.filter(
+                    answer =>
+                        answer !== option
+                )
+                : [
+                    ...currentAnswer,
+                    option
+                ]
+        );
+
+
+        if (
+            updatedAnswer.length === 0
+        ) {
+
+            const updatedAnswers = {
+                ...answersRef.current
+            };
+
+
+            delete updatedAnswers[
+                questionId
+            ];
+
+
+            answersRef.current = (
+                updatedAnswers
+            );
+
+            setAnswers(
+                updatedAnswers
+            );
+
+
+            return;
+        }
+
+
+        saveAnswer(
+            questionId,
+            updatedAnswer
+        );
+    };
+
+
+    const handleShortAnswerChange = (
+        questionId,
+        value
+    ) => {
+
+        const updatedAnswers = {
+            ...answersRef.current
+        };
+
+
+        if (value.trim()) {
+
+            updatedAnswers[
+                questionId
+            ] = value;
+
+        } else {
+
+            delete updatedAnswers[
+                questionId
+            ];
+        }
+
+
+        answersRef.current = (
+            updatedAnswers
+        );
+
+        setAnswers(
+            updatedAnswers
+        );
+
+
+        if (
+            shortAnswerTimersRef.current[
+                questionId
+            ]
+        ) {
+
+            clearTimeout(
+                shortAnswerTimersRef.current[
+                    questionId
+                ]
+            );
+        }
+
+
+        if (!value.trim()) {
+
+            return;
+        }
+
+
+        shortAnswerTimersRef.current[
+            questionId
+        ] = setTimeout(
+            () => {
+
+                saveAnswer(
+                    questionId,
+                    value
+                );
+
+            },
+            500
+        );
+    };
+
+
+    const handleShortAnswerBlur = (
+        questionId
+    ) => {
+
+        const answer = (
+            answersRef.current[
+                questionId
+            ]
+        );
+
+
+        if (
+            typeof answer !== "string" ||
+            !answer.trim()
+        ) {
+
+            return;
+        }
+
+
+        if (
+            shortAnswerTimersRef.current[
+                questionId
+            ]
+        ) {
+
+            clearTimeout(
+                shortAnswerTimersRef.current[
+                    questionId
+                ]
+            );
+        }
+
+
+        saveAnswer(
+            questionId,
+            answer
+        );
     };
 
 
@@ -458,11 +730,56 @@ function QuizAttempt({
                 ?.length || 0
         );
 
+
         setCurrentQuestionIndex(
             previousIndex => Math.min(
                 totalQuestions - 1,
                 previousIndex + 1
             )
+        );
+    };
+
+
+    const isQuestionAnswered = (
+        question
+    ) => {
+
+        const answer = (
+            answers[
+                question.id
+            ]
+        );
+
+
+        if (
+            question.question_type ===
+            "multiple_select"
+        ) {
+
+            return (
+                Array.isArray(answer) &&
+                answer.length > 0
+            );
+        }
+
+
+        if (
+            question.question_type ===
+            "short_answer"
+        ) {
+
+            return (
+                typeof answer === "string" &&
+                Boolean(
+                    answer.trim()
+                )
+            );
+        }
+
+
+        return (
+            typeof answer === "string" &&
+            Boolean(answer)
         );
     };
 
@@ -474,11 +791,16 @@ function QuizAttempt({
                 ?.length || 0
         );
 
+
         const answeredQuestions = (
-            Object.keys(
-                answersRef.current
+            attempt.question_snapshot.filter(
+                question =>
+                    isQuestionAnswered(
+                        question
+                    )
             ).length
         );
+
 
         const unansweredQuestions = (
             totalQuestions -
@@ -533,6 +855,7 @@ function QuizAttempt({
             totalSeconds / 60
         );
 
+
         const seconds = (
             totalSeconds % 60
         );
@@ -546,6 +869,277 @@ function QuizAttempt({
                 2,
                 "0"
             )}`
+        );
+    };
+
+
+    const getQuestionTypeLabel = (
+        questionType
+    ) => {
+
+        if (
+            questionType ===
+            "true_false"
+        ) {
+
+            return "True / False";
+        }
+
+
+        if (
+            questionType ===
+            "short_answer"
+        ) {
+
+            return "Short Answer";
+        }
+
+
+        if (
+            questionType ===
+            "multiple_select"
+        ) {
+
+            return "Multiple Select";
+        }
+
+
+        return "MCQ";
+    };
+
+
+    const renderSingleChoiceOptions = (
+        question
+    ) => {
+
+        return question.options.map(
+            (
+                option,
+                optionIndex
+            ) => {
+
+                const isSelected = (
+                    answers[
+                        question.id
+                    ] === option
+                );
+
+
+                return (
+
+                    <label
+                        key={
+                            `${question.id}-${optionIndex}`
+                        }
+                        className={
+                            isSelected
+                                ? (
+                                    "answer-option " +
+                                    "selected"
+                                )
+                                : "answer-option"
+                        }
+                    >
+
+                        <input
+                            type="radio"
+                            name={
+                                question.id
+                            }
+                            value={
+                                option
+                            }
+                            checked={
+                                isSelected
+                            }
+                            disabled={
+                                savingQuestionId ===
+                                question.id ||
+                                submitting ||
+                                isTimeExpired
+                            }
+                            onChange={
+                                () =>
+                                    handleSingleAnswerChange(
+                                        question.id,
+                                        option
+                                    )
+                            }
+                        />
+
+
+                        <span
+                            className={
+                                "option-indicator"
+                            }
+                        />
+
+
+                        <span className="option-text">
+
+                            {option}
+
+                        </span>
+
+                    </label>
+                );
+            }
+        );
+    };
+
+
+    const renderMultipleSelectOptions = (
+        question
+    ) => {
+
+        const selectedAnswers = (
+            Array.isArray(
+                answers[
+                    question.id
+                ]
+            )
+                ? answers[
+                    question.id
+                ]
+                : []
+        );
+
+
+        return question.options.map(
+            (
+                option,
+                optionIndex
+            ) => {
+
+                const isSelected = (
+                    selectedAnswers.includes(
+                        option
+                    )
+                );
+
+
+                return (
+
+                    <label
+                        key={
+                            `${question.id}-${optionIndex}`
+                        }
+                        className={
+                            isSelected
+                                ? (
+                                    "answer-option " +
+                                    "selected"
+                                )
+                                : "answer-option"
+                        }
+                    >
+
+                        <input
+                            type="checkbox"
+                            value={option}
+                            checked={
+                                isSelected
+                            }
+                            disabled={
+                                savingQuestionId ===
+                                question.id ||
+                                submitting ||
+                                isTimeExpired
+                            }
+                            onChange={
+                                () =>
+                                    handleMultipleSelectChange(
+                                        question.id,
+                                        option
+                                    )
+                            }
+                        />
+
+
+                        <span
+                            className={
+                                "option-indicator"
+                            }
+                        />
+
+
+                        <span className="option-text">
+
+                            {option}
+
+                        </span>
+
+                    </label>
+                );
+            }
+        );
+    };
+
+
+    const renderShortAnswer = (
+        question
+    ) => {
+
+        const answer = (
+            typeof answers[
+                question.id
+            ] === "string"
+                ? answers[
+                    question.id
+                ]
+                : ""
+        );
+
+
+        return (
+
+            <div className="short-answer-container">
+
+                <label
+                    htmlFor={
+                        `short-answer-${question.id}`
+                    }
+                    className="short-answer-label"
+                >
+
+                    Your Answer
+
+                </label>
+
+
+                <textarea
+                    id={
+                        `short-answer-${question.id}`
+                    }
+                    className={
+                        "form-input " +
+                        "short-answer-input"
+                    }
+                    value={answer}
+                    rows={5}
+                    placeholder={
+                        "Type your answer here..."
+                    }
+                    disabled={
+                        submitting ||
+                        isTimeExpired
+                    }
+                    onChange={
+                        event =>
+                            handleShortAnswerChange(
+                                question.id,
+                                event.target.value
+                            )
+                    }
+                    onBlur={
+                        () =>
+                            handleShortAnswerBlur(
+                                question.id
+                            )
+                    }
+                />
+
+            </div>
         );
     };
 
@@ -636,8 +1230,11 @@ function QuizAttempt({
 
 
     const answeredCount = (
-        Object.keys(
-            answers
+        questions.filter(
+            question =>
+                isQuestionAnswered(
+                    question
+                )
         ).length
     );
 
@@ -678,11 +1275,64 @@ function QuizAttempt({
             }
 
 
-            <div className="attempt-summary">
+            <div className="quiz-attempt-header">
 
                 <div>
 
-                    <span className="attempt-progress-label">
+                    <h2>
+                        Quiz Attempt
+                    </h2>
+
+                    <p>
+
+                        Question {
+                            currentQuestionIndex + 1
+                        } of {
+                            questions.length
+                        } · {
+                            answeredCount
+                        } answered
+
+                    </p>
+
+                </div>
+
+
+                <div
+                    className={
+                        isTimeExpired
+                            ? "quiz-timer danger"
+                            : isTimeCritical
+                                ? "quiz-timer warning"
+                                : "quiz-timer"
+                    }
+                >
+
+                    <FaClock />
+
+
+                    <span>
+
+                        {
+                            isTimeExpired
+                                ? "Time Expired"
+                                : formatTime(
+                                    remainingSeconds
+                                )
+                        }
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div className="quiz-progress-section">
+
+                <div className="quiz-progress-info">
+
+                    <span>
 
                         Question {
                             currentQuestionIndex + 1
@@ -692,198 +1342,104 @@ function QuizAttempt({
 
                     </span>
 
-                    <p>
 
-                        {
-                            answeredCount
-                        } of {
+                    <span>
+
+                        {answeredCount} of {
                             questions.length
                         } answered
-
-                    </p>
-
-                </div>
-
-
-                <div className="attempt-summary-right">
-
-                    <div
-                        className={
-                            isTimeCritical
-                                ? (
-                                    "attempt-timer " +
-                                    "time-critical"
-                                )
-                                : "attempt-timer"
-                        }
-                    >
-
-                        <FaClock />
-
-                        <span>
-
-                            {
-                                isTimeExpired
-                                    ? (
-                                        "Time Expired"
-                                    )
-                                    : (
-                                        formatTime(
-                                            remainingSeconds
-                                        )
-                                    )
-                            }
-
-                        </span>
-
-                    </div>
-
-
-                    <span className="attempt-status">
-
-                        {
-                            submitting &&
-                            isTimeExpired
-                                ? "Auto-submitting..."
-                                : attempt.status
-                        }
 
                     </span>
 
                 </div>
 
+
+                <div className="quiz-progress-bar">
+
+                    <div
+                        className="quiz-progress-fill"
+                        style={{
+                            width:
+                                `${progressPercentage}%`
+                        }}
+                    />
+
+                </div>
+
             </div>
 
 
-            <div className="attempt-progress-bar">
+            <article className="quiz-question-card">
 
-                <div
-                    className="attempt-progress-fill"
-                    style={{
-                        width:
-                            `${progressPercentage}%`
-                    }}
-                />
-
-            </div>
-
-
-            <article className="attempt-question-card">
-
-                <div className="question-heading">
+                <div className="question-meta">
 
                     <span className="question-number">
 
-                        {
+                        Question {
                             currentQuestionIndex + 1
                         }
 
                     </span>
 
-                    <h2>
+
+                    <span
+                        className={
+                            `difficulty-badge ${
+                                currentQuestion
+                                    .difficulty ||
+                                "easy"
+                            }`
+                        }
+                    >
 
                         {
-                            currentQuestion.question
+                            currentQuestion
+                                .difficulty ||
+                            "easy"
                         }
 
-                    </h2>
+                    </span>
 
                 </div>
 
 
-                <div className="question-options">
+                <h2 className="question-text">
 
                     {
-                        currentQuestion.options.map(
-                            (
-                                option,
-                                optionIndex
-                            ) => {
+                        currentQuestion.question
+                    }
 
-                                const isSelected = (
-                                    answers[
-                                        currentQuestion.id
-                                    ] === option
-                                );
-
-                                return (
-
-                                    <label
-                                        key={
-                                            `${currentQuestion.id}-${optionIndex}`
-                                        }
-                                        className={
-                                            isSelected
-                                                ? (
-                                                    "question-option " +
-                                                    "selected"
-                                                )
-                                                : (
-                                                    "question-option"
-                                                )
-                                        }
-                                    >
-
-                                        <input
-                                            type="radio"
-                                            name={
-                                                currentQuestion.id
-                                            }
-                                            value={
-                                                option
-                                            }
-                                            checked={
-                                                isSelected
-                                            }
-                                            disabled={
-                                                savingQuestionId ===
-                                                currentQuestion.id ||
-                                                submitting ||
-                                                isTimeExpired
-                                            }
-                                            onChange={
-                                                () =>
-                                                    handleAnswerChange(
-                                                        currentQuestion.id,
-                                                        option
-                                                    )
-                                            }
-                                        />
-
-                                        <span className="option-letter">
-
-                                            {
-                                                String.fromCharCode(
-                                                    65 +
-                                                    optionIndex
-                                                )
-                                            }
-
-                                        </span>
-
-                                        <span className="option-text">
-
-                                            {option}
-
-                                        </span>
+                </h2>
 
 
-                                        {
-                                            isSelected && (
+                <span className="question-type-label">
 
-                                                <FaCheck
-                                                    className={
-                                                        "option-check"
-                                                    }
-                                                />
-
-                                            )
-                                        }
-
-                                    </label>
-                                );
-                            }
+                    {
+                        getQuestionTypeLabel(
+                            currentQuestion
+                                .question_type
                         )
+                    }
+
+                </span>
+
+
+                <div className="answer-options">
+
+                    {
+                        currentQuestion.question_type ===
+                        "short_answer"
+                            ? renderShortAnswer(
+                                currentQuestion
+                            )
+                            : currentQuestion.question_type ===
+                                "multiple_select"
+                                ? renderMultipleSelectOptions(
+                                    currentQuestion
+                                )
+                                : renderSingleChoiceOptions(
+                                    currentQuestion
+                                )
                     }
 
                 </div>
@@ -893,7 +1449,11 @@ function QuizAttempt({
                     savingQuestionId ===
                     currentQuestion.id && (
 
-                        <p className="answer-saving-message">
+                        <p
+                            className={
+                                "answer-save-status saving"
+                            }
+                        >
 
                             Saving answer...
 
@@ -904,11 +1464,11 @@ function QuizAttempt({
             </article>
 
 
-            <div className="attempt-navigation">
+            <div className="quiz-navigation">
 
                 <button
                     type="button"
-                    className="secondary-button"
+                    className="quiz-nav-button"
                     disabled={
                         currentQuestionIndex === 0 ||
                         submitting ||
@@ -933,7 +1493,7 @@ function QuizAttempt({
 
                             <button
                                 type="button"
-                                className="primary-button"
+                                className="quiz-nav-button"
                                 disabled={
                                     submitting ||
                                     isTimeExpired
@@ -948,15 +1508,12 @@ function QuizAttempt({
                                 <FaArrowRight />
 
                             </button>
-                        )
-                        : (
+
+                        ) : (
 
                             <button
                                 type="button"
-                                className={
-                                    "primary-button " +
-                                    "submit-attempt-button"
-                                }
+                                className="submit-quiz-button"
                                 disabled={
                                     submitting ||
                                     savingQuestionId !==
@@ -993,19 +1550,22 @@ function QuizAttempt({
                         ) => {
 
                             const isAnswered = (
-                                answers[
-                                    question.id
-                                ] !== undefined
+                                isQuestionAnswered(
+                                    question
+                                )
                             );
+
 
                             const isCurrent = (
                                 index ===
                                 currentQuestionIndex
                             );
 
+
                             let className = (
                                 "question-navigation-button"
                             );
+
 
                             if (isAnswered) {
 
@@ -1013,6 +1573,7 @@ function QuizAttempt({
                                     " answered"
                                 );
                             }
+
 
                             if (isCurrent) {
 

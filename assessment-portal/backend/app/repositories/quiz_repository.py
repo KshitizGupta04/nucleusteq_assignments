@@ -105,6 +105,25 @@ class QuizRepository:
         ]
 
 
+    # Get all quizzes belonging to a category.
+    # Used for category cascading deletion.
+    @classmethod
+    def get_quizzes_by_category_id(
+        cls,
+        category_id: str
+    ):
+
+        quizzes = list(
+            cls.collection.find(
+                {
+                    "category_id": category_id
+                }
+            )
+        )
+
+        return quizzes
+
+
     @classmethod
     def update_quiz(
         cls,

@@ -14,7 +14,7 @@ class Question(BaseModel):
 
     options: list[str]
 
-    correct_answer: str
+    correct_answer: str | list[str]
 
     question_type: str
 

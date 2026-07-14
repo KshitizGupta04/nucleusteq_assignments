@@ -516,7 +516,6 @@ def test_invalid_refresh_token(
 
 
 
-# ADDITIONAL: Get Student Profile
 def test_get_profile(
     client
 ):
@@ -524,7 +523,7 @@ def test_get_profile(
     (
         register_response,
         username,
-        _,
+        email,
         password
     ) = create_student(
         client
@@ -555,8 +554,13 @@ def test_get_profile(
     data = response.json()
 
     assert (
-        data["sub"]
+        data["username"]
         == username
+    )
+
+    assert (
+        data["email"]
+        == email
     )
 
     assert (
@@ -564,11 +568,7 @@ def test_get_profile(
         == "student"
     )
 
-    assert (
-        data["type"]
-        == "access"
-    )
-
+    assert "created_at" in data
 
 # ADDITIONAL: Admin Can Get Users
 def test_admin_can_get_users(

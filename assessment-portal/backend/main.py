@@ -1,6 +1,18 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.auth import router as auth_router
+from contextlib import (
+    asynccontextmanager
+)
+
+from fastapi import (
+    FastAPI
+)
+
+from fastapi.middleware.cors import (
+    CORSMiddleware
+)
+
+from app.api.v1.auth import (
+    router as auth_router
+)
 
 from app.api.v1.category import (
     router as category_router
@@ -18,18 +30,41 @@ from app.api.v1.attempt import (
     router as attempt_router
 )
 
-from app.exceptions.handlers import (
-    register_exception_handlers
-)
-
 from app.api.v1.result import (
     router as result_router
 )
 
+from app.core.logger import (
+    logger
+)
+
+from app.exceptions.handlers import (
+    register_exception_handlers
+)
+
+
+@asynccontextmanager
+async def lifespan(
+    app: FastAPI
+):
+
+    # Log application startup.
+    logger.info(
+        "Assessment Portal API started."
+    )
+
+    yield
+
+    # Log application shutdown.
+    logger.info(
+        "Assessment Portal API stopped."
+    )
+
 
 app = FastAPI(
     title="Assessment Portal API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 
@@ -44,9 +79,11 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+
 register_exception_handlers(
     app
 )
+
 
 app.include_router(
     auth_router

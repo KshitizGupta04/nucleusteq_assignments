@@ -25,25 +25,7 @@ function ProtectedRoute({
         .toLowerCase();
 
 
-    console.log(
-        "PROTECTED ROUTE CHECK:",
-        {
-            tokenExists: Boolean(token),
-            storedRole,
-            normalizedRole: role,
-            allowedRole:
-                normalizedAllowedRole,
-            currentPath:
-                window.location.pathname
-        }
-    );
-
-
     if (!token) {
-
-        console.error(
-            "REDIRECTING TO LOGIN: No token"
-        );
 
         return (
             <Navigate
@@ -59,15 +41,6 @@ function ProtectedRoute({
         role !== normalizedAllowedRole
     ) {
 
-        console.error(
-            "REDIRECTING TO LOGIN: Role mismatch",
-            {
-                actualRole: role,
-                expectedRole:
-                    normalizedAllowedRole
-            }
-        );
-
         return (
             <Navigate
                 to="/login"
@@ -75,11 +48,6 @@ function ProtectedRoute({
             />
         );
     }
-
-
-    console.log(
-        "PROTECTED ROUTE: Access allowed"
-    );
 
 
     return children;

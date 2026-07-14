@@ -5,8 +5,8 @@ import {
     Routes
 } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentDashboard from "./pages/student/StudentDashboard";

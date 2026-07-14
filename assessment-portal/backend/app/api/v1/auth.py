@@ -7,6 +7,10 @@ from fastapi.security import (
     OAuth2PasswordRequestForm
 )
 
+from app.exceptions.customexceptions import (
+    UserNotFoundException
+)
+
 from app.core.dependencies import (
     get_current_admin,
     get_current_user
@@ -22,6 +26,7 @@ from app.repositories.user_repository import (
 
 from app.schemas.auth_schema import (
     LoginRequest,
+    ProfileResponse,
     RefreshTokenRequest,
     RegisterRequest,
     TokenResponse,
@@ -91,14 +96,30 @@ def refresh_token(
     )
 
 
-@router.get("/me")
+@router.get(
+    "/me",
+    response_model=ProfileResponse
+)
 def get_profile(
     current_user=Depends(
         get_current_user
     )
 ):
 
-    return current_user
+    user = UserRepository.get_user_by_username(
+        current_user["sub"]
+    )
+
+    if not user:
+
+        raise UserNotFoundException()
+
+    return {
+        "username": user["username"],
+        "email": user["email"],
+        "role": user["role"],
+        "created_at": user["created_at"]
+    }
 
 
 @router.get("/users")

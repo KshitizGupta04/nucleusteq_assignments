@@ -13,6 +13,9 @@ from pydantic import (
 )
 
 
+AnswerType = str | List[str]
+
+
 class StartAttemptRequest(
     BaseModel
 ):
@@ -26,10 +29,7 @@ class SaveAnswerRequest(
 
     question_id: str
 
-    answer: str = Field(
-        ...,
-        min_length=1
-    )
+    answer: AnswerType
 
 
 class SubmitAttemptRequest(
@@ -38,7 +38,7 @@ class SubmitAttemptRequest(
 
     answers: Dict[
         str,
-        str
+        AnswerType
     ]
 
 
@@ -77,7 +77,7 @@ class AttemptResponse(
 
     answers: Dict[
         str,
-        str
+        AnswerType
     ]
 
     score: float
@@ -125,7 +125,7 @@ class ResumeAttemptResponse(
 
     answers: Dict[
         str,
-        str
+        AnswerType
     ]
 
     status: str

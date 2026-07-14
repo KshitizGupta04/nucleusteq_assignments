@@ -20,7 +20,7 @@ import {
     getAdminResults,
     getQuizzes,
     getResultBreakdown
-} from "../../services/api";
+} from "../../services/adminService";
 
 
 function AdminResults() {
